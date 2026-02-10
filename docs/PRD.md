@@ -338,18 +338,15 @@ All entities include `org_id`.
 
 ---
 
-## 11. API Contracts (High‑Level)
+## 11. Data Access Pattern
 
-- POST /auth/signup
-- POST /invites/accept
-- POST /fractions/associate
-- POST /fractions/approve
-- CRUD /tickets
-- CRUD /suppliers
-- CRUD /maintenance
-- GET /search
+All data loading and mutations use **React Router loaders and actions** within route modules. There is no separate REST API layer.
 
-Server‑side RBAC enforced on every request.
+- `loader` — server-side data fetching, scoped by `org_id` and RBAC
+- `action` — server-side mutations (create, update, delete), with form validation
+- **Resource routes** — used only for non-UI endpoints (e.g., file downloads, webhook receivers)
+
+Server‑side RBAC enforced on every loader and action.
 
 ---
 
@@ -400,6 +397,8 @@ Server‑side RBAC enforced on every request.
 - React Router
 - TypeScript
 - Tailwind + shadcn/ui
+- Zod (schema validation)
+- React Hook Form (form state management)
 - Better Auth
 - Postgres (Docker local, Neon prod)
 - Drizzle ORM

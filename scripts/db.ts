@@ -40,7 +40,7 @@ const DESTRUCTIVE_PATTERNS: { regex: RegExp; label: string; severity: Severity }
   { regex: /\bTRUNCATE\b/i, label: 'TRUNCATE', severity: 'error' },
   { regex: /DELETE\s+FROM/i, label: 'DELETE FROM', severity: 'error' },
   { regex: /DROP\s+INDEX/i, label: 'DROP INDEX', severity: 'warn' },
-  { regex: /RENAME\s+(TABLE|TO)/i, label: 'RENAME TABLE', severity: 'warn' },
+  { regex: /RENAME\s+TO\b/i, label: 'RENAME TABLE', severity: 'warn' },
   { regex: /RENAME\s+COLUMN/i, label: 'RENAME COLUMN', severity: 'warn' },
   { regex: /DROP\s+CONSTRAINT/i, label: 'DROP CONSTRAINT', severity: 'warn' },
 ]

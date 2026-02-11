@@ -56,6 +56,14 @@ export const auth = betterAuth({
     },
   },
 
+  user: {
+    deleteUser: {
+      enabled: true,
+      // For now: require password OR a fresh session to delete.
+      // Optionally, in production you can also enable email verification flow.
+    },
+  },
+
   plugins: [
     oneTap(),
     organization({

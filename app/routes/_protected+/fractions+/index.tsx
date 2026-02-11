@@ -1,4 +1,4 @@
-import { Link, useFetcher } from 'react-router'
+import { data, Link, useFetcher } from 'react-router'
 import { z } from 'zod'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -15,6 +15,7 @@ import { requestAssociation } from '~/lib/services/associations'
 import { Button } from '~/components/ui/button'
 import { CardLink } from '~/components/brand/card-link'
 import { EmptyState } from '~/components/layout/empty-state'
+import { setToast } from '~/lib/toast.server'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Frações — Zelus' }]
@@ -44,7 +45,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     await requestAssociation(orgId, user.id, parsed.data.fractionId)
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Associação solicitada.') })
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao solicitar associação.' }
   }

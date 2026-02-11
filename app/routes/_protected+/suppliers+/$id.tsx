@@ -1,4 +1,4 @@
-import { redirect, Form, useFetcher, Link } from 'react-router'
+import { data, redirect, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { WrenchIcon } from '@hugeicons/core-free-icons'
 
@@ -28,7 +28,8 @@ import {
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { formatDate } from '~/lib/format'
 import { BackButton } from '~/components/layout/back-button'
-import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { setToast } from '~/lib/toast.server'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -81,7 +82,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       },
       user.id,
     )
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
   if (intent === 'delete') {
@@ -107,8 +108,9 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
     <div>
       <BackButton to="/suppliers" />
 
-      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
-      {actionData?.success && <SuccessBanner className="mt-4">Alterações guardadas.</SuccessBanner>}
+      {actionData && 'error' in actionData && (
+        <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
+      )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-5">
         {/* Left column: Edit form (admin) or read-only info */}

@@ -1,4 +1,4 @@
-import { Form } from 'react-router'
+import { data, Form } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/categories'
@@ -9,7 +9,8 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel } from '~/components/ui/field'
-import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { setToast } from '~/lib/toast.server'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Categorias — Zelus' }]
@@ -31,10 +32,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { orgId } = context.get(orgContext)
   const user = context.get(userContext)
   const formData = await request.formData()
-  const data = Object.fromEntries(formData)
+  const fields = Object.fromEntries(formData)
 
-  if (data.intent === 'create') {
-    const parsed = createSchema.safeParse(data)
+  if (fields.intent === 'create') {
+    const parsed = createSchema.safeParse(fields)
     if (!parsed.success) {
       const msg = parsed.error.issues[0]?.message ?? 'Dados inválidos.'
       return { error: msg }
@@ -42,15 +43,15 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     const result = await createCategory(parsed.data.key, user.id, orgId)
     if (!result) return { error: 'Categoria já existe.' }
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
-  if (data.intent === 'delete') {
-    const key = String(data.key)
+  if (fields.intent === 'delete') {
+    const key = String(fields.key)
 
     try {
       await deleteCategory(key, user.id, orgId)
-      return { success: true }
+      return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao apagar categoria.' }
     }
@@ -66,8 +67,9 @@ export default function CategoriesPage({ loaderData, actionData }: Route.Compone
     <div>
       <h1 className="text-lg font-semibold tracking-tight">Categorias</h1>
 
-      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
-      {actionData?.success && <SuccessBanner className="mt-4">Alterações guardadas.</SuccessBanner>}
+      {actionData && 'error' in actionData && (
+        <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
+      )}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2">

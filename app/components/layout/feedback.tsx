@@ -1,4 +1,4 @@
-import { Alert02Icon, AlertIcon, TickDouble01Icon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, AlertIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { ReactNode } from 'react'
 
@@ -13,26 +13,6 @@ export function ErrorBanner({ children, className }: { children: ReactNode; clas
       )}
     >
       <HugeiconsIcon icon={AlertIcon} size={14} strokeWidth={2} className="shrink-0" />
-      {children}
-    </div>
-  )
-}
-
-export function SuccessBanner({
-  children,
-  className,
-}: {
-  children: ReactNode
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-2 rounded-xl bg-green-100 px-4 py-3 text-sm text-green-600',
-        className,
-      )}
-    >
-      <HugeiconsIcon icon={TickDouble01Icon} size={14} strokeWidth={2} className="shrink-0" />
       {children}
     </div>
   )

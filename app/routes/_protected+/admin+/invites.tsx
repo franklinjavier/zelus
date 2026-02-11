@@ -1,4 +1,4 @@
-import { Form } from 'react-router'
+import { data, Form } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/invites'
@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Badge } from '~/components/ui/badge'
 import { Field, FieldLabel } from '~/components/ui/field'
-import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { setToast } from '~/lib/toast.server'
 import { roleLabel } from '~/components/shared/role-badge'
 import {
   Select,
@@ -48,22 +49,22 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { orgId } = context.get(orgContext)
   const user = context.get(userContext)
   const formData = await request.formData()
-  const data = Object.fromEntries(formData)
+  const fields = Object.fromEntries(formData)
 
-  if (data.intent === 'create-org-invite') {
-    const parsed = orgInviteSchema.safeParse(data)
+  if (fields.intent === 'create-org-invite') {
+    const parsed = orgInviteSchema.safeParse(fields)
     if (!parsed.success) return { error: 'Dados inválidos.' }
 
     try {
       await createOrgInvite(orgId, parsed.data.email, parsed.data.role, user.id)
-      return { success: true }
+      return data({ success: true }, { headers: await setToast('Convite criado.') })
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao criar convite.' }
     }
   }
 
-  if (data.intent === 'create-fraction-invite') {
-    const parsed = fractionInviteSchema.safeParse(data)
+  if (fields.intent === 'create-fraction-invite') {
+    const parsed = fractionInviteSchema.safeParse(fields)
     if (!parsed.success) return { error: 'Dados inválidos.' }
 
     try {
@@ -74,7 +75,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         parsed.data.role,
         user.id,
       )
-      return { success: true }
+      return data({ success: true }, { headers: await setToast('Convite criado.') })
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao criar convite.' }
     }
@@ -97,9 +98,8 @@ export default function InvitesPage({ loaderData, actionData }: Route.ComponentP
               <CardTitle>Novo convite</CardTitle>
             </CardHeader>
             <CardContent>
-              {actionData?.error && <ErrorBanner className="mb-3">{actionData.error}</ErrorBanner>}
-              {actionData?.success && (
-                <SuccessBanner className="mb-3">Convite criado.</SuccessBanner>
+              {actionData && 'error' in actionData && (
+                <ErrorBanner className="mb-3">{actionData.error}</ErrorBanner>
               )}
 
               <InviteForm fractions={fractions} />

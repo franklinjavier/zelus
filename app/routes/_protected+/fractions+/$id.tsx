@@ -1,4 +1,4 @@
-import { redirect, Form, useFetcher, Link } from 'react-router'
+import { data, redirect, Form, useFetcher } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { UserAdd01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
 
@@ -24,7 +24,8 @@ import {
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { getInitials } from '~/lib/format'
 import { BackButton } from '~/components/layout/back-button'
-import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { setToast } from '~/lib/toast.server'
 import { RoleBadge } from '~/components/shared/role-badge'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
@@ -70,7 +71,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!label?.trim()) return { error: 'Nome obrigatório.' }
 
     await updateFraction(orgId, params.id, { label, description: description || null }, user.id)
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
   if (intent === 'delete') {
@@ -103,7 +104,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     try {
       await createFractionInvite(orgId, params.id, email, role, user.id)
-      return { success: true, message: 'Convite enviado.' }
+      return data({ success: true }, { headers: await setToast('Convite enviado.') })
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao enviar convite.' }
     }
@@ -120,10 +121,8 @@ export default function FractionDetailPage({ loaderData, actionData }: Route.Com
     <div>
       <BackButton to="/fractions" />
 
-      {/* Feedback messages */}
-      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
-      {actionData?.success && 'message' in actionData && (
-        <SuccessBanner className="mt-4">{actionData.message}</SuccessBanner>
+      {actionData && 'error' in actionData && (
+        <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
       )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-5">

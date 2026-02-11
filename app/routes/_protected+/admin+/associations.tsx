@@ -1,4 +1,4 @@
-import { useFetcher } from 'react-router'
+import { data, useFetcher } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
 
@@ -9,6 +9,7 @@ import {
   approveAssociation,
   rejectAssociation,
 } from '~/lib/services/associations'
+import { setToast } from '~/lib/toast.server'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Card, CardContent } from '~/components/ui/card'
@@ -46,11 +47,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   try {
     if (intent === 'approve') {
       await approveAssociation(orgId, associationId, user.id)
-      return { success: true }
+      return data({ success: true }, { headers: await setToast('Associação aprovada.') })
     }
     if (intent === 'reject') {
       await rejectAssociation(orgId, associationId, user.id)
-      return { success: true }
+      return data({ success: true }, { headers: await setToast('Associação rejeitada.') })
     }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao processar associação.' }

@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router'
+import { Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Add01Icon,
@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import { useFilterParams } from '~/lib/use-filter-params'
+import { EmptyState } from '~/components/layout/empty-state'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Fornecedores — Zelus' }]
@@ -45,19 +47,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
   const { suppliers, categories, effectiveRole } = loaderData
   const isAdmin = effectiveRole === 'org_admin'
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  function handleFilterChange(key: string, value: string | null) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      if (!value || value === '_all') {
-        next.delete(key)
-      } else {
-        next.set(key, value)
-      }
-      return next
-    })
-  }
+  const { searchParams, setFilter } = useFilterParams()
 
   const categoryItems = [
     { label: 'Todas as categorias', value: '_all' },
@@ -85,7 +75,7 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Select
             value={searchParams.get('category') ?? '_all'}
-            onValueChange={(v) => handleFilterChange('category', v)}
+            onValueChange={(v) => setFilter('category', v)}
             items={categoryItems}
           >
             <SelectTrigger size="sm">
@@ -103,22 +93,13 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
       )}
 
       {suppliers.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-4">
-          <div className="bg-muted flex size-14 items-center justify-center rounded-2xl">
-            <HugeiconsIcon
-              icon={TruckDeliveryIcon}
-              size={24}
-              strokeWidth={1.5}
-              className="text-muted-foreground"
-            />
-          </div>
-          <p className="text-muted-foreground">Nenhum fornecedor encontrado</p>
+        <EmptyState icon={TruckDeliveryIcon} message="Nenhum fornecedor encontrado">
           {isAdmin && (
             <Button render={<Link to="/suppliers/new" />} variant="outline">
               Criar primeiro fornecedor
             </Button>
           )}
-        </div>
+        </EmptyState>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {suppliers.map((supplier) => (

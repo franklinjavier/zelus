@@ -1,6 +1,6 @@
-import { redirect, Form, useFetcher, Link } from 'react-router'
+import { data, redirect, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft02Icon, WrenchIcon } from '@hugeicons/core-free-icons'
+import { WrenchIcon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/$id'
 import { orgContext, userContext } from '~/lib/auth/context'
@@ -25,20 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '~/components/ui/alert-dialog'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
+import { formatDate } from '~/lib/format'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { setToast } from '~/lib/toast.server'
+import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
-export function meta({ data }: Route.MetaArgs) {
-  const name = data?.supplier?.name ?? 'Fornecedor'
+export function meta({ loaderData }: Route.MetaArgs) {
+  const name = loaderData?.supplier?.name ?? 'Fornecedor'
   return [{ title: `${name} — Zelus` }]
 }
 
@@ -87,7 +82,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       },
       user.id,
     )
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
   if (intent === 'delete') {
@@ -111,20 +106,10 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
 
   return (
     <div>
-      <Button render={<Link to="/suppliers" />} variant="ghost">
-        <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-        Voltar
-      </Button>
+      <BackButton to="/suppliers" />
 
-      {actionData?.error && (
-        <div className="bg-destructive/10 text-destructive mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.error}
-        </div>
-      )}
-      {actionData?.success && (
-        <div className="bg-primary/10 text-primary mt-4 rounded-xl px-4 py-3 text-sm">
-          Alterações guardadas.
-        </div>
+      {actionData && 'error' in actionData && (
+        <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
       )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-5">
@@ -200,27 +185,15 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                   </Field>
 
                   <div className="flex items-center justify-between pt-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger render={<Button type="button" variant="destructive" />}>
-                        Apagar
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Apagar fornecedor?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação não pode ser revertida. Todos os dados do fornecedor serão
-                            apagados.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <fetcher.Form method="post">
-                            <input type="hidden" name="intent" value="delete" />
-                            <AlertDialogAction type="submit">Apagar</AlertDialogAction>
-                          </fetcher.Form>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <DeleteConfirmDialog
+                      title="Apagar fornecedor?"
+                      description="Esta ação não pode ser revertida. Todos os dados do fornecedor serão apagados."
+                    >
+                      <fetcher.Form method="post">
+                        <input type="hidden" name="intent" value="delete" />
+                        <AlertDialogAction type="submit">Apagar</AlertDialogAction>
+                      </fetcher.Form>
+                    </DeleteConfirmDialog>
                     <Button type="submit">Guardar</Button>
                   </div>
                 </Form>
@@ -307,13 +280,7 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground text-sm">Criado em</dt>
-                  <dd className="text-sm">
-                    {new Date(supplier.createdAt).toLocaleDateString('pt-PT', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </dd>
+                  <dd className="text-sm">{formatDate(supplier.createdAt)}</dd>
                 </div>
               </dl>
             </CardContent>

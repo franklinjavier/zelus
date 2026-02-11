@@ -1,6 +1,9 @@
-import { Link, useSearchParams } from 'react-router'
+import { Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Add01Icon, WrenchIcon } from '@hugeicons/core-free-icons'
+import { formatCost, formatDate } from '~/lib/format'
+import { useFilterParams } from '~/lib/use-filter-params'
+import { EmptyState } from '~/components/layout/empty-state'
 
 import type { Route } from './+types/index'
 import { orgContext } from '~/lib/auth/context'
@@ -35,34 +38,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { records, suppliers, effectiveRole }
 }
 
-function formatDate(date: Date | string) {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
-function formatCost(cost: string | null) {
-  if (!cost) return null
-  const num = parseFloat(cost)
-  if (isNaN(num)) return null
-  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(num)
-}
-
 export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
   const { records, suppliers, effectiveRole } = loaderData
   const isAdmin = effectiveRole === 'org_admin'
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  function handleFilterChange(key: string, value: string | null) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      if (!value || value === '_all') {
-        next.delete(key)
-      } else {
-        next.set(key, value)
-      }
-      return next
-    })
-  }
+  const { searchParams, setFilter } = useFilterParams()
 
   const supplierItems = [
     { label: 'Todos os fornecedores', value: '_all' },
@@ -90,7 +69,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Select
             value={searchParams.get('supplierId') ?? '_all'}
-            onValueChange={(v) => handleFilterChange('supplierId', v)}
+            onValueChange={(v) => setFilter('supplierId', v)}
             items={supplierItems}
           >
             <SelectTrigger size="sm">
@@ -108,22 +87,13 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
       )}
 
       {records.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-4">
-          <div className="bg-muted flex size-14 items-center justify-center rounded-2xl">
-            <HugeiconsIcon
-              icon={WrenchIcon}
-              size={24}
-              strokeWidth={1.5}
-              className="text-muted-foreground"
-            />
-          </div>
-          <p className="text-muted-foreground">Nenhum registo de manutenção encontrado</p>
+        <EmptyState icon={WrenchIcon} message="Nenhum registo de manutenção encontrado">
           {isAdmin && (
             <Button render={<Link to="/maintenance/new" />} variant="outline">
               Criar primeiro registo
             </Button>
           )}
-        </div>
+        </EmptyState>
       ) : (
         <Card className="mt-6">
           <CardContent className="p-0">

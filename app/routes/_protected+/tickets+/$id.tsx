@@ -1,7 +1,6 @@
-import { Form, useFetcher, Link } from 'react-router'
+import { data, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  ArrowLeft02Icon,
   Calendar03Icon,
   UserCircleIcon,
   Home11Icon,
@@ -33,9 +32,13 @@ import {
 import { StatusBadge, statusLabels, type Status } from '~/components/tickets/status-badge'
 import { PriorityIndicator, PrioritySelector } from '~/components/tickets/priority-indicator'
 import { TimelineEntry } from '~/components/tickets/timeline-entry'
+import { formatDate } from '~/lib/format'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { setToast } from '~/lib/toast.server'
 
-export function meta({ data }: Route.MetaArgs) {
-  const title = data?.ticket?.title ?? 'Ocorrencia'
+export function meta({ loaderData }: Route.MetaArgs) {
+  const title = loaderData?.ticket?.title ?? 'Ocorrencia'
   return [{ title: `${title} — Zelus` }]
 }
 
@@ -81,7 +84,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const content = formData.get('content') as string
     if (!content?.trim()) return { error: 'Comentario obrigatorio.' }
     await addComment(orgId, params.id, content, user.id)
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
   if (intent === 'update-status') {
@@ -99,7 +102,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const status = formData.get('status') as 'open' | 'in_progress' | 'resolved' | 'closed'
     if (!status) return { error: 'Estado obrigatorio.' }
     await updateTicketStatus(orgId, params.id, status, user.id)
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
   if (intent === 'update-ticket') {
@@ -130,7 +133,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       },
       user.id,
     )
-    return { success: true }
+    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
   if (intent === 'delete-attachment') {
@@ -138,7 +141,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     if (!attachmentId) return { error: 'Anexo nao encontrado.' }
     try {
       await deleteAttachment(orgId, attachmentId, user.id)
-      return { success: true }
+      return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao apagar anexo.' }
     }
@@ -164,29 +167,14 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
     ...categories.map((c) => ({ label: translateCategory(c.key), value: c.key })),
   ]
 
-  const formattedDate = new Date(ticket.createdAt).toLocaleDateString('pt-PT', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
+  const formattedDate = formatDate(ticket.createdAt)
 
   return (
     <div>
-      <Button render={<Link to="/tickets" />} variant="ghost">
-        <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-        Voltar
-      </Button>
+      <BackButton to="/tickets" />
 
-      {/* Feedback messages */}
-      {actionData?.error && (
-        <div className="bg-destructive/10 text-destructive mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.error}
-        </div>
-      )}
-      {actionData?.success && (
-        <div className="bg-primary/10 text-primary mt-4 rounded-xl px-4 py-3 text-sm">
-          Alteracoes guardadas.
-        </div>
+      {actionData && 'error' in actionData && (
+        <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
       )}
 
       {/* Title + description header */}

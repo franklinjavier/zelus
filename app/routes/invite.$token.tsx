@@ -5,12 +5,13 @@ import { sessionContext } from '~/lib/auth/context'
 import { getInviteByToken, acceptInvite } from '~/lib/services/invites'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card'
-import { Badge } from '~/components/ui/badge'
 import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { RoleBadge } from '~/components/shared/role-badge'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 
-export function meta({ data }: Route.MetaArgs) {
-  return [{ title: data?.invite ? 'Aceitar Convite — Zelus' : 'Convite — Zelus' }]
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [{ title: loaderData?.invite ? 'Aceitar Convite — Zelus' : 'Convite — Zelus' }]
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -85,11 +86,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
             </div>
           </div>
 
-          {actionData?.error && (
-            <div className="bg-destructive/10 text-destructive mb-4 rounded-xl px-3 py-2 text-sm">
-              {actionData.error}
-            </div>
-          )}
+          {actionData?.error && <ErrorBanner className="mb-4">{actionData.error}</ErrorBanner>}
 
           {accepted && (
             <div className="bg-muted rounded-xl px-3 py-2 text-center text-sm">
@@ -131,13 +128,4 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
       </Card>
     </div>
   )
-}
-
-function RoleBadge({ role }: { role: string }) {
-  const labels: Record<string, string> = {
-    org_admin: 'Admin',
-    fraction_owner_admin: 'Admin Fração',
-    fraction_member: 'Membro',
-  }
-  return <Badge variant="secondary">{labels[role] ?? role}</Badge>
 }

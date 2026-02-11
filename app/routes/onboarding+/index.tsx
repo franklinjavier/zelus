@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { data, redirect, useFetcher } from 'react-router'
+import { z } from 'zod'
 
 import type { Route } from './+types/index'
 import { requireAuth } from '~/lib/auth/rbac'
@@ -10,8 +8,10 @@ import { auth } from '~/lib/auth/auth.server'
 import { db } from '~/lib/db'
 import { fractions, member } from '~/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { validateForm } from '~/lib/forms'
 
 import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
+import { ErrorBanner } from '~/components/layout/feedback'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
@@ -24,9 +24,6 @@ const createOrgSchema = z.object({
   totalFractions: z.string().optional(),
   notes: z.string().optional(),
 })
-
-type CreateOrgValues = z.infer<typeof createOrgSchema>
-type FractionsValues = { labels: { value: string }[] }
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Configurar Condomínio — Zelus' }]
@@ -71,12 +68,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   const intent = formData.get('intent') as string
 
   if (intent === 'create-org') {
-    const parsed = createOrgSchema.safeParse(Object.fromEntries(formData))
-    if (!parsed.success) {
-      return { error: 'Dados inválidos.' }
-    }
+    const result = validateForm(formData, createOrgSchema)
+    if ('errors' in result) return data({ errors: result.errors }, { status: 400 })
 
-    const slug = parsed.data.name
+    const slug = result.data.name
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -85,11 +80,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     const res = await auth.api.createOrganization({
       body: {
-        name: parsed.data.name,
+        name: result.data.name,
         slug,
-        city: parsed.data.city || undefined,
-        totalFractions: parsed.data.totalFractions || undefined,
-        notes: parsed.data.notes || undefined,
+        city: result.data.city || undefined,
+        totalFractions: result.data.totalFractions || undefined,
+        notes: result.data.notes || undefined,
       },
       asResponse: true,
       headers: request.headers,
@@ -140,6 +135,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [orgId, setOrgId] = useState('')
   const [prevData, setPrevData] = useState<typeof fetcher.data>(undefined)
+  const [fractionLabels, setFractionLabels] = useState([''])
 
   // Sync state from fetcher responses (derived state pattern)
   if (fetcher.data !== prevData) {
@@ -150,41 +146,10 @@ export default function OnboardingPage() {
 
   const serverError =
     fetcher.data && 'error' in fetcher.data ? (fetcher.data.error as string) : null
-
-  // Step 1 form
-  const orgForm = useForm<CreateOrgValues>({
-    resolver: zodResolver(createOrgSchema),
-    defaultValues: { name: '', city: '', totalFractions: '', notes: '' },
-  })
-
-  // Step 2 form
-  const fractionsForm = useForm<FractionsValues>({
-    defaultValues: { labels: [{ value: '' }] },
-  })
-  const { fields, append, remove } = useFieldArray({
-    control: fractionsForm.control,
-    name: 'labels',
-  })
-
-  function onCreateOrg(values: CreateOrgValues) {
-    const formData = new FormData()
-    formData.set('intent', 'create-org')
-    formData.set('name', values.name)
-    formData.set('city', values.city)
-    if (values.totalFractions) formData.set('totalFractions', values.totalFractions)
-    if (values.notes) formData.set('notes', values.notes)
-    fetcher.submit(formData, { method: 'post' })
-  }
-
-  function onCreateFractions(values: FractionsValues) {
-    const formData = new FormData()
-    formData.set('intent', 'create-fractions')
-    formData.set('orgId', orgId)
-    values.labels
-      .filter((l) => l.value.trim())
-      .forEach((l) => formData.append('label', l.value.trim()))
-    fetcher.submit(formData, { method: 'post' })
-  }
+  const fieldErrors =
+    fetcher.data && 'errors' in fetcher.data
+      ? (fetcher.data.errors as Record<string, string>)
+      : null
 
   function handleFinish() {
     const formData = new FormData()
@@ -213,108 +178,79 @@ export default function OnboardingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {serverError && (
-            <div className="bg-destructive/10 text-destructive mb-4 rounded-xl px-3 py-2 text-sm">
-              {serverError}
-            </div>
-          )}
+          {serverError && <ErrorBanner className="mb-4">{serverError}</ErrorBanner>}
 
           {step === 1 && (
-            <form onSubmit={orgForm.handleSubmit(onCreateOrg)} className="grid gap-4">
-              <Controller
-                name="name"
-                control={orgForm.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Nome do condomínio *</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      placeholder="Ex: Edifício Aurora"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-              <Controller
-                name="city"
-                control={orgForm.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Cidade / localização *</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      placeholder="Ex: Lisboa"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-              <Controller
-                name="totalFractions"
-                control={orgForm.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Número total de frações</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type="number"
-                      placeholder="Ex: 12"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-              <Controller
-                name="notes"
-                control={orgForm.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Notas internas</FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      placeholder="Opcional"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
+            <fetcher.Form method="post" className="grid gap-4">
+              <input type="hidden" name="intent" value="create-org" />
+              <Field>
+                <FieldLabel htmlFor="name">Nome do condomínio *</FieldLabel>
+                <Input id="name" name="name" placeholder="Ex: Edifício Aurora" required />
+                {fieldErrors?.name && <FieldError>{fieldErrors.name}</FieldError>}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="city">Cidade / localização *</FieldLabel>
+                <Input id="city" name="city" placeholder="Ex: Lisboa" required />
+                {fieldErrors?.city && <FieldError>{fieldErrors.city}</FieldError>}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="totalFractions">Número total de frações</FieldLabel>
+                <Input
+                  id="totalFractions"
+                  name="totalFractions"
+                  type="number"
+                  placeholder="Ex: 12"
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="notes">Notas internas</FieldLabel>
+                <Input id="notes" name="notes" placeholder="Opcional" />
+              </Field>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'A criar…' : 'Continuar'}
               </Button>
-            </form>
+            </fetcher.Form>
           )}
 
           {step === 2 && (
-            <form onSubmit={fractionsForm.handleSubmit(onCreateFractions)} className="grid gap-4">
+            <fetcher.Form method="post" className="grid gap-4">
+              <input type="hidden" name="intent" value="create-fractions" />
+              <input type="hidden" name="orgId" value={orgId} />
               <p className="text-muted-foreground text-sm">
                 Adicione as frações do edifício. Pode usar nomes livres (ex: &quot;T3 – 2º
                 Esq.&quot;).
               </p>
-              {fields.map((item, index) => (
-                <div key={item.id} className="flex gap-2">
-                  <Controller
-                    name={`labels.${index}.value`}
-                    control={fractionsForm.control}
-                    render={({ field }) => (
-                      <Input {...field} placeholder={`Fração ${index + 1}`} className="flex-1" />
-                    )}
+              {fractionLabels.map((value, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    name="label"
+                    value={value}
+                    onChange={(e) => {
+                      const next = [...fractionLabels]
+                      next[index] = e.target.value
+                      setFractionLabels(next)
+                    }}
+                    placeholder={`Fração ${index + 1}`}
+                    className="flex-1"
                   />
-                  {fields.length > 1 && (
-                    <Button type="button" variant="ghost" onClick={() => remove(index)}>
+                  {fractionLabels.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() =>
+                        setFractionLabels(fractionLabels.filter((_, i) => i !== index))
+                      }
+                    >
                       ✕
                     </Button>
                   )}
                 </div>
               ))}
-              <Button type="button" variant="outline" onClick={() => append({ value: '' })}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setFractionLabels([...fractionLabels, ''])}
+              >
                 + Adicionar fração
               </Button>
               <div className="flex gap-2">
@@ -325,7 +261,7 @@ export default function OnboardingPage() {
                   Saltar
                 </Button>
               </div>
-            </form>
+            </fetcher.Form>
           )}
 
           {step === 3 && (

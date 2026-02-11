@@ -1,7 +1,5 @@
 import { redirect, useNavigation, Form, Link } from 'react-router'
 import { z } from 'zod'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft02Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/new'
 import { orgContext, userContext } from '~/lib/auth/context'
@@ -22,6 +20,8 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { PrioritySelector } from '~/components/tickets/priority-indicator'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner } from '~/components/layout/feedback'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Nova ocorrência — Zelus' }]
@@ -93,10 +93,7 @@ export default function NewTicketPage({ loaderData, actionData }: Route.Componen
 
   return (
     <div className="mx-auto max-w-md">
-      <Button render={<Link to="/tickets" />} variant="ghost">
-        <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-        Voltar
-      </Button>
+      <BackButton to="/tickets" />
 
       <Card className="mt-6">
         <CardHeader>
@@ -104,11 +101,7 @@ export default function NewTicketPage({ loaderData, actionData }: Route.Componen
         </CardHeader>
         <CardContent>
           <Form method="post" className="grid gap-4">
-            {actionData?.error && (
-              <div className="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm">
-                {actionData.error}
-              </div>
-            )}
+            {actionData?.error && <ErrorBanner>{actionData.error}</ErrorBanner>}
 
             <Field>
               <FieldLabel htmlFor="title">Título</FieldLabel>

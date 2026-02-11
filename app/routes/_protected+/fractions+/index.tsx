@@ -14,6 +14,7 @@ import { listFractions } from '~/lib/services/fractions'
 import { requestAssociation } from '~/lib/services/associations'
 import { Button } from '~/components/ui/button'
 import { CardLink } from '~/components/brand/card-link'
+import { EmptyState } from '~/components/layout/empty-state'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Frações — Zelus' }]
@@ -71,22 +72,13 @@ export default function FractionsPage({ loaderData }: Route.ComponentProps) {
       </div>
 
       {fractions.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-4">
-          <div className="bg-muted flex size-14 items-center justify-center rounded-2xl">
-            <HugeiconsIcon
-              icon={Building06Icon}
-              size={24}
-              strokeWidth={1.5}
-              className="text-muted-foreground"
-            />
-          </div>
-          <p className="text-muted-foreground">Nenhuma fração criada</p>
+        <EmptyState icon={Building06Icon} message="Nenhuma fração criada">
           {isAdmin && (
             <Button render={<Link to="/fractions/new" />} variant="outline">
               Criar primeira fração
             </Button>
           )}
-        </div>
+        </EmptyState>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {fractions.map((fraction) => (

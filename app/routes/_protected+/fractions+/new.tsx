@@ -1,7 +1,5 @@
 import { redirect, useNavigation, Form, Link } from 'react-router'
 import { z } from 'zod'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft02Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/new'
 import { orgContext, userContext } from '~/lib/auth/context'
@@ -11,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel } from '~/components/ui/field'
 import { Textarea } from '~/components/ui/textarea'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner } from '~/components/layout/feedback'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Nova Fração — Zelus' }]
@@ -46,12 +46,7 @@ export default function NewFractionPage({ actionData }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto max-w-md">
-      <div className="flex items-center gap-3">
-        <Button render={<Link to="/fractions" />} variant="ghost" size="icon">
-          <HugeiconsIcon icon={ArrowLeft02Icon} size={18} strokeWidth={2} />
-        </Button>
-        <h1 className="text-lg font-semibold tracking-tight">Nova Fração</h1>
-      </div>
+      <BackButton to="/fractions" />
 
       <Card className="mt-6">
         <CardHeader>
@@ -59,11 +54,7 @@ export default function NewFractionPage({ actionData }: Route.ComponentProps) {
         </CardHeader>
         <CardContent>
           <Form method="post" className="grid gap-4">
-            {actionData?.error && (
-              <div className="bg-destructive/10 text-destructive rounded-xl px-4 py-3 text-sm">
-                {actionData.error}
-              </div>
-            )}
+            {actionData?.error && <ErrorBanner>{actionData.error}</ErrorBanner>}
 
             <Field>
               <FieldLabel htmlFor="label">Nome</FieldLabel>

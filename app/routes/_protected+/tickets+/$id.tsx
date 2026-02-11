@@ -1,7 +1,6 @@
 import { Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  ArrowLeft02Icon,
   Calendar03Icon,
   UserCircleIcon,
   Home11Icon,
@@ -33,9 +32,12 @@ import {
 import { StatusBadge, statusLabels, type Status } from '~/components/tickets/status-badge'
 import { PriorityIndicator, PrioritySelector } from '~/components/tickets/priority-indicator'
 import { TimelineEntry } from '~/components/tickets/timeline-entry'
+import { formatDate } from '~/lib/format'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
 
-export function meta({ data }: Route.MetaArgs) {
-  const title = data?.ticket?.title ?? 'Ocorrencia'
+export function meta({ loaderData }: Route.MetaArgs) {
+  const title = loaderData?.ticket?.title ?? 'Ocorrencia'
   return [{ title: `${title} — Zelus` }]
 }
 
@@ -164,30 +166,15 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
     ...categories.map((c) => ({ label: translateCategory(c.key), value: c.key })),
   ]
 
-  const formattedDate = new Date(ticket.createdAt).toLocaleDateString('pt-PT', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
+  const formattedDate = formatDate(ticket.createdAt)
 
   return (
     <div>
-      <Button render={<Link to="/tickets" />} variant="ghost">
-        <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-        Voltar
-      </Button>
+      <BackButton to="/tickets" />
 
       {/* Feedback messages */}
-      {actionData?.error && (
-        <div className="bg-destructive/10 text-destructive mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.error}
-        </div>
-      )}
-      {actionData?.success && (
-        <div className="bg-primary/10 text-primary mt-4 rounded-xl px-4 py-3 text-sm">
-          Alteracoes guardadas.
-        </div>
-      )}
+      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
+      {actionData?.success && <SuccessBanner className="mt-4">Alteracoes guardadas.</SuccessBanner>}
 
       {/* Title + description header */}
       <div className="mt-6 mb-5">

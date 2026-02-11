@@ -33,3 +33,11 @@ triggers. This ensures portability to Neon (which has limitations on custom trig
 
 PRD does not mention cost, but maintenance records linked to suppliers logically need it. Added as
 optional `numeric(10,2)` field. This is NOT accounting (non-goal) — it's operational record-keeping.
+
+## D7 — Form + action for all forms (no react-hook-form)
+
+All forms use React Router's `Form` or `fetcher.Form` with Zod validation in the route action.
+Field-level errors returned as `{ errors: { fieldName: "message" } }` with status 400.
+No client-side form libraries. Removed `react-hook-form` and `@hookform/resolvers`.
+
+Reference: https://reactrouter.com/how-to/form-validation

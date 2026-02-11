@@ -1,6 +1,6 @@
 import { redirect, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft02Icon, UserAdd01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
+import { UserAdd01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/$id'
 import { orgContext, userContext } from '~/lib/auth/context'
@@ -21,20 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '~/components/ui/alert-dialog'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
+import { getInitials } from '~/lib/format'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { RoleBadge } from '~/components/shared/role-badge'
+import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
-export function meta({ data }: Route.MetaArgs) {
-  const label = data?.fraction?.label ?? 'Fração'
+export function meta({ loaderData }: Route.MetaArgs) {
+  const label = loaderData?.fraction?.label ?? 'Fração'
   return [{ title: `${label} — Zelus` }]
 }
 
@@ -123,21 +118,12 @@ export default function FractionDetailPage({ loaderData, actionData }: Route.Com
 
   return (
     <div>
-      <Button render={<Link to="/fractions" />} variant="ghost">
-        <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-        Voltar
-      </Button>
+      <BackButton to="/fractions" />
 
       {/* Feedback messages */}
-      {actionData?.error && (
-        <div className="bg-destructive/10 text-destructive mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.error}
-        </div>
-      )}
+      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
       {actionData?.success && 'message' in actionData && (
-        <div className="bg-primary/10 text-primary mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.message}
-        </div>
+        <SuccessBanner className="mt-4">{actionData.message}</SuccessBanner>
       )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-5">
@@ -165,27 +151,15 @@ export default function FractionDetailPage({ loaderData, actionData }: Route.Com
                     />
                   </Field>
                   <div className="flex items-center justify-between pt-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger render={<Button type="button" variant="destructive" />}>
-                        Apagar
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Apagar fração?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação não pode ser revertida. Todos os dados da fração serão
-                            apagados.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <fetcher.Form method="post">
-                            <input type="hidden" name="intent" value="delete" />
-                            <AlertDialogAction type="submit">Apagar</AlertDialogAction>
-                          </fetcher.Form>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <DeleteConfirmDialog
+                      title="Apagar fração?"
+                      description="Esta ação não pode ser revertida. Todos os dados da fração serão apagados."
+                    >
+                      <fetcher.Form method="post">
+                        <input type="hidden" name="intent" value="delete" />
+                        <AlertDialogAction type="submit">Apagar</AlertDialogAction>
+                      </fetcher.Form>
+                    </DeleteConfirmDialog>
                     <Button type="submit">Guardar</Button>
                   </div>
                 </Form>
@@ -277,25 +251,11 @@ export default function FractionDetailPage({ loaderData, actionData }: Route.Com
 }
 
 function MemberAvatar({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-
   return (
     <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium">
-      {initials}
+      {getInitials(name)}
     </div>
   )
-}
-
-function RoleBadge({ role }: { role: string }) {
-  if (role === 'fraction_owner_admin') {
-    return <Badge variant="default">Admin</Badge>
-  }
-  return <Badge variant="secondary">Membro</Badge>
 }
 
 function StatusBadge({ status }: { status: string }) {

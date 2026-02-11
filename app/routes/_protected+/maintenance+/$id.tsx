@@ -1,6 +1,6 @@
 import { redirect, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft02Icon, Calendar03Icon } from '@hugeicons/core-free-icons'
+import { Calendar03Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/$id'
 import { orgContext, userContext } from '~/lib/auth/context'
@@ -18,20 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '~/components/ui/alert-dialog'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
+import { formatCost, formatDate, toInputDate } from '~/lib/format'
+import { BackButton } from '~/components/layout/back-button'
+import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
-export function meta({ data }: Route.MetaArgs) {
-  const title = data?.record?.title ?? 'Manutenção'
+export function meta({ loaderData }: Route.MetaArgs) {
+  const title = loaderData?.record?.title ?? 'Manutenção'
   return [{ title: `${title} — Zelus` }]
 }
 
@@ -91,18 +85,6 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   return { error: 'Ação desconhecida.' }
 }
 
-function formatCost(cost: string | null) {
-  if (!cost) return null
-  const num = parseFloat(cost)
-  if (isNaN(num)) return null
-  return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(num)
-}
-
-function toInputDate(date: Date | string) {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toISOString().split('T')[0]
-}
-
 export default function MaintenanceDetailPage({ loaderData, actionData }: Route.ComponentProps) {
   const { record, suppliers, effectiveRole } = loaderData
   const isAdmin = effectiveRole === 'org_admin'
@@ -113,29 +95,14 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
     ...suppliers.map((s) => ({ label: s.name, value: s.id })),
   ]
 
-  const formattedDate = new Date(record.performedAt).toLocaleDateString('pt-PT', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
+  const formattedDate = formatDate(record.performedAt)
 
   return (
     <div>
-      <Button render={<Link to="/maintenance" />} variant="ghost">
-        <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-        Voltar
-      </Button>
+      <BackButton to="/maintenance" />
 
-      {actionData?.error && (
-        <div className="bg-destructive/10 text-destructive mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.error}
-        </div>
-      )}
-      {actionData?.success && (
-        <div className="bg-primary/10 text-primary mt-4 rounded-xl px-4 py-3 text-sm">
-          Alterações guardadas.
-        </div>
-      )}
+      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
+      {actionData?.success && <SuccessBanner className="mt-4">Alterações guardadas.</SuccessBanner>}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-5">
         {/* Left column: Description + details */}
@@ -266,26 +233,15 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                   </Field>
 
                   <div className="flex items-center justify-between pt-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger render={<Button type="button" variant="destructive" />}>
-                        Apagar
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Apagar registo?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação não pode ser revertida. O registo de manutenção será apagado.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <fetcher.Form method="post">
-                            <input type="hidden" name="intent" value="delete" />
-                            <AlertDialogAction type="submit">Apagar</AlertDialogAction>
-                          </fetcher.Form>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <DeleteConfirmDialog
+                      title="Apagar registo?"
+                      description="Esta ação não pode ser revertida. O registo de manutenção será apagado."
+                    >
+                      <fetcher.Form method="post">
+                        <input type="hidden" name="intent" value="delete" />
+                        <AlertDialogAction type="submit">Apagar</AlertDialogAction>
+                      </fetcher.Form>
+                    </DeleteConfirmDialog>
                     <Button type="submit">Guardar</Button>
                   </div>
                 </Form>

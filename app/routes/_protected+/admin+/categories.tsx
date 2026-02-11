@@ -9,6 +9,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel } from '~/components/ui/field'
+import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Categorias — Zelus' }]
@@ -65,16 +66,8 @@ export default function CategoriesPage({ loaderData, actionData }: Route.Compone
     <div>
       <h1 className="text-lg font-semibold tracking-tight">Categorias</h1>
 
-      {actionData?.error && (
-        <div className="bg-destructive/10 text-destructive mt-4 rounded-xl px-4 py-3 text-sm">
-          {actionData.error}
-        </div>
-      )}
-      {actionData?.success && (
-        <div className="bg-primary/10 text-primary mt-4 rounded-xl px-4 py-3 text-sm">
-          Alterações guardadas.
-        </div>
-      )}
+      {actionData?.error && <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>}
+      {actionData?.success && <SuccessBanner className="mt-4">Alterações guardadas.</SuccessBanner>}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2">

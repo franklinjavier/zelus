@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
-    "@hookform/resolvers": "^5.2.2",
     "@hugeicons/core-free-icons": "^3.1.1",
     "@hugeicons/react": "^1.1.5",
     "@neondatabase/serverless": "^1.0.2",
@@ -44,7 +43,6 @@
     "postgres": "^3.4.8",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-hook-form": "^7.71.1",
     "react-router": "7.12.0",
     "remix-flat-routes": "^0.8.5",
     "shadcn": "^3.8.4",
@@ -69,6 +67,7 @@
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "happy-dom": "^20.6.1",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",

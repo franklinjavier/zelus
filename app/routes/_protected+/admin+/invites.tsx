@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { Badge } from '~/components/ui/badge'
 import { Field, FieldLabel } from '~/components/ui/field'
+import { ErrorBanner, SuccessBanner } from '~/components/layout/feedback'
+import { roleLabel } from '~/components/shared/role-badge'
 import {
   Select,
   SelectContent,
@@ -95,15 +97,9 @@ export default function InvitesPage({ loaderData, actionData }: Route.ComponentP
               <CardTitle>Novo convite</CardTitle>
             </CardHeader>
             <CardContent>
-              {actionData?.error && (
-                <div className="bg-destructive/10 text-destructive mb-3 rounded-xl px-3 py-2 text-sm">
-                  {actionData.error}
-                </div>
-              )}
+              {actionData?.error && <ErrorBanner className="mb-3">{actionData.error}</ErrorBanner>}
               {actionData?.success && (
-                <div className="bg-primary/10 text-primary mb-3 rounded-xl px-3 py-2 text-sm">
-                  Convite criado.
-                </div>
+                <SuccessBanner className="mb-3">Convite criado.</SuccessBanner>
               )}
 
               <InviteForm fractions={fractions} />
@@ -234,15 +230,6 @@ function InviteForm({ fractions }: { fractions: { id: string; label: string }[] 
       </Button>
     </Form>
   )
-}
-
-function roleLabel(role: string) {
-  const labels: Record<string, string> = {
-    org_admin: 'Admin Org',
-    fraction_owner_admin: 'Admin Fração',
-    fraction_member: 'Membro',
-  }
-  return labels[role] ?? role
 }
 
 function StatusBadge({ status }: { status: string }) {

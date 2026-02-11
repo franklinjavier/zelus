@@ -13,6 +13,7 @@ bun run dev          # Start dev server
 bun run build        # Production build
 bun run start        # Serve production build (react-router-serve)
 bun run typecheck    # Generate route types + tsc
+bun run test         # Run vitest tests
 ```
 
 Add shadcn/ui components with `bunx shadcn@latest add [component-name]`.
@@ -67,14 +68,22 @@ Each route file can export: `default` (component), `meta`, `loader`, `action`, `
 ```
 app/components/
 ├── ui/           # shadcn/ui primitives — managed by `bunx shadcn`, don't manually edit
+├── auth/         # Auth-related components (GoogleIcon)
 ├── brand/        # Logo, azulejo pattern, CardLink — brand identity components
-├── layout/       # App shell: sidebar, header, page wrappers
+├── layout/       # App shell, sidebar, header, BackButton, EmptyState, feedback banners
+├── shared/       # Cross-feature components (RoleBadge, DeleteConfirmDialog)
 └── [feature]/    # Feature-specific shared components
 ```
 
 - **No loose files** in `components/` root — everything in a subfolder
 - **`ui/`** is shadcn-managed — do not manually create files there
 - Route-specific components stay colocated in `app/routes/`
+
+### Shared Utilities (`app/lib/`)
+
+- **`format.ts`** — Date/currency/initials formatting (`formatDate`, `formatShortDate`, `toInputDate`, `formatCost`, `getInitials`)
+- **`forms.ts`** — Zod-based `validateForm` helper for route actions
+- **`use-filter-params.ts`** — Hook for URL search param filters on list pages
 
 ## UI & Styling
 
@@ -86,6 +95,12 @@ Key facts:
 - **Tailwind CSS v4** with OKLCH color variables in `app/app.css`
 - **Icons**: `@hugeicons/react` + `@hugeicons/core-free-icons`
 - **Target audience**: elderly, non-technical users — h-10 buttons/inputs, no text-xs, 4.5:1+ contrast
+
+## Testing
+
+- **Vitest** with happy-dom environment (`vitest.config.ts`)
+- Test files go in `__tests__/` folders next to the code they test (e.g. `app/lib/__tests__/format.test.ts`)
+- CI runs typecheck + tests on PRs and pushes to main (`.github/workflows/ci.yml`)
 
 ## Code Style
 

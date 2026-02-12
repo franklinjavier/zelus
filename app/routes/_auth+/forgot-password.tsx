@@ -83,11 +83,7 @@ export default function ForgotPasswordPage({ actionData }: Route.ComponentProps)
         <CardContent>
           {!sent && (
             <form method="post" onSubmit={form.handleSubmit(onValid)} className="grid gap-4">
-              {actionData?.error && (
-                <div className="bg-destructive/10 text-destructive rounded-xl px-3 py-2 text-sm">
-                  {actionData.error}
-                </div>
-              )}
+              {/* intentionally no error message (avoid leaking account existence) */}
               <Controller
                 name="email"
                 control={form.control}

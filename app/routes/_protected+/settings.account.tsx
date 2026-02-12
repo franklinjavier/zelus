@@ -19,10 +19,13 @@ type ChangePasswordValues = z.infer<typeof changePasswordSchema>
 
 const deleteAccountSchema = z.object({
   password: z.string().min(1, 'Obrigatório'),
-  confirm: z.literal('APAGAR', { errorMap: () => ({ message: 'Digite APAGAR para confirmar' }) }),
+  confirm: z
+    .string()
+    .min(1, 'Obrigatório')
+    .refine((value) => value === 'APAGAR', { message: 'Digite APAGAR para confirmar' }),
 })
 
-type DeleteAccountValues = z.infer<typeof deleteAccountSchema>
+type DeleteAccountValues = z.input<typeof deleteAccountSchema>
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Conta — Zelus' }]
@@ -103,7 +106,7 @@ export default function AccountSettingsPage({ actionData }: Route.ComponentProps
 
   const deleteForm = useForm<DeleteAccountValues>({
     resolver: zodResolver(deleteAccountSchema),
-    defaultValues: { password: '', confirm: '' as any },
+    defaultValues: { password: '', confirm: '' },
   })
 
   return (
@@ -115,12 +118,12 @@ export default function AccountSettingsPage({ actionData }: Route.ComponentProps
         </p>
       </header>
 
-      {actionData?.error && (
+      {actionData && 'error' in actionData && typeof actionData.error === 'string' && (
         <div className="bg-destructive/10 text-destructive rounded-xl px-3 py-2 text-sm">
           {actionData.error}
         </div>
       )}
-      {actionData?.success && (
+      {actionData && 'success' in actionData && typeof actionData.success === 'string' && (
         <div className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
           {actionData.success}
         </div>

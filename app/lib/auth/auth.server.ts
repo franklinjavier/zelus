@@ -20,13 +20,25 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+
+    // TODO: integrate Resend to send password reset emails in production.
+    sendResetPassword: async ({ user, url }) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[auth] Password reset for ${user.email}: ${url}`)
+      }
+    },
+
+    // Security: revoke sessions on password reset.
+    revokeSessionsOnPasswordReset: true,
   },
 
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
       // TODO: integrate Resend to send verification emails
-      console.log(`[auth] Verification email for ${user.email}: ${url}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[auth] Verification email for ${user.email}: ${url}`)
+      }
     },
   },
 
@@ -41,6 +53,14 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       trustedProviders: ['google'],
+    },
+  },
+
+  user: {
+    deleteUser: {
+      enabled: true,
+      // For now: require password OR a fresh session to delete.
+      // Optionally, in production you can also enable email verification flow.
     },
   },
 

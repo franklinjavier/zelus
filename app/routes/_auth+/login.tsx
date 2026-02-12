@@ -125,12 +125,17 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
             Entrar com Google
           </Button>
 
-          <p className="text-muted-foreground mt-4 text-center text-sm">
-            Não tem conta?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              Criar conta
+          <div className="mt-4 grid gap-2 text-center text-sm">
+            <Link to="/forgot-password" className="text-primary hover:underline">
+              Esqueceu a palavra-passe?
             </Link>
-          </p>
+            <p className="text-muted-foreground">
+              Não tem conta?{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                Criar conta
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

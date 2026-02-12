@@ -41,6 +41,7 @@ const mainNav = [
   { label: 'Frações', to: '/fractions', icon: Building06Icon },
   { label: 'Fornecedores', to: '/suppliers', icon: TruckDeliveryIcon },
   { label: 'Manutenções', to: '/maintenance', icon: WrenchIcon },
+  { label: 'Conta', to: '/settings/account', icon: Settings02Icon },
 ]
 
 const adminNav = [

@@ -1,25 +1,25 @@
-import { useState } from 'react'
-import { data, Form, Link, Outlet, useMatches, useNavigate, href } from 'react-router'
-import { HugeiconsIcon } from '@hugeicons/react'
 import { CopyLinkIcon, MailSend02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { useState } from 'react'
+import { data, Form, href, Link, Outlet, useMatches, useNavigate } from 'react-router'
 
-import type { Route } from './+types/_layout'
-import { orgContext, userContext } from '~/lib/auth/context'
-import { listInvites, revokeInvite } from '~/lib/services/invites'
-import { Button } from '~/components/ui/button'
-import { Badge } from '~/components/ui/badge'
 import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
-import { setToast } from '~/lib/toast.server'
-import { cn } from '~/lib/utils'
 import { roleLabel } from '~/components/shared/role-badge'
+import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
 import {
   Drawer,
-  DrawerPopup,
-  DrawerHeader,
-  DrawerTitle,
   DrawerDescription,
+  DrawerHeader,
+  DrawerPopup,
+  DrawerTitle,
 } from '~/components/ui/drawer'
+import { orgContext, userContext } from '~/lib/auth/context'
+import { listInvites, revokeInvite } from '~/lib/services/invites'
+import { setToast } from '~/lib/toast.server'
+import { cn } from '~/lib/utils'
+import type { Route } from './+types/_layout'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Convites — Zelus' }]
@@ -68,9 +68,6 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
   const { invites } = loaderData
   const navigate = useNavigate()
   const matches = useMatches()
-  const hasChildRoute =
-    matches.length > 0 &&
-    matches[matches.length - 1]?.id !== matches.find((m) => m.pathname === '/admin/invites')?.id
   const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
 
   return (
@@ -177,10 +174,4 @@ function CopyLinkButton({ token }: { token: string }) {
       Copiar link
     </Button>
   )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === 'accepted') return <Badge variant="default">Aceite</Badge>
-  if (status === 'pending') return <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>
-  return <Badge variant="destructive">Expirado</Badge>
 }

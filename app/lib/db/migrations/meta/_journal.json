@@ -43,6 +43,13 @@
       "when": 1771072993771,
       "tag": "0005_add-admin-plugin-fields",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771097685267,
+      "tag": "0006_add-supplier-contact-fields",
+      "breakpoints": true
     }
   ]
 }

@@ -74,6 +74,8 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       {
         name,
         category,
+        contactName: (formData.get('contactName') as string) || null,
+        contactPhone: (formData.get('contactPhone') as string) || null,
         phone: (formData.get('phone') as string) || null,
         email: (formData.get('email') as string) || null,
         website: (formData.get('website') as string) || null,
@@ -124,55 +126,93 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                 <Form method="post" className="grid gap-4">
                   <input type="hidden" name="intent" value="update" />
 
-                  <Field>
-                    <FieldLabel htmlFor="name">
-                      Nome <span className="text-destructive">*</span>
-                    </FieldLabel>
-                    <Input id="name" name="name" defaultValue={supplier.name} required />
-                  </Field>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                      <FieldLabel htmlFor="name">
+                        Nome <span className="text-destructive">*</span>
+                      </FieldLabel>
+                      <Input id="name" name="name" defaultValue={supplier.name} required />
+                    </Field>
 
-                  <Field>
-                    <FieldLabel htmlFor="category">
-                      Categoria <span className="text-destructive">*</span>
-                    </FieldLabel>
-                    <Select name="category" defaultValue={supplier.category} items={categoryItems}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoryItems.map((item) => (
-                          <SelectItem key={item.value} value={item.value}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
+                    <Field>
+                      <FieldLabel htmlFor="category">
+                        Categoria <span className="text-destructive">*</span>
+                      </FieldLabel>
+                      <Select
+                        name="category"
+                        defaultValue={supplier.category}
+                        items={categoryItems}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryItems.map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
 
-                  <Field>
-                    <FieldLabel htmlFor="phone">Telefone</FieldLabel>
-                    <Input id="phone" name="phone" type="tel" defaultValue={supplier.phone ?? ''} />
-                  </Field>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                      <FieldLabel htmlFor="contactName">Responsável</FieldLabel>
+                      <Input
+                        id="contactName"
+                        name="contactName"
+                        defaultValue={supplier.contactName ?? ''}
+                        placeholder="Nome do responsável"
+                      />
+                    </Field>
 
-                  <Field>
-                    <FieldLabel htmlFor="email">E-mail</FieldLabel>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      defaultValue={supplier.email ?? ''}
-                    />
-                  </Field>
+                    <Field>
+                      <FieldLabel htmlFor="contactPhone">Telefone do responsável</FieldLabel>
+                      <Input
+                        id="contactPhone"
+                        name="contactPhone"
+                        type="tel"
+                        defaultValue={supplier.contactPhone ?? ''}
+                        placeholder="+351 ..."
+                      />
+                    </Field>
+                  </div>
 
-                  <Field>
-                    <FieldLabel htmlFor="website">Website</FieldLabel>
-                    <Input id="website" name="website" defaultValue={supplier.website ?? ''} />
-                  </Field>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                      <FieldLabel htmlFor="phone">Telefone geral</FieldLabel>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        defaultValue={supplier.phone ?? ''}
+                      />
+                    </Field>
 
-                  <Field>
-                    <FieldLabel htmlFor="address">Morada</FieldLabel>
-                    <Input id="address" name="address" defaultValue={supplier.address ?? ''} />
-                  </Field>
+                    <Field>
+                      <FieldLabel htmlFor="email">E-mail</FieldLabel>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        defaultValue={supplier.email ?? ''}
+                      />
+                    </Field>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                      <FieldLabel htmlFor="website">Website</FieldLabel>
+                      <Input id="website" name="website" defaultValue={supplier.website ?? ''} />
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="address">Morada</FieldLabel>
+                      <Input id="address" name="address" defaultValue={supplier.address ?? ''} />
+                    </Field>
+                  </div>
 
                   <Field>
                     <FieldLabel htmlFor="notes">Notas</FieldLabel>
@@ -212,6 +252,17 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                       <Badge variant="secondary">{translateCategory(supplier.category)}</Badge>
                     </dd>
                   </div>
+                  {supplier.contactName && (
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted-foreground text-sm">Responsável</dt>
+                      <dd className="text-sm">
+                        {supplier.contactName}
+                        {supplier.contactPhone && (
+                          <span className="text-muted-foreground"> · {supplier.contactPhone}</span>
+                        )}
+                      </dd>
+                    </div>
+                  )}
                   {supplier.phone && (
                     <div className="flex items-center justify-between">
                       <dt className="text-muted-foreground text-sm">Telefone</dt>

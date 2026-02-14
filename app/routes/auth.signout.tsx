@@ -1,4 +1,4 @@
-import { redirect } from 'react-router'
+import { href, redirect } from 'react-router'
 
 import type { Route } from './+types/auth.signout'
 import { auth } from '~/lib/auth/auth.server'
@@ -14,5 +14,5 @@ export async function action({ request }: Route.ActionArgs) {
     headers.append('set-cookie', cookie)
   }
 
-  return redirect('/login', { headers })
+  return redirect(href('/login'), { headers })
 }

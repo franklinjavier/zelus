@@ -1,4 +1,4 @@
-import { redirect, type RouterContextProvider } from 'react-router'
+import { href, redirect, type RouterContextProvider } from 'react-router'
 import { eq, and } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
@@ -29,7 +29,7 @@ type OrgResult = AuthResult & {
  */
 export function requireAuth(context: RbacContext): AuthResult {
   const session = context.get(sessionContext)
-  if (!session) throw redirect('/login')
+  if (!session) throw redirect(href('/login'))
   return { session, user: session.user }
 }
 
@@ -41,7 +41,7 @@ export async function requireOrgMember(context: RbacContext): Promise<OrgResult>
   const { session, user } = requireAuth(context)
 
   const activeOrgId = session.session.activeOrganizationId
-  if (!activeOrgId) throw redirect('/onboarding')
+  if (!activeOrgId) throw redirect(href('/onboarding'))
 
   const [memberRow] = await db
     .select()
@@ -49,7 +49,7 @@ export async function requireOrgMember(context: RbacContext): Promise<OrgResult>
     .where(and(eq(member.organizationId, activeOrgId), eq(member.userId, user.id)))
     .limit(1)
 
-  if (!memberRow) throw redirect('/onboarding')
+  if (!memberRow) throw redirect(href('/onboarding'))
 
   const [org] = await db
     .select()
@@ -57,7 +57,7 @@ export async function requireOrgMember(context: RbacContext): Promise<OrgResult>
     .where(eq(organization.id, activeOrgId))
     .limit(1)
 
-  if (!org) throw redirect('/onboarding')
+  if (!org) throw redirect(href('/onboarding'))
 
   const orgRole = memberRow.role as 'owner' | 'admin' | 'member'
 

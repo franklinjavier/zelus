@@ -47,6 +47,5 @@ export function getTrustedOrigins() {
     origins.add(process.env.APP_URL)
   }
 
-  console.log('trusted origins', Array.from(origins).flat().toString())
   return Array.from(origins)
 }

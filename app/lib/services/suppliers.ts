@@ -9,6 +9,8 @@ export async function createSupplier(
   data: {
     name: string
     category: string
+    contactName?: string | null
+    contactPhone?: string | null
     phone?: string | null
     email?: string | null
     website?: string | null
@@ -23,6 +25,8 @@ export async function createSupplier(
       orgId,
       name: data.name,
       category: data.category,
+      contactName: data.contactName ?? null,
+      contactPhone: data.contactPhone ?? null,
       phone: data.phone ?? null,
       email: data.email ?? null,
       website: data.website ?? null,
@@ -49,6 +53,8 @@ export async function listSuppliers(orgId: string, filters?: { category?: string
       id: suppliers.id,
       name: suppliers.name,
       category: suppliers.category,
+      contactName: suppliers.contactName,
+      contactPhone: suppliers.contactPhone,
       phone: suppliers.phone,
       email: suppliers.email,
       website: suppliers.website,
@@ -93,6 +99,8 @@ export async function updateSupplier(
   data: {
     name?: string
     category?: string
+    contactName?: string | null
+    contactPhone?: string | null
     phone?: string | null
     email?: string | null
     website?: string | null

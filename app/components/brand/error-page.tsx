@@ -1,3 +1,4 @@
+import { href, Link } from 'react-router'
 import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 
@@ -6,16 +7,11 @@ type ErrorProps = {
   title: string
   message: string
   stack?: string
-  /**
-   * Where the primary recovery button should take the user.
-   * Defaults to public home.
-   */
-  homeHref?: string
 }
 
-export function ErrorContent({ status, title, message, stack, homeHref = '/' }: ErrorProps) {
+export function ErrorContent({ status, title, message, stack }: ErrorProps) {
   return (
-    <div className="flex flex-1 items-center justify-center px-6 py-20">
+    <div className="relative z-10 flex flex-1 items-center justify-center px-6 py-20">
       <div className="max-w-md text-center">
         <div className="mb-6 flex flex-col items-center gap-3">
           <ZelusLogoTile size={56} className="text-primary" />
@@ -28,18 +24,12 @@ export function ErrorContent({ status, title, message, stack, homeHref = '/' }: 
         <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
         <p className="text-muted-foreground mt-2">{message}</p>
         <div className="mt-8">
-          <a
-            href={homeHref}
+          <Link
+            to={href('/dashboard')}
             className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center rounded-full px-6 text-sm font-medium"
-            onClick={(e) => {
-              // Some router/error-boundary states can swallow client-side navigation.
-              // Force a hard navigation to guarantee the user can recover.
-              e.preventDefault()
-              window.location.assign(homeHref)
-            }}
           >
             Voltar ao início
-          </a>
+          </Link>
         </div>
         {stack && (
           <pre className="text-muted-foreground mt-8 max-h-64 overflow-auto rounded-xl border p-4 text-left text-xs">

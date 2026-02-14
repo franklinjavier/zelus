@@ -1,7 +1,8 @@
-import { data, Form, Link, redirect, useNavigation, useSearchParams } from 'react-router'
+import { data, Form, href, Link, redirect, useNavigation, useSearchParams } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/forgot-password'
+import { Turnstile } from '~/components/auth/turnstile'
 import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { Field, FieldError, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { auth } from '~/lib/auth/auth.server'
-import { validateForm } from '~/lib/forms'
+import { validateForm, withCaptchaToken } from '~/lib/forms'
 
 const schema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -20,7 +21,8 @@ export function meta(_args: Route.MetaArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const result = validateForm(await request.formData(), schema)
+  const formData = await request.formData()
+  const result = validateForm(formData, schema)
   if ('errors' in result) return data({ errors: result.errors }, { status: 400 })
 
   const { email } = result.data
@@ -30,15 +32,15 @@ export async function action({ request }: Route.ActionArgs) {
     await auth.api.requestPasswordReset({
       body: {
         email,
-        redirectTo: '/reset-password',
+        redirectTo: href('/reset-password'),
       },
-      headers: request.headers,
+      headers: withCaptchaToken(formData, request),
     })
   } catch {
     // Swallow — never reveal whether the email exists.
   }
 
-  return redirect('/forgot-password?sent=1')
+  return redirect(`${href('/forgot-password')}?sent=1`)
 }
 
 export default function ForgotPasswordPage({ actionData }: Route.ComponentProps) {
@@ -79,6 +81,7 @@ export default function ForgotPasswordPage({ actionData }: Route.ComponentProps)
                 />
                 {errors?.email && <FieldError>{errors.email}</FieldError>}
               </Field>
+              <Turnstile />
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'A enviar…' : 'Enviar link'}
               </Button>
@@ -86,7 +89,7 @@ export default function ForgotPasswordPage({ actionData }: Route.ComponentProps)
           )}
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            <Link to="/login" className="text-primary hover:underline">
+            <Link to={href('/login')} className="text-primary hover:underline">
               Voltar ao login
             </Link>
           </p>

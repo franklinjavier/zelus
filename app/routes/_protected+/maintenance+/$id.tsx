@@ -1,4 +1,4 @@
-import { data, redirect, Form, useFetcher, Link } from 'react-router'
+import { data, href, redirect, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Calendar03Icon } from '@hugeicons/core-free-icons'
 
@@ -77,7 +77,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (intent === 'delete') {
     try {
       await deleteRecord(orgId, params.id, user.id)
-      return redirect('/maintenance')
+      return redirect(href('/maintenance'))
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao apagar registo.' }
     }
@@ -100,7 +100,7 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
 
   return (
     <div>
-      <BackButton to="/maintenance" />
+      <BackButton to={href('/maintenance')} />
 
       {actionData && 'error' in actionData && (
         <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
@@ -136,7 +136,10 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                   <dt className="text-muted-foreground text-sm">Fornecedor</dt>
                   <dd className="text-sm">
                     {record.supplierName && record.supplierId ? (
-                      <Link to={`/suppliers/${record.supplierId}`} className="text-primary">
+                      <Link
+                        to={href('/suppliers/:id', { id: record.supplierId })}
+                        className="text-primary"
+                      >
                         {record.supplierName}
                       </Link>
                     ) : (
@@ -264,7 +267,10 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                     <dt className="text-muted-foreground text-sm">Fornecedor</dt>
                     <dd className="text-sm">
                       {record.supplierName && record.supplierId ? (
-                        <Link to={`/suppliers/${record.supplierId}`} className="text-primary">
+                        <Link
+                          to={href('/suppliers/:id', { id: record.supplierId })}
+                          className="text-primary"
+                        >
                           {record.supplierName}
                         </Link>
                       ) : (

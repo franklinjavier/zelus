@@ -1,11 +1,11 @@
 import { betterAuth } from 'better-auth'
-import { oneTap, organization } from 'better-auth/plugins'
+import { admin, captcha, oneTap, organization } from 'better-auth/plugins'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { eq } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import * as schema from '~/lib/db/schema'
-import { getAppUrl, getTrustedOrigins } from '~/lib/get-app-url'
+import { getAppUrl, getTrustedOrigins } from '~/lib/misc/app-url'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -65,6 +65,14 @@ export const auth = betterAuth({
   },
 
   plugins: [
+    admin({
+      defaultRole: 'user',
+      adminRoles: ['admin'],
+    }),
+    captcha({
+      provider: 'cloudflare-turnstile',
+      secretKey: process.env.TURNSTILE_SECRET_KEY!,
+    }),
     oneTap(),
     organization({
       allowUserToCreateOrganization: true,

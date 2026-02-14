@@ -1,4 +1,4 @@
-import { data, redirect, useFetcher } from 'react-router'
+import { data, redirect, useFetcher, href } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/org'
@@ -60,7 +60,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   const orgData = await res.json()
-  throw redirect(`/onboarding/fractions?orgId=${orgData.id}`, {
+  throw redirect(`${href('/onboarding/fractions')}?orgId=${orgData.id}`, {
     headers: forwardCookies(res),
   })
 }

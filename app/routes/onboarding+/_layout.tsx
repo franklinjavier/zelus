@@ -1,4 +1,4 @@
-import { Outlet, redirect, useLocation } from 'react-router'
+import { Outlet, redirect, useLocation, href } from 'react-router'
 import { eq } from 'drizzle-orm'
 
 import type { Route } from './+types/_layout'
@@ -30,8 +30,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   // If user already has an active org and is on the initial steps, redirect to dashboard
   if (session.session.activeOrganizationId) {
-    if (pathname === '/onboarding' || pathname === '/onboarding/org') {
-      throw redirect('/dashboard')
+    if (pathname === href('/onboarding') || pathname === href('/onboarding/org')) {
+      throw redirect(href('/dashboard'))
     }
     // On /onboarding/fractions or /onboarding/done, allow through — wizard in progress
     return null
@@ -50,22 +50,22 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       asResponse: true,
       headers: request.headers,
     })
-    throw redirect('/dashboard', { headers: forwardCookies(res) })
+    throw redirect(href('/dashboard'), { headers: forwardCookies(res) })
   }
 
   return null
 }
 
 const stepMeta: Record<string, { title: string; description: string }> = {
-  '/onboarding/org': {
+  [href('/onboarding/org')]: {
     title: 'Configurar condomínio',
     description: 'Passo 1 de 3 — Dados do condomínio',
   },
-  '/onboarding/fractions': {
+  [href('/onboarding/fractions')]: {
     title: 'Adicionar frações',
     description: 'Passo 2 de 3 — Frações do edifício',
   },
-  '/onboarding/done': {
+  [href('/onboarding/done')]: {
     title: 'Tudo pronto!',
     description: 'Passo 3 de 3 — Configuração concluída',
   },
@@ -73,7 +73,7 @@ const stepMeta: Record<string, { title: string; description: string }> = {
 
 export default function OnboardingLayout() {
   const { pathname } = useLocation()
-  const step = stepMeta[pathname] ?? stepMeta['/onboarding/org']
+  const step = stepMeta[pathname] ?? stepMeta[href('/onboarding/org')]
 
   return (
     <div className="flex min-h-svh items-center justify-center px-4">

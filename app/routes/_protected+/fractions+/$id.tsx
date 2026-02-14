@@ -1,4 +1,4 @@
-import { data, redirect, Form, useFetcher } from 'react-router'
+import { data, href, redirect, Form, useFetcher } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { UserAdd01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
 
@@ -81,7 +81,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     try {
       await deleteFraction(orgId, params.id, user.id)
-      return redirect('/fractions')
+      return redirect(href('/fractions'))
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao apagar fração.' }
     }
@@ -116,136 +116,153 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 export default function FractionDetailPage({ loaderData, actionData }: Route.ComponentProps) {
   const { fraction, members, isAdmin, canInvite } = loaderData
   const fetcher = useFetcher()
+  const hasLeftColumn = isAdmin || canInvite
 
   return (
     <div>
-      <BackButton to="/fractions" />
+      <BackButton to={href('/fractions')} />
 
       {actionData && 'error' in actionData && (
         <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
       )}
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-5">
-        {/* Left column: Info/Edit + Invite */}
-        <div className="flex flex-col gap-5 lg:col-span-2">
-          {isAdmin && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Dados da fração</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form method="post" className="grid gap-4">
-                  <input type="hidden" name="intent" value="update" />
-                  <Field>
-                    <FieldLabel htmlFor="label">Nome</FieldLabel>
-                    <Input id="label" name="label" defaultValue={fraction.label} required />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="description">Descrição</FieldLabel>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      defaultValue={fraction.description ?? ''}
-                      rows={3}
-                    />
-                  </Field>
-                  <div className="flex items-center justify-between pt-2">
-                    <DeleteConfirmDialog
-                      title="Apagar fração?"
-                      description="Esta ação não pode ser revertida. Todos os dados da fração serão apagados."
-                    >
-                      <fetcher.Form method="post">
-                        <input type="hidden" name="intent" value="delete" />
-                        <AlertDialogAction type="submit">Apagar</AlertDialogAction>
-                      </fetcher.Form>
-                    </DeleteConfirmDialog>
-                    <Button type="submit">Guardar</Button>
-                  </div>
-                </Form>
-              </CardContent>
-            </Card>
-          )}
-
-          {canInvite && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Convidar membro</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form method="post" className="grid gap-4">
-                  <input type="hidden" name="intent" value="invite-member" />
-                  <Field>
-                    <FieldLabel htmlFor="invite-email">E-mail</FieldLabel>
-                    <Input
-                      id="invite-email"
-                      name="email"
-                      type="email"
-                      placeholder="email@exemplo.com"
-                      required
-                    />
-                  </Field>
-                  <FractionRoleSelect />
-                  <Button type="submit">
-                    <HugeiconsIcon
-                      icon={UserAdd01Icon}
-                      data-icon="inline-start"
-                      size={16}
-                      strokeWidth={2}
-                    />
-                    Enviar convite
-                  </Button>
-                </Form>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Right column: Members */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Membros
-                <span className="text-muted-foreground ml-2 text-sm font-normal">
-                  {members.length}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {members.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-10">
-                  <div className="bg-muted flex size-12 items-center justify-center rounded-2xl">
-                    <HugeiconsIcon
-                      icon={UserMultiple02Icon}
-                      size={20}
-                      strokeWidth={1.5}
-                      className="text-muted-foreground"
-                    />
-                  </div>
-                  <p className="text-muted-foreground text-sm">Nenhum membro associado</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {members.map((m) => (
-                    <div key={m.id} className="flex items-center gap-3 px-5 py-3.5">
-                      <MemberAvatar name={m.userName} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{m.userName}</p>
-                        <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <RoleBadge role={m.role} />
-                        <StatusBadge status={m.status} />
-                      </div>
+      {hasLeftColumn && (
+        <div className="mt-6 grid gap-5 lg:grid-cols-5">
+          {/* Left column: Info/Edit + Invite */}
+          <div className="flex flex-col gap-5 lg:col-span-2">
+            {isAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dados da fração</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form method="post" className="grid gap-4">
+                    <input type="hidden" name="intent" value="update" />
+                    <Field>
+                      <FieldLabel htmlFor="label">Nome</FieldLabel>
+                      <Input id="label" name="label" defaultValue={fraction.label} required />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="description">Descrição</FieldLabel>
+                      <Textarea
+                        id="description"
+                        name="description"
+                        defaultValue={fraction.description ?? ''}
+                        rows={3}
+                      />
+                    </Field>
+                    <div className="flex items-center justify-between pt-2">
+                      <DeleteConfirmDialog
+                        title="Apagar fração?"
+                        description="Esta ação não pode ser revertida. Todos os dados da fração serão apagados."
+                      >
+                        <fetcher.Form method="post">
+                          <input type="hidden" name="intent" value="delete" />
+                          <AlertDialogAction type="submit">Apagar</AlertDialogAction>
+                        </fetcher.Form>
+                      </DeleteConfirmDialog>
+                      <Button type="submit">Guardar</Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
+
+            {canInvite && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Convidar membro</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form method="post" className="grid gap-4">
+                    <input type="hidden" name="intent" value="invite-member" />
+                    <Field>
+                      <FieldLabel htmlFor="invite-email">E-mail</FieldLabel>
+                      <Input
+                        id="invite-email"
+                        name="email"
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        required
+                      />
+                    </Field>
+                    <FractionRoleSelect />
+                    <Button type="submit">
+                      <HugeiconsIcon
+                        icon={UserAdd01Icon}
+                        data-icon="inline-start"
+                        size={16}
+                        strokeWidth={2}
+                      />
+                      Enviar convite
+                    </Button>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right column: Members */}
+          <div className="lg:col-span-3">
+            <MembersCard members={members} />
+          </div>
         </div>
-      </div>
+      )}
+
+      {!hasLeftColumn && (
+        <div className="mt-6">
+          <MembersCard members={members} />
+        </div>
+      )}
     </div>
+  )
+}
+
+function MembersCard({
+  members,
+}: {
+  members: { id: string; userName: string; userEmail: string; role: string; status: string }[]
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          Membros
+          <span className="text-muted-foreground ml-2 text-sm font-normal">{members.length}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {members.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-10">
+            <div className="bg-muted flex size-12 items-center justify-center rounded-2xl">
+              <HugeiconsIcon
+                icon={UserMultiple02Icon}
+                size={20}
+                strokeWidth={1.5}
+                className="text-muted-foreground"
+              />
+            </div>
+            <p className="text-muted-foreground text-sm">Nenhum membro associado</p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {members.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 px-5 py-3.5">
+                <MemberAvatar name={m.userName} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{m.userName}</p>
+                  <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <RoleBadge role={m.role} />
+                  <StatusBadge status={m.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -258,7 +275,7 @@ function MemberAvatar({ name }: { name: string }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === 'approved') return <Badge variant="outline">Aprovado</Badge>
+  if (status === 'approved') return null
   if (status === 'pending') return <Badge variant="secondary">Pendente</Badge>
   return <Badge variant="destructive">Rejeitado</Badge>
 }

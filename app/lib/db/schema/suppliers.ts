@@ -18,6 +18,8 @@ export const suppliers = pgTable(
       .references(() => organization.id),
     name: text('name').notNull(),
     category: text('category').notNull(),
+    contactName: text('contact_name'),
+    contactPhone: text('contact_phone'),
     phone: text('phone'),
     email: text('email'),
     website: text('website'),

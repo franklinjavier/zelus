@@ -16,7 +16,7 @@ export function CardLink({
     <Link
       to={to}
       className={cn(
-        'group bg-card ring-foreground/10 hover:ring-primary/20 relative flex flex-col justify-between overflow-hidden rounded-2xl p-5 ring-1 transition-colors',
+        'group bg-card ring-foreground/10 hover:ring-primary/20 hover:bg-primary/[0.03] relative flex flex-col justify-between overflow-hidden rounded-2xl p-5 ring-1 transition-all duration-300 ease-out hover:-translate-y-0.5',
         className,
       )}
     >

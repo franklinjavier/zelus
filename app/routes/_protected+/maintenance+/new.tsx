@@ -1,4 +1,4 @@
-import { redirect, useNavigation, Form, Link } from 'react-router'
+import { href, redirect, useNavigation, Form, Link } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/new'
@@ -66,7 +66,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       user.id,
     )
 
-    return redirect(`/maintenance/${record.id}`)
+    return redirect(href('/maintenance/:id', { id: record.id }))
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao criar registo.' }
   }
@@ -84,7 +84,7 @@ export default function NewMaintenancePage({ loaderData, actionData }: Route.Com
 
   return (
     <div className="mx-auto max-w-md">
-      <BackButton to="/maintenance" />
+      <BackButton to={href('/maintenance')} />
 
       <Card className="mt-6">
         <CardHeader>
@@ -143,7 +143,7 @@ export default function NewMaintenancePage({ loaderData, actionData }: Route.Com
             </Field>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button render={<Link to="/maintenance" />} variant="outline">
+              <Button render={<Link to={href('/maintenance')} />} variant="outline">
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>

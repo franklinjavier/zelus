@@ -1,4 +1,4 @@
-import { data, Link, useFetcher } from 'react-router'
+import { data, href, Link, useFetcher } from 'react-router'
 import { z } from 'zod'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -11,7 +11,7 @@ import {
 import type { Route } from './+types/index'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { listFractions } from '~/lib/services/fractions'
-import { requestAssociation } from '~/lib/services/associations'
+import { requestAssociation, getUserAssociatedFractionIds } from '~/lib/services/associations'
 import { Button } from '~/components/ui/button'
 import { CardLink } from '~/components/brand/card-link'
 import { EmptyState } from '~/components/layout/empty-state'
@@ -23,9 +23,20 @@ export function meta(_args: Route.MetaArgs) {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { orgId, effectiveRole } = context.get(orgContext)
+  const user = context.get(userContext)
   const fractionsList = await listFractions(orgId)
 
-  return { fractions: fractionsList, effectiveRole }
+  const isAdmin = effectiveRole === 'org_admin'
+  // For non-admins, fetch which fractions they already have an association with
+  const userAssociations = isAdmin
+    ? new Map<string, string>()
+    : await getUserAssociatedFractionIds(orgId, user.id)
+
+  return {
+    fractions: fractionsList,
+    effectiveRole,
+    userAssociations: Object.fromEntries(userAssociations),
+  }
 }
 
 const requestSchema = z.object({
@@ -52,7 +63,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export default function FractionsPage({ loaderData }: Route.ComponentProps) {
-  const { fractions, effectiveRole } = loaderData
+  const { fractions, effectiveRole, userAssociations } = loaderData
   const isAdmin = effectiveRole === 'org_admin'
 
   return (
@@ -65,7 +76,7 @@ export default function FractionsPage({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to="/fractions/new" />}>
+          <Button render={<Link to={href('/fractions/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Nova fração
           </Button>
@@ -75,7 +86,7 @@ export default function FractionsPage({ loaderData }: Route.ComponentProps) {
       {fractions.length === 0 ? (
         <EmptyState icon={Building06Icon} message="Nenhuma fração criada">
           {isAdmin && (
-            <Button render={<Link to="/fractions/new" />} variant="outline">
+            <Button render={<Link to={href('/fractions/new')} />} variant="outline">
               Criar primeira fração
             </Button>
           )}
@@ -83,7 +94,12 @@ export default function FractionsPage({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {fractions.map((fraction) => (
-            <FractionTile key={fraction.id} fraction={fraction} isAdmin={isAdmin} />
+            <FractionTile
+              key={fraction.id}
+              fraction={fraction}
+              isAdmin={isAdmin}
+              associationStatus={userAssociations[fraction.id] ?? null}
+            />
           ))}
         </div>
       )}
@@ -94,6 +110,7 @@ export default function FractionsPage({ loaderData }: Route.ComponentProps) {
 function FractionTile({
   fraction,
   isAdmin,
+  associationStatus,
 }: {
   fraction: {
     id: string
@@ -102,12 +119,13 @@ function FractionTile({
     memberCount: number
   }
   isAdmin: boolean
+  associationStatus: string | null
 }) {
   const fetcher = useFetcher()
   const isRequesting = fetcher.state !== 'idle'
 
   return (
-    <CardLink to={`/fractions/${fraction.id}`}>
+    <CardLink to={href('/fractions/:id', { id: fraction.id })}>
       <div>
         <p className="font-medium">{fraction.label}</p>
         {fraction.description && (
@@ -119,7 +137,23 @@ function FractionTile({
           <HugeiconsIcon icon={UserMultiple02Icon} size={14} strokeWidth={2} />
           {fraction.memberCount} {fraction.memberCount === 1 ? 'membro' : 'membros'}
         </span>
-        {!isAdmin ? (
+        {isAdmin ? (
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            size={16}
+            strokeWidth={2}
+            className="text-muted-foreground"
+          />
+        ) : associationStatus === 'approved' ? (
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            size={16}
+            strokeWidth={2}
+            className="text-muted-foreground"
+          />
+        ) : associationStatus === 'pending' ? (
+          <span className="text-muted-foreground text-sm">Pendente</span>
+        ) : (
           <fetcher.Form method="post" onClick={(e) => e.stopPropagation()}>
             <input type="hidden" name="intent" value="request-association" />
             <input type="hidden" name="fractionId" value={fraction.id} />
@@ -132,13 +166,6 @@ function FractionTile({
               {isRequesting ? 'A solicitar…' : 'Associar-me'}
             </Button>
           </fetcher.Form>
-        ) : (
-          <HugeiconsIcon
-            icon={ArrowRight01Icon}
-            size={16}
-            strokeWidth={2}
-            className="text-muted-foreground"
-          />
         )}
       </div>
     </CardLink>

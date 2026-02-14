@@ -1,3 +1,5 @@
+import { href } from 'react-router'
+
 import type { Route } from './+types'
 import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
@@ -28,7 +30,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <a
-              href="/login"
+              href={href('/login')}
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-full px-5 text-sm font-medium"
             >
               Começar

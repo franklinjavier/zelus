@@ -126,6 +126,15 @@ body {
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+@keyframes azulejo-drift {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 48px 48px;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,4 +1,4 @@
-import { redirect, useNavigation, Form, Link } from 'react-router'
+import { href, redirect, useNavigation, Form, Link } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/new'
@@ -56,7 +56,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   await createSupplier(orgId, parsed.data, user.id)
-  return redirect('/suppliers')
+  return redirect(href('/suppliers'))
 }
 
 export default function NewSupplierPage({ loaderData, actionData }: Route.ComponentProps) {
@@ -68,7 +68,7 @@ export default function NewSupplierPage({ loaderData, actionData }: Route.Compon
 
   return (
     <div className="mx-auto max-w-md">
-      <BackButton to="/suppliers" />
+      <BackButton to={href('/suppliers')} />
 
       <Card className="mt-6">
         <CardHeader>
@@ -134,7 +134,7 @@ export default function NewSupplierPage({ loaderData, actionData }: Route.Compon
             </Field>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button render={<Link to="/suppliers" />} variant="outline">
+              <Button render={<Link to={href('/suppliers')} />} variant="outline">
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>

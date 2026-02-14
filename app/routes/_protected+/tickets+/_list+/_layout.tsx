@@ -1,6 +1,6 @@
 import { Add01Icon, LockIcon, Ticket02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Link } from 'react-router'
+import { href, Link, Outlet, useMatches, useNavigate } from 'react-router'
 
 import { priorityLabels } from '~/components/tickets/priority-indicator'
 import { statusLabels, type Status } from '~/components/tickets/status-badge'
@@ -18,13 +18,20 @@ import { orgContext, userContext } from '~/lib/auth/context'
 import { listCategories } from '~/lib/services/categories'
 import { translateCategory } from '~/lib/category-labels'
 import { listTickets } from '~/lib/services/tickets'
-import type { Route } from './+types/index'
+import type { Route } from './+types/_layout'
 import { formatShortDate, getInitials } from '~/lib/format'
 import { useFilterParams } from '~/lib/use-filter-params'
 import { EmptyState } from '~/components/layout/empty-state'
+import {
+  Drawer,
+  DrawerPopup,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '~/components/ui/drawer'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Ocorrencias — Zelus' }]
+  return [{ title: 'Ocorrências — Zelus' }]
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -56,9 +63,14 @@ const statusDotColors: Record<Status, string> = {
   closed: 'bg-muted-foreground',
 }
 
-export default function TicketsPage({ loaderData }: Route.ComponentProps) {
+export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
   const { tickets, categories } = loaderData
   const { searchParams, setFilter } = useFilterParams()
+  const navigate = useNavigate()
+  const matches = useMatches()
+  const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
+
+  const categoryLabelMap = new Map(categories.map((c) => [c.key, translateCategory(c.key)]))
 
   const grouped = statusOrder
     .map((status) => ({
@@ -89,14 +101,14 @@ export default function TicketsPage({ loaderData }: Route.ComponentProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">Ocorrencias</h1>
+          <h1 className="text-lg font-semibold tracking-tight">Ocorrências</h1>
           <p className="text-muted-foreground text-sm">
-            {tickets.length} {tickets.length === 1 ? 'ocorrencia' : 'ocorrencias'}
+            {tickets.length} {tickets.length === 1 ? 'ocorrência' : 'ocorrências'}
           </p>
         </div>
-        <Button render={<Link to="/tickets/new" />}>
+        <Button render={<Link to={href('/tickets/new')} />}>
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-          Nova ocorrencia
+          Nova ocorrência
         </Button>
       </div>
 
@@ -158,7 +170,7 @@ export default function TicketsPage({ loaderData }: Route.ComponentProps) {
 
       {/* Ticket list */}
       {tickets.length === 0 ? (
-        <EmptyState icon={Ticket02Icon} message="Nenhuma ocorrencia encontrada" />
+        <EmptyState icon={Ticket02Icon} message="Nenhuma ocorrência encontrada" />
       ) : (
         <div className="mt-6 grid gap-5">
           {grouped.map(({ status, tickets: groupTickets }) => (
@@ -175,7 +187,7 @@ export default function TicketsPage({ loaderData }: Route.ComponentProps) {
                   {groupTickets.map((ticket) => (
                     <Link
                       key={ticket.id}
-                      to={`/tickets/${ticket.id}`}
+                      to={href('/tickets/:id', { id: ticket.id })}
                       className="hover:bg-accent flex items-center gap-3 px-5 py-3.5 transition-colors"
                     >
                       {/* Left side */}
@@ -196,8 +208,8 @@ export default function TicketsPage({ loaderData }: Route.ComponentProps) {
 
                       {/* Right side */}
                       <div className="flex shrink-0 items-center gap-3">
-                        {ticket.category && (
-                          <Badge variant="outline">{translateCategory(ticket.category)}</Badge>
+                        {ticket.category && categoryLabelMap.has(ticket.category) && (
+                          <Badge variant="outline">{categoryLabelMap.get(ticket.category)}</Badge>
                         )}
                         {ticket.fractionLabel && (
                           <span className="text-muted-foreground text-sm">
@@ -219,16 +231,26 @@ export default function TicketsPage({ loaderData }: Route.ComponentProps) {
           ))}
         </div>
       )}
+
+      <Drawer
+        open={isDrawerOpen}
+        onOpenChange={(open) => {
+          if (!open) navigate(href('/tickets'))
+        }}
+      >
+        <DrawerPopup>
+          <DrawerHeader>
+            <DrawerTitle>Nova ocorrência</DrawerTitle>
+            <DrawerDescription>Preencha os dados para criar uma nova ocorrência.</DrawerDescription>
+          </DrawerHeader>
+          <Outlet />
+        </DrawerPopup>
+      </Drawer>
     </div>
   )
 }
 
-/**
- * Icon-only priority indicator for the list view.
- * Reuses the same icon/color config as PriorityIndicator but without the label text.
- */
 function PriorityIndicatorIcon({ priority }: { priority: string | null }) {
-  // Import the icon configs inline to avoid coupling to internal exports
   const key = priority ?? ''
   const config: Record<string, { className: string }> = {
     urgent: { className: 'text-red-600' },
@@ -239,6 +261,5 @@ function PriorityIndicatorIcon({ priority }: { priority: string | null }) {
   }
   const { className } = config[key] ?? config['']
 
-  // Use a simple dot for compact display
   return <span className={`inline-block size-2.5 rounded-full ${className} bg-current`} />
 }

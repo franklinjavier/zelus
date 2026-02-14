@@ -1,4 +1,4 @@
-import { redirect } from 'react-router'
+import { href, redirect } from 'react-router'
 import { eq, and } from 'drizzle-orm'
 
 import type { Route } from '../../+types/root'
@@ -32,11 +32,11 @@ export const orgMemberMiddleware: AnyMiddlewareFunction = async (
   next: () => Promise<Response>,
 ) => {
   const session = context.get(sessionContext)
-  if (!session) throw redirect('/login')
+  if (!session) throw redirect(href('/login'))
 
   const user = session.user
   const activeOrgId = session.session.activeOrganizationId
-  if (!activeOrgId) throw redirect('/onboarding')
+  if (!activeOrgId) throw redirect(href('/onboarding'))
 
   const [memberRow] = await db
     .select()
@@ -44,7 +44,7 @@ export const orgMemberMiddleware: AnyMiddlewareFunction = async (
     .where(and(eq(member.organizationId, activeOrgId), eq(member.userId, user.id)))
     .limit(1)
 
-  if (!memberRow) throw redirect('/onboarding')
+  if (!memberRow) throw redirect(href('/onboarding'))
 
   const [org] = await db
     .select()
@@ -52,7 +52,7 @@ export const orgMemberMiddleware: AnyMiddlewareFunction = async (
     .where(eq(organization.id, activeOrgId))
     .limit(1)
 
-  if (!org) throw redirect('/onboarding')
+  if (!org) throw redirect(href('/onboarding'))
 
   const orgRole = memberRow.role as 'owner' | 'admin' | 'member'
 
@@ -77,7 +77,7 @@ export const orgMemberMiddleware: AnyMiddlewareFunction = async (
     }
   }
 
-  context.set(orgContext, { orgId: activeOrgId, orgRole, effectiveRole })
+  context.set(orgContext, { orgId: activeOrgId, orgName: org.name, orgRole, effectiveRole })
   context.set(userContext, { id: user.id, name: user.name, email: user.email })
 
   return next()

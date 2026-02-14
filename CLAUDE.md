@@ -85,6 +85,24 @@ app/components/
 - **`forms.ts`** — Zod-based `validateForm` helper for route actions
 - **`use-filter-params.ts`** — Hook for URL search param filters on list pages
 
+### Route Paths
+
+**Always use `href()` from `react-router`** instead of hardcoded path strings. This gives compile-time validation that the route exists.
+
+```tsx
+import { href } from 'react-router'
+
+// Static routes
+href('/dashboard')
+href('/tickets')
+
+// Dynamic routes — params are type-checked
+href('/tickets/:id', { id: ticketId })
+href('/invite/:token', { token })
+```
+
+Use `href()` everywhere: `redirect()`, `<Link to>`, `navigate()`, `action` props, etc.
+
 ## UI & Styling
 
 **Read `.interface-design/system.md` before making any UI changes.** It documents the full design system: palette, typography, spacing, radius, sizing, accessibility rules, and brand components.

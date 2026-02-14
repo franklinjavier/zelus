@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { href, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Add01Icon, WrenchIcon } from '@hugeicons/core-free-icons'
 import { formatCost, formatDate } from '~/lib/format'
@@ -58,7 +58,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to="/maintenance/new" />}>
+          <Button render={<Link to={href('/maintenance/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Novo registo
           </Button>
@@ -89,7 +89,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
       {records.length === 0 ? (
         <EmptyState icon={WrenchIcon} message="Nenhum registo de manutenção encontrado">
           {isAdmin && (
-            <Button render={<Link to="/maintenance/new" />} variant="outline">
+            <Button render={<Link to={href('/maintenance/new')} />} variant="outline">
               Criar primeiro registo
             </Button>
           )}
@@ -101,7 +101,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
               {records.map((record) => (
                 <Link
                   key={record.id}
-                  to={`/maintenance/${record.id}`}
+                  to={href('/maintenance/:id', { id: record.id })}
                   className="hover:bg-accent flex items-center gap-3 px-5 py-3.5 transition-colors"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">

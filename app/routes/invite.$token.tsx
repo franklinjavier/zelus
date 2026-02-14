@@ -1,6 +1,7 @@
-import { redirect, Form, Link } from 'react-router'
+import { redirect, Form, Link, href } from 'react-router'
 
 import type { Route } from './+types/invite.$token'
+import { auth } from '~/lib/auth/auth.server'
 import { sessionContext } from '~/lib/auth/context'
 import { getInviteByToken, acceptInvite } from '~/lib/services/invites'
 import { Button } from '~/components/ui/button'
@@ -44,13 +45,26 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ params, context }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const session = context.get(sessionContext)
-  if (!session) throw redirect(`/login?redirect=/invite/${params.token}`)
+  if (!session)
+    throw redirect(`${href('/login')}?redirect=${href('/invite/:token', { token: params.token })}`)
 
   try {
-    await acceptInvite(params.token, session.user.id)
-    return redirect('/dashboard')
+    const invite = await acceptInvite(params.token, session.user.id)
+
+    const res = await auth.api.setActiveOrganization({
+      body: { organizationId: invite.orgId },
+      asResponse: true,
+      headers: request.headers,
+    })
+
+    const headers = new Headers()
+    for (const cookie of res.headers.getSetCookie()) {
+      headers.append('set-cookie', cookie)
+    }
+
+    return redirect(href('/dashboard'), { headers })
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao aceitar convite.' }
   }
@@ -113,11 +127,21 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
               <p className="text-muted-foreground text-center text-sm">
                 Inicie sessão para aceitar o convite.
               </p>
-              <Button render={<Link to={`/login?redirect=/invite/${invite.token}`} />}>
+              <Button
+                render={
+                  <Link
+                    to={`${href('/login')}?redirect=${href('/invite/:token', { token: invite.token })}&email=${encodeURIComponent(invite.email)}`}
+                  />
+                }
+              >
                 Entrar
               </Button>
               <Button
-                render={<Link to={`/register?redirect=/invite/${invite.token}`} />}
+                render={
+                  <Link
+                    to={`${href('/register')}?redirect=${href('/invite/:token', { token: invite.token })}&email=${encodeURIComponent(invite.email)}`}
+                  />
+                }
                 variant="outline"
               >
                 Criar conta

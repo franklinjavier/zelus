@@ -7,6 +7,8 @@ import {
   WrenchIcon,
 } from '@hugeicons/core-free-icons'
 
+import { href } from 'react-router'
+
 import type { Route } from './+types/dashboard'
 import { orgContext } from '~/lib/auth/context'
 import { CardLink } from '~/components/brand/card-link'
@@ -59,26 +61,31 @@ export default function DashboardPage({ loaderData }: Route.ComponentProps) {
           label="Ocorrências"
           value={stats.totalTickets}
           icon={Ticket02Icon}
-          href="/tickets"
+          href={href('/tickets')}
         />
-        <StatTile label="Abertas" value={stats.openTickets} icon={Alert02Icon} href="/tickets" />
+        <StatTile
+          label="Abertas"
+          value={stats.openTickets}
+          icon={Alert02Icon}
+          href={href('/tickets')}
+        />
         <StatTile
           label="Frações"
           value={stats.totalFractions}
           icon={Building06Icon}
-          href="/fractions"
+          href={href('/fractions')}
         />
         <StatTile
           label="Fornecedores"
           value={stats.totalSuppliers}
           icon={TruckDeliveryIcon}
-          href="/suppliers"
+          href={href('/suppliers')}
         />
         <StatTile
           label="Manutenções"
           value={stats.totalMaintenance}
           icon={WrenchIcon}
-          href="/maintenance"
+          href={href('/maintenance')}
         />
       </div>
     </div>

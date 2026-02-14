@@ -1,4 +1,4 @@
-import { redirect, useFetcher, useSearchParams } from 'react-router'
+import { redirect, useFetcher, useSearchParams, href } from 'react-router'
 
 import type { Route } from './+types/done'
 import { requireAuth } from '~/lib/auth/rbac'
@@ -17,7 +17,7 @@ function forwardCookies(res: Response): Headers {
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const orgId = url.searchParams.get('orgId')
-  if (!orgId) throw redirect('/onboarding/org')
+  if (!orgId) throw redirect(href('/onboarding/org'))
   return { orgId }
 }
 
@@ -26,7 +26,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData()
   const orgId = formData.get('orgId') as string
 
-  if (!orgId) throw redirect('/onboarding/org')
+  if (!orgId) throw redirect(href('/onboarding/org'))
 
   const res = await auth.api.setActiveOrganization({
     body: { organizationId: orgId },
@@ -34,7 +34,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     headers: request.headers,
   })
 
-  throw redirect('/dashboard', { headers: forwardCookies(res) })
+  throw redirect(href('/dashboard'), { headers: forwardCookies(res) })
 }
 
 export default function OnboardingDone() {

@@ -1,4 +1,4 @@
-import { redirect, useNavigation, Form, Link } from 'react-router'
+import { href, redirect, useNavigation, Form, Link } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/new'
@@ -37,7 +37,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   await createFraction(orgId, parsed.data, user.id)
-  return redirect('/fractions')
+  return redirect(href('/fractions'))
 }
 
 export default function NewFractionPage({ actionData }: Route.ComponentProps) {
@@ -46,7 +46,7 @@ export default function NewFractionPage({ actionData }: Route.ComponentProps) {
 
   return (
     <div className="mx-auto max-w-md">
-      <BackButton to="/fractions" />
+      <BackButton to={href('/fractions')} />
 
       <Card className="mt-6">
         <CardHeader>
@@ -72,7 +72,7 @@ export default function NewFractionPage({ actionData }: Route.ComponentProps) {
             </Field>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button render={<Link to="/fractions" />} variant="outline">
+              <Button render={<Link to={href('/fractions')} />} variant="outline">
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>

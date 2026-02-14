@@ -1,8 +1,12 @@
 import { eq, and } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { userFractions, fractions, user } from '~/lib/db/schema'
+import { userFractions, fractions, user, organization } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
+import { createNotification } from './notifications'
+import { sendEmail } from '~/lib/email/client'
+import { associationApprovedEmail } from '~/lib/email/templates/association-approved'
+import { associationRejectedEmail } from '~/lib/email/templates/association-rejected'
 
 export async function requestAssociation(orgId: string, userId: string, fractionId: string) {
   // Prevent duplicate pending/approved associations
@@ -95,6 +99,43 @@ export async function approveAssociation(
     metadata: { userId: assoc.userId, fractionId: assoc.fractionId },
   })
 
+  // Notify the user
+  const [fraction] = await db
+    .select({ label: fractions.label })
+    .from(fractions)
+    .where(eq(fractions.id, assoc.fractionId))
+    .limit(1)
+  const [org] = await db
+    .select({ name: organization.name })
+    .from(organization)
+    .where(eq(organization.id, orgId))
+    .limit(1)
+  const [userData] = await db
+    .select({ name: user.name, email: user.email })
+    .from(user)
+    .where(eq(user.id, assoc.userId))
+    .limit(1)
+
+  if (fraction && org && userData) {
+    const fractionLabel = fraction.label
+    await createNotification({
+      orgId,
+      userId: assoc.userId,
+      type: 'association_approved',
+      title: `Associação aprovada — ${fractionLabel}`,
+      message: `A sua associação à fração ${fractionLabel} foi aprovada.`,
+      metadata: { fractionId: assoc.fractionId },
+    })
+
+    const email = associationApprovedEmail({
+      userName: userData.name,
+      fractionLabel,
+      orgName: org.name,
+      fractionUrl: `${process.env.APP_URL ?? ''}/fractions/${assoc.fractionId}`,
+    })
+    sendEmail({ to: userData.email, ...email }).catch(() => {})
+  }
+
   return updated
 }
 
@@ -123,7 +164,64 @@ export async function rejectAssociation(orgId: string, associationId: string, ad
     metadata: { userId: assoc.userId, fractionId: assoc.fractionId },
   })
 
+  // Notify the user
+  const [fraction] = await db
+    .select({ label: fractions.label })
+    .from(fractions)
+    .where(eq(fractions.id, assoc.fractionId))
+    .limit(1)
+  const [org] = await db
+    .select({ name: organization.name })
+    .from(organization)
+    .where(eq(organization.id, orgId))
+    .limit(1)
+  const [userData] = await db
+    .select({ name: user.name, email: user.email })
+    .from(user)
+    .where(eq(user.id, assoc.userId))
+    .limit(1)
+
+  if (fraction && org && userData) {
+    const fractionLabel = fraction.label
+    await createNotification({
+      orgId,
+      userId: assoc.userId,
+      type: 'association_rejected',
+      title: `Associação rejeitada — ${fractionLabel}`,
+      message: `A sua associação à fração ${fractionLabel} foi rejeitada.`,
+      metadata: { fractionId: assoc.fractionId },
+    })
+
+    const email = associationRejectedEmail({
+      userName: userData.name,
+      fractionLabel,
+      orgName: org.name,
+    })
+    sendEmail({ to: userData.email, ...email }).catch(() => {})
+  }
+
   return updated
+}
+
+export async function getUserAssociatedFractionIds(orgId: string, userId: string) {
+  const rows = await db
+    .select({ fractionId: userFractions.fractionId, status: userFractions.status })
+    .from(userFractions)
+    .where(and(eq(userFractions.orgId, orgId), eq(userFractions.userId, userId)))
+
+  const map = new Map<string, string>()
+  for (const row of rows) {
+    // Keep the "strongest" status: approved > pending > rejected
+    const current = map.get(row.fractionId)
+    if (
+      !current ||
+      row.status === 'approved' ||
+      (row.status === 'pending' && current === 'rejected')
+    ) {
+      map.set(row.fractionId, row.status)
+    }
+  }
+  return map
 }
 
 export async function listPendingAssociations(orgId: string) {

@@ -1,4 +1,4 @@
-import { data, Form, redirect, useNavigation } from 'react-router'
+import { data, Form, href, redirect, useNavigation } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/settings.account'
@@ -115,7 +115,7 @@ export async function action({ request }: Route.ActionArgs) {
       headers.append('set-cookie', cookie)
     }
 
-    return redirect('/', { headers })
+    return redirect(href('/'), { headers })
   }
 
   return data({ error: 'Ação inválida.' } satisfies ActionData, { status: 400 })

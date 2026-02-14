@@ -1,4 +1,4 @@
-import { Link } from 'react-router'
+import { href, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Add01Icon,
@@ -64,7 +64,7 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to="/suppliers/new" />}>
+          <Button render={<Link to={href('/suppliers/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Novo fornecedor
           </Button>
@@ -95,7 +95,7 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
       {suppliers.length === 0 ? (
         <EmptyState icon={TruckDeliveryIcon} message="Nenhum fornecedor encontrado">
           {isAdmin && (
-            <Button render={<Link to="/suppliers/new" />} variant="outline">
+            <Button render={<Link to={href('/suppliers/new')} />} variant="outline">
               Criar primeiro fornecedor
             </Button>
           )}
@@ -103,7 +103,7 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {suppliers.map((supplier) => (
-            <CardLink key={supplier.id} to={`/suppliers/${supplier.id}`}>
+            <CardLink key={supplier.id} to={href('/suppliers/:id', { id: supplier.id })}>
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium">{supplier.name}</p>

@@ -1,4 +1,4 @@
-import { data, redirect, Form, useFetcher, Link } from 'react-router'
+import { data, href, redirect, Form, useFetcher, Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { WrenchIcon } from '@hugeicons/core-free-icons'
 
@@ -88,7 +88,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (intent === 'delete') {
     try {
       await deleteSupplier(orgId, params.id, user.id)
-      return redirect('/suppliers')
+      return redirect(href('/suppliers'))
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao apagar fornecedor.' }
     }
@@ -106,7 +106,7 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
 
   return (
     <div>
-      <BackButton to="/suppliers" />
+      <BackButton to={href('/suppliers')} />
 
       {actionData && 'error' in actionData && (
         <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
@@ -270,7 +270,10 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                   </dt>
                   <dd className="text-sm">
                     {maintenanceCount > 0 ? (
-                      <Link to={`/maintenance?supplierId=${supplier.id}`} className="text-primary">
+                      <Link
+                        to={`${href('/maintenance')}?supplierId=${supplier.id}`}
+                        className="text-primary"
+                      >
                         {maintenanceCount} {maintenanceCount === 1 ? 'registo' : 'registos'}
                       </Link>
                     ) : (

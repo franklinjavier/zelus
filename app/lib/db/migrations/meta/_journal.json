@@ -29,6 +29,20 @@
       "when": 1770826299950,
       "tag": "0003_quiet_penance",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771084800000,
+      "tag": "0004_add_search_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771072993771,
+      "tag": "0005_add-admin-plugin-fields",
+      "breakpoints": true
     }
   ]
 }

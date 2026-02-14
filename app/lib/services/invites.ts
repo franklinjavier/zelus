@@ -1,8 +1,12 @@
 import { eq, and } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { invites, userFractions, fractions, member, user } from '~/lib/db/schema'
+import { invites, userFractions, fractions, member, user, organization } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
+import { createNotification } from './notifications'
+import { sendEmail } from '~/lib/email/client'
+import { orgInviteEmail } from '~/lib/email/templates/org-invite'
+import { fractionInviteEmail } from '~/lib/email/templates/fraction-invite'
 
 function generateToken(): string {
   return crypto.randomUUID() + '-' + crypto.randomUUID()
@@ -38,6 +42,27 @@ export async function createOrgInvite(
     entityId: invite.id,
     metadata: { email, type: 'org', role },
   })
+
+  // Send invite email
+  const [org] = await db
+    .select({ name: organization.name })
+    .from(organization)
+    .where(eq(organization.id, orgId))
+    .limit(1)
+  const [inviter] = await db
+    .select({ name: user.name })
+    .from(user)
+    .where(eq(user.id, adminUserId))
+    .limit(1)
+
+  if (org && inviter) {
+    const emailData = orgInviteEmail({
+      orgName: org.name,
+      inviterName: inviter.name,
+      inviteUrl: `${process.env.APP_URL ?? ''}/invite/${token}`,
+    })
+    sendEmail({ to: email, ...emailData }).catch(() => {})
+  }
 
   return invite
 }
@@ -94,6 +119,33 @@ export async function createFractionInvite(
     entityId: invite.id,
     metadata: { email, type: 'fraction', fractionId, role },
   })
+
+  // Send invite email
+  const [org] = await db
+    .select({ name: organization.name })
+    .from(organization)
+    .where(eq(organization.id, orgId))
+    .limit(1)
+  const [fraction] = await db
+    .select({ label: fractions.label })
+    .from(fractions)
+    .where(eq(fractions.id, fractionId))
+    .limit(1)
+  const [inviter] = await db
+    .select({ name: user.name })
+    .from(user)
+    .where(eq(user.id, inviterUserId))
+    .limit(1)
+
+  if (org && fraction && inviter) {
+    const emailData = fractionInviteEmail({
+      orgName: org.name,
+      fractionLabel: fraction.label,
+      inviterName: inviter.name,
+      inviteUrl: `${process.env.APP_URL ?? ''}/invite/${token}`,
+    })
+    sendEmail({ to: email, ...emailData }).catch(() => {})
+  }
 
   return invite
 }
@@ -198,6 +250,24 @@ export async function acceptInvite(token: string, userId: string) {
     metadata: { type: invite.type, email: invite.email },
   })
 
+  // Notify the admin who sent the invite
+  const [acceptingUser] = await db
+    .select({ name: user.name })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+
+  const acceptorName = acceptingUser?.name ?? invite.email
+
+  createNotification({
+    orgId: invite.orgId,
+    userId: invite.invitedBy,
+    type: 'invite.accepted',
+    title: 'Convite aceite',
+    message: `${acceptorName} aceitou o convite para ${invite.type === 'org' ? 'a organização' : 'a fração'}.`,
+    metadata: { inviteId: invite.id, email: invite.email, type: invite.type },
+  }).catch(() => {})
+
   return invite
 }
 
@@ -210,6 +280,7 @@ export async function listInvites(orgId: string) {
       fractionId: invites.fractionId,
       role: invites.role,
       status: invites.status,
+      token: invites.token,
       expiresAt: invites.expiresAt,
       createdAt: invites.createdAt,
       invitedByName: user.name,
@@ -243,4 +314,27 @@ export async function getInviteByToken(token: string) {
     .limit(1)
 
   return invite ?? null
+}
+
+export async function revokeInvite(orgId: string, inviteId: string, adminUserId: string) {
+  const [invite] = await db
+    .select()
+    .from(invites)
+    .where(and(eq(invites.id, inviteId), eq(invites.orgId, orgId), eq(invites.status, 'pending')))
+    .limit(1)
+
+  if (!invite) throw new Error('Convite não encontrado ou já não está pendente.')
+
+  const [deleted] = await db.delete(invites).where(eq(invites.id, inviteId)).returning()
+
+  await logAuditEvent({
+    orgId,
+    userId: adminUserId,
+    action: 'invite.revoked',
+    entityType: 'invite',
+    entityId: inviteId,
+    metadata: { email: invite.email, type: invite.type },
+  })
+
+  return deleted
 }

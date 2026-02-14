@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Edit02Icon, LockIcon } from '@hugeicons/core-free-icons'
+import { CheckmarkCircle01Icon, Edit02Icon, LockIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { data, Form, href, useFetcher } from 'react-router'
 
 import { BackButton } from '~/components/layout/back-button'
+import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { PriorityIndicator, PrioritySelector } from '~/components/tickets/priority-indicator'
 import { StatusBadge, statusLabels, type Status } from '~/components/tickets/status-badge'
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
+import { Checkbox } from '~/components/ui/checkbox'
 import {
   Drawer,
   DrawerPopup,
@@ -217,9 +219,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
             </CardHeader>
             <CardContent>
               {timeline.length === 0 ? (
-                <p className="text-muted-foreground py-6 text-center text-sm">
-                  Sem atividade registada
-                </p>
+                <EmptyState icon={CheckmarkCircle01Icon} message="Sem atividade registada" />
               ) : (
                 <div className="flex flex-col gap-5">
                   {timeline.map((item) => (
@@ -269,7 +269,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                           }}
                           items={statusItems}
                         >
-                          <SelectTrigger className="h-8 w-auto min-w-32">
+                          <SelectTrigger className="h-10 w-auto min-w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -385,12 +385,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                 </Field>
 
                 <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="private"
-                    defaultChecked={ticket.private}
-                    className="accent-primary h-5 w-5 rounded"
-                  />
+                  <Checkbox name="private" defaultChecked={ticket.private} />
                   <span className="text-sm">Marcar como privado</span>
                 </label>
 

@@ -188,7 +188,7 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
                     <Link
                       key={ticket.id}
                       to={href('/tickets/:id', { id: ticket.id })}
-                      className="hover:bg-accent flex items-center gap-3 px-5 py-3.5 transition-colors"
+                      className="hover:bg-accent flex items-center gap-3 px-5 py-4 transition-colors"
                     >
                       {/* Left side */}
                       <div className="flex min-w-0 flex-1 items-center gap-2.5">

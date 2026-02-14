@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { data, Form, Link, Outlet, useMatches, useNavigate, href } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { CopyLinkIcon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { CopyLinkIcon, MailSend02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/_layout'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { listInvites, revokeInvite } from '~/lib/services/invites'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Badge } from '~/components/ui/badge'
+import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { setToast } from '~/lib/toast.server'
+import { cn } from '~/lib/utils'
 import { roleLabel } from '~/components/shared/role-badge'
 import {
   Drawer,
@@ -51,6 +52,18 @@ export async function action({ request, context }: Route.ActionArgs) {
   return { error: 'Ação desconhecida.' }
 }
 
+const statusStyles: Record<string, string> = {
+  pending: 'bg-amber-500/5 ring-amber-500/10 hover:bg-amber-500/10',
+  accepted: 'bg-emerald-500/5 ring-emerald-500/10 hover:bg-emerald-500/10',
+  default: 'bg-muted/50 ring-foreground/5 hover:bg-muted',
+}
+
+const statusIconStyles: Record<string, string> = {
+  pending: 'bg-amber-500/10 text-amber-600',
+  accepted: 'bg-emerald-500/10 text-emerald-600',
+  default: 'bg-muted text-muted-foreground',
+}
+
 export default function InvitesLayout({ loaderData, actionData }: Route.ComponentProps) {
   const { invites } = loaderData
   const navigate = useNavigate()
@@ -72,57 +85,55 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
       )}
 
       <div className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Convites enviados</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {invites.length === 0 ? (
-              <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-                Nenhum convite enviado.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {invites.map((invite) => (
-                  <div key={invite.id} className="flex items-center justify-between px-4 py-2.5">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{invite.email}</p>
-                      <div className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-sm">
-                        <span>
-                          {invite.type === 'org'
-                            ? 'Organização'
-                            : (invite.fractionLabel ?? 'Fração')}
-                        </span>
-                        <span>&middot;</span>
-                        <span>{roleLabel(invite.role)}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={invite.status} />
-                      {invite.status === 'pending' && (
-                        <>
-                          <CopyLinkButton token={invite.token} />
-                          <Form method="post">
-                            <input type="hidden" name="intent" value="revoke-invite" />
-                            <input type="hidden" name="inviteId" value={invite.id} />
-                            <Button
-                              type="submit"
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive"
-                            >
-                              Revogar
-                            </Button>
-                          </Form>
-                        </>
-                      )}
-                    </div>
+        {invites.length === 0 ? (
+          <EmptyState icon={MailSend02Icon} message="Nenhum convite enviado" />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {invites.map((invite) => (
+              <div
+                key={invite.id}
+                className={cn(
+                  'flex items-center justify-between gap-4 rounded-2xl p-5 ring-1 transition-colors',
+                  statusStyles[invite.status] ?? statusStyles.default,
+                )}
+              >
+                <div className="flex min-w-0 items-center gap-4">
+                  <div
+                    className={cn(
+                      'flex size-9 shrink-0 items-center justify-center rounded-xl',
+                      statusIconStyles[invite.status] ?? statusIconStyles.default,
+                    )}
+                  >
+                    <HugeiconsIcon icon={MailSend02Icon} size={18} strokeWidth={1.5} />
                   </div>
-                ))}
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{invite.email}</p>
+                    <p className="text-muted-foreground mt-0.5 text-sm">
+                      {invite.type === 'org' ? 'Organização' : (invite.fractionLabel ?? 'Fração')}
+                      {' · '}
+                      {roleLabel(invite.role)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
+                  {invite.status === 'pending' && (
+                    <>
+                      <CopyLinkButton token={invite.token} />
+                      <Form method="post">
+                        <input type="hidden" name="intent" value="revoke-invite" />
+                        <input type="hidden" name="inviteId" value={invite.id} />
+                        <Button type="submit" variant="destructive" size="sm">
+                          Revogar
+                        </Button>
+                      </Form>
+                    </>
+                  )}
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       <Drawer
@@ -157,18 +168,19 @@ function CopyLinkButton({ token }: { token: string }) {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="outline"
       size="sm"
       onClick={handleCopy}
       aria-label="Copiar link do convite"
     >
       <HugeiconsIcon icon={copied ? Tick02Icon : CopyLinkIcon} size={16} />
+      Copiar link
     </Button>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'accepted') return <Badge variant="default">Aceite</Badge>
-  if (status === 'pending') return <Badge variant="secondary">Pendente</Badge>
+  if (status === 'pending') return <Badge className="bg-amber-100 text-amber-700">Pendente</Badge>
   return <Badge variant="destructive">Expirado</Badge>
 }

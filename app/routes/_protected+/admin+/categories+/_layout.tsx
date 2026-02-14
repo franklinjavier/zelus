@@ -1,12 +1,16 @@
 import { data, Form, Link, Outlet, useMatches, useNavigate, href } from 'react-router'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Tag01Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/_layout'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { listCategories, deleteCategory } from '~/lib/services/categories'
 import { translateCategory } from '~/lib/category-labels'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { ErrorBanner } from '~/components/layout/feedback'
+import { EmptyState } from '~/components/layout/empty-state'
+import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { setToast } from '~/lib/toast.server'
 import {
   Drawer,
@@ -63,36 +67,40 @@ export default function CategoriesLayout({ loaderData, actionData }: Route.Compo
       )}
 
       <div className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Categorias</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {categories.length === 0 ? (
-              <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-                Nenhuma categoria criada.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {categories.map((cat) => (
-                  <div key={cat.key} className="flex items-center justify-between px-4 py-2.5">
-                    <div>
-                      <p className="text-sm font-medium">{translateCategory(cat.key)}</p>
-                      <p className="text-muted-foreground text-sm">{cat.key}</p>
-                    </div>
-                    <Form method="post">
-                      <input type="hidden" name="intent" value="delete" />
-                      <input type="hidden" name="key" value={cat.key} />
-                      <Button type="submit" variant="ghost" size="sm" className="text-destructive">
-                        Apagar
-                      </Button>
-                    </Form>
+        {categories.length === 0 ? (
+          <EmptyState icon={Tag01Icon} message="Nenhuma categoria criada" />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {categories.map((cat) => (
+              <div
+                key={cat.key}
+                className="bg-primary/5 ring-primary/10 hover:bg-primary/10 flex items-center justify-between gap-4 rounded-2xl p-5 ring-1 transition-colors"
+              >
+                <div className="flex min-w-0 items-center gap-4">
+                  <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
+                    <HugeiconsIcon
+                      icon={Tag01Icon}
+                      size={18}
+                      strokeWidth={1.5}
+                      className="text-primary"
+                    />
                   </div>
-                ))}
+                  <p className="truncate font-medium">{translateCategory(cat.key)}</p>
+                </div>
+                <DeleteConfirmDialog
+                  title="Apagar categoria?"
+                  description={`A categoria "${translateCategory(cat.key)}" será removida permanentemente.`}
+                >
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="delete" />
+                    <input type="hidden" name="key" value={cat.key} />
+                    <AlertDialogAction type="submit">Apagar</AlertDialogAction>
+                  </Form>
+                </DeleteConfirmDialog>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       <Drawer

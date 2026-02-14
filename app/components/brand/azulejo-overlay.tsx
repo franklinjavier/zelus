@@ -23,7 +23,11 @@ export function AzulejoOverlay({
         className,
       )}
     >
-      <svg className="text-primary h-full w-full" style={{ opacity }} aria-hidden="true">
+      <svg
+        className="text-primary h-full w-full animate-[azulejo-drift_8s_linear_infinite]"
+        style={{ opacity }}
+        aria-hidden="true"
+      >
         <defs>
           <pattern id={patternId} width={TILE} height={TILE} patternUnits="userSpaceOnUse">
             <rect width={TILE} height={TILE} fill="none" stroke="currentColor" strokeWidth={0.5} />

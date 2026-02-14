@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { PrioritySelector } from '~/components/tickets/priority-indicator'
+import { Checkbox } from '~/components/ui/checkbox'
 import { ErrorBanner } from '~/components/layout/feedback'
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -144,8 +145,8 @@ export default function NewTicketDrawer({ loaderData, actionData }: Route.Compon
         </Field>
 
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="private" className="accent-primary h-5 w-5 rounded" />
-          Marcar como privado
+          <Checkbox name="private" />
+          <span className="text-sm">Marcar como privado</span>
         </label>
 
         <Button type="submit" disabled={isSubmitting} className="mt-1">

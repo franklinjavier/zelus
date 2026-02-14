@@ -18,10 +18,10 @@ export function AppShell({ user, isOrgAdmin, children }: AppShellProps) {
   return (
     <SidebarProvider>
       <AppSidebar user={user} isOrgAdmin={isOrgAdmin} />
-      <SidebarInset className="relative overflow-hidden">
+      <SidebarInset className="relative flex h-svh flex-col overflow-hidden">
         <AzulejoPattern baseOpacity={0.04} hoverOpacity={0.15} />
         <Header />
-        <div className="relative flex-1 px-4 py-6 lg:px-8">{children}</div>
+        <div className="relative min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )

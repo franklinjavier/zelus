@@ -41,6 +41,8 @@ export function ErrorBoundary({ error, loaderData }: Route.ErrorBoundaryProps) {
           ? 'A página que procura não existe ou foi movida.'
           : error.statusText || 'Ocorreu um erro inesperado.'
       }
+      // In the authenticated app shell, send the user back to the dashboard.
+      homeHref="/dashboard"
     />
   ) : (
     <ErrorContent

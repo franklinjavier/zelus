@@ -29,3 +29,7 @@ export const categoryLabels: Record<string, string> = {
 export function translateCategory(key: string): string {
   return categoryLabels[key] ?? key
 }
+
+export function hasCategoryLabel(key: string): boolean {
+  return key in categoryLabels
+}

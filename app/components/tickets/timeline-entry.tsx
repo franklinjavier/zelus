@@ -80,7 +80,7 @@ function MemberAvatar({ name }: { name: string }) {
     .toUpperCase()
 
   return (
-    <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium">
+    <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
       {initials}
     </div>
   )
@@ -91,12 +91,10 @@ function CommentEntry({ item }: { item: CommentItem }) {
     <div className="flex gap-3">
       <MemberAvatar name={item.userName} />
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <span className="text-sm font-medium">{item.userName}</span>
-          <span className="text-muted-foreground text-sm">
-            {formatRelativeTime(item.createdAt)}
-          </span>
-        </div>
+        <p className="text-sm">
+          <span className="font-medium">{item.userName}</span>
+          <span className="text-muted-foreground"> · {formatRelativeTime(item.createdAt)}</span>
+        </p>
         <p className="mt-1 text-sm whitespace-pre-wrap">{item.content}</p>
         {item.attachments && item.attachments.length > 0 && (
           <div className="mt-2 flex flex-col gap-1.5">
@@ -124,16 +122,14 @@ function CommentEntry({ item }: { item: CommentItem }) {
 
 function StatusChangeEntry({ item }: { item: StatusChangeItem }) {
   const toLabel = statusLabels[item.toStatus as keyof typeof statusLabels] ?? item.toStatus
-
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-full">
-        <div className="bg-muted-foreground/40 size-2 rounded-full" />
-      </div>
+    <div className="flex items-center gap-3 pl-2.5">
+      <span className="bg-muted-foreground/40 size-2 shrink-0 rounded-full" />
       <p className="text-muted-foreground text-sm">
         {item.userName} alterou o estado para{' '}
         <span className="text-foreground font-medium">{toLabel}</span>
-        <span className="ml-2">{formatRelativeTime(item.createdAt)}</span>
+        {' · '}
+        {formatRelativeTime(item.createdAt)}
       </p>
     </div>
   )
@@ -141,33 +137,27 @@ function StatusChangeEntry({ item }: { item: StatusChangeItem }) {
 
 function AttachmentEntry({ item }: { item: AttachmentItem }) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-full">
-        <HugeiconsIcon
-          icon={File01Icon}
-          size={16}
-          strokeWidth={1.5}
-          className="text-muted-foreground"
-        />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
-          <span className="text-muted-foreground text-sm">{item.userName}</span>
-          <span className="text-muted-foreground text-sm">
-            {formatRelativeTime(item.createdAt)}
-          </span>
-        </div>
+    <div className="flex items-center gap-3 pl-2">
+      <HugeiconsIcon
+        icon={File01Icon}
+        size={14}
+        strokeWidth={1.5}
+        className="text-muted-foreground shrink-0"
+      />
+      <p className="text-muted-foreground min-w-0 text-sm">
+        {item.userName} anexou{' '}
         <a
           href={item.fileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80 inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+          className="text-primary hover:text-primary/80 underline-offset-4 hover:underline"
         >
-          <HugeiconsIcon icon={File01Icon} size={14} strokeWidth={2} className="shrink-0" />
           {item.fileName}
-          <span className="text-muted-foreground text-sm">({formatFileSize(item.fileSize)})</span>
         </a>
-      </div>
+        <span className="text-muted-foreground"> ({formatFileSize(item.fileSize)})</span>
+        {' · '}
+        {formatRelativeTime(item.createdAt)}
+      </p>
     </div>
   )
 }

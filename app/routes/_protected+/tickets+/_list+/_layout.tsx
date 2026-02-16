@@ -19,7 +19,7 @@ import { listCategories } from '~/lib/services/categories'
 import { translateCategory } from '~/lib/category-labels'
 import { listTickets } from '~/lib/services/tickets'
 import type { Route } from './+types/_layout'
-import { formatShortDate, getInitials } from '~/lib/format'
+import { formatShortDate } from '~/lib/format'
 import { useFilterParams } from '~/lib/use-filter-params'
 import { EmptyState } from '~/components/layout/empty-state'
 import {
@@ -69,15 +69,6 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
   const matches = useMatches()
   const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
-
-  const categoryLabelMap = new Map(categories.map((c) => [c.key, translateCategory(c.key)]))
-
-  const grouped = statusOrder
-    .map((status) => ({
-      status,
-      tickets: tickets.filter((t) => t.status === status),
-    }))
-    .filter((group) => group.tickets.length > 0)
 
   const statusItems = [
     { label: 'Todos os estados', value: '_all' },
@@ -172,63 +163,52 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
       {tickets.length === 0 ? (
         <EmptyState icon={Ticket02Icon} message="Nenhuma ocorrência encontrada" />
       ) : (
-        <div className="mt-6 grid gap-5">
-          {grouped.map(({ status, tickets: groupTickets }) => (
-            <Card key={status}>
-              <div className="flex items-center gap-2.5 px-6 pt-5 pb-1">
-                <span className={`size-2.5 rounded-full ${statusDotColors[status]}`} />
-                <span className="text-sm font-medium">{statusLabels[status]}</span>
-                <Badge variant="secondary" className="ml-1">
-                  {groupTickets.length}
-                </Badge>
-              </div>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {groupTickets.map((ticket) => (
-                    <Link
-                      key={ticket.id}
-                      to={href('/tickets/:id', { id: ticket.id })}
-                      className="hover:bg-accent flex items-center gap-3 px-5 py-4 transition-colors"
-                    >
-                      {/* Left side */}
-                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                        <span className="shrink-0">
-                          <PriorityIndicatorIcon priority={ticket.priority} />
-                        </span>
-                        <span className="truncate font-medium">{ticket.title}</span>
-                        {ticket.private && (
-                          <HugeiconsIcon
-                            icon={LockIcon}
-                            size={14}
-                            strokeWidth={2}
-                            className="text-muted-foreground shrink-0"
-                          />
-                        )}
-                      </div>
-
-                      {/* Right side */}
-                      <div className="flex shrink-0 items-center gap-3">
-                        {ticket.category && categoryLabelMap.has(ticket.category) && (
-                          <Badge variant="outline">{categoryLabelMap.get(ticket.category)}</Badge>
-                        )}
-                        {ticket.fractionLabel && (
-                          <span className="text-muted-foreground text-sm">
-                            {ticket.fractionLabel}
-                          </span>
-                        )}
-                        <span className="text-muted-foreground text-sm">
-                          {formatShortDate(ticket.createdAt)}
-                        </span>
-                        <div className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-medium">
-                          {getInitials(ticket.creatorName)}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {statusOrder.map((status) => {
+            const groupTickets = tickets.filter((t) => t.status === status)
+            return (
+              <Card key={status} className="gap-0 py-0">
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <span className={`size-2 rounded-full ${statusDotColors[status]}`} />
+                  <span className="text-sm font-medium">{statusLabels[status]}</span>
+                  <Badge variant="secondary">{groupTickets.length}</Badge>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                <CardContent className="p-0">
+                  {groupTickets.length === 0 ? (
+                    <p className="text-muted-foreground px-4 pb-3 text-sm">Nenhuma ocorrência</p>
+                  ) : (
+                    <div className="divide-y">
+                      {groupTickets.map((ticket) => (
+                        <Link
+                          key={ticket.id}
+                          to={href('/tickets/:id', { id: ticket.id })}
+                          className="hover:bg-accent flex items-center gap-3 px-4 py-3 transition-colors"
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <span className="shrink-0">
+                              <PriorityIndicatorIcon priority={ticket.priority} />
+                            </span>
+                            <span className="truncate font-medium">{ticket.title}</span>
+                            {ticket.private && (
+                              <HugeiconsIcon
+                                icon={LockIcon}
+                                size={14}
+                                strokeWidth={2}
+                                className="text-muted-foreground shrink-0"
+                              />
+                            )}
+                          </div>
+                          <span className="text-muted-foreground shrink-0 text-sm">
+                            {formatShortDate(ticket.createdAt)}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
 

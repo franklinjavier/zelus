@@ -5,12 +5,12 @@ import type { Route } from './+types/new'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { createTicket } from '~/lib/services/tickets'
 import { listCategories } from '~/lib/services/categories'
-import { translateCategory } from '~/lib/category-labels'
 import { listFractions } from '~/lib/services/fractions'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel } from '~/components/ui/field'
 import { Textarea } from '~/components/ui/textarea'
+import { CategorySelect } from '~/components/shared/category-select'
 import {
   Select,
   SelectContent,
@@ -76,11 +76,6 @@ export default function NewTicketDrawer({ loaderData, actionData }: Route.Compon
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
 
-  const categoryItems = [
-    { label: '— Selecionar —', value: '' },
-    ...categories.map((c) => ({ label: translateCategory(c.key), value: c.key })),
-  ]
-
   const fractionItems = [
     { label: '— Nenhuma —', value: '' },
     ...fractions.map((f) => ({ label: f.label, value: f.id })),
@@ -108,19 +103,8 @@ export default function NewTicketDrawer({ loaderData, actionData }: Route.Compon
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="categoryId">Categoria</FieldLabel>
-          <Select name="category" defaultValue="" items={categoryItems}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FieldLabel>Categoria</FieldLabel>
+          <CategorySelect categories={categories} />
         </Field>
 
         <Field>

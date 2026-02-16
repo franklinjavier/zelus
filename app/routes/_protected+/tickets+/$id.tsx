@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { CheckmarkCircle01Icon, Edit02Icon, LockIcon } from '@hugeicons/core-free-icons'
+import {
+  ArrowUp01Icon,
+  CheckmarkCircle01Icon,
+  Edit02Icon,
+  LockIcon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { data, Form, href, useFetcher } from 'react-router'
 
@@ -14,6 +19,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Field, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
+import { CategorySelect } from '~/components/shared/category-select'
 import {
   Select,
   SelectContent,
@@ -32,7 +38,7 @@ import {
 } from '~/components/ui/drawer'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { getFractionRole } from '~/lib/auth/rbac'
-import { translateCategory } from '~/lib/category-labels'
+import { hasCategoryLabel, translateCategory } from '~/lib/category-labels'
 import { formatDate } from '~/lib/format'
 import { listCategories } from '~/lib/services/categories'
 import { deleteAttachment } from '~/lib/services/ticket-attachments'
@@ -167,11 +173,6 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
     }),
   )
 
-  const editCategoryItems = [
-    { label: '— Nenhuma —', value: '' },
-    ...categories.map((c) => ({ label: translateCategory(c.key), value: c.key })),
-  ]
-
   const formattedDate = formatDate(ticket.createdAt)
 
   return (
@@ -221,7 +222,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
               {timeline.length === 0 ? (
                 <EmptyState icon={CheckmarkCircle01Icon} message="Sem atividade registada" />
               ) : (
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4">
                   {timeline.map((item) => (
                     <TimelineEntry key={item.id} item={item} />
                   ))}
@@ -229,15 +230,21 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
               )}
 
               {/* Comment form */}
-              <div className="mt-6 border-t pt-5">
-                <Form method="post" className="flex flex-col gap-3">
-                  <input type="hidden" name="intent" value="comment" />
-                  <Textarea name="content" placeholder="Escrever comentário..." rows={3} required />
-                  <div className="flex justify-end">
-                    <Button type="submit">Comentar</Button>
-                  </div>
-                </Form>
-              </div>
+              <Form key={timeline.length} method="post" className="relative mt-6">
+                <input type="hidden" name="intent" value="comment" />
+                <Textarea
+                  name="content"
+                  placeholder="Escrever comentário..."
+                  rows={2}
+                  required
+                  className="pr-12 pb-10"
+                />
+                <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                  <Button type="submit" size="icon" variant="default" className="size-8 rounded-lg">
+                    <HugeiconsIcon icon={ArrowUp01Icon} size={16} strokeWidth={2} />
+                  </Button>
+                </div>
+              </Form>
             </CardContent>
           </Card>
         </div>
@@ -299,7 +306,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground text-sm">Categoria</dt>
                   <dd>
-                    {ticket.category ? (
+                    {ticket.category && hasCategoryLabel(ticket.category) ? (
                       <Badge variant="secondary">{translateCategory(ticket.category)}</Badge>
                     ) : (
                       <span className="text-muted-foreground text-sm">&mdash;</span>
@@ -360,23 +367,8 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="edit-category">Categoria</FieldLabel>
-                  <Select
-                    name="category"
-                    defaultValue={ticket.category ?? ''}
-                    items={editCategoryItems}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {editCategoryItems.map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
-                          {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FieldLabel>Categoria</FieldLabel>
+                  <CategorySelect categories={categories} defaultValue={ticket.category} />
                 </Field>
 
                 <Field>

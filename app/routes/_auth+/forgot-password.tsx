@@ -82,7 +82,7 @@ export default function ForgotPasswordPage({ actionData }: Route.ComponentProps)
                 {errors?.email && <FieldError>{errors.email}</FieldError>}
               </Field>
               <Turnstile />
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" size="lg" disabled={isSubmitting}>
                 {isSubmitting ? 'A enviar…' : 'Enviar link'}
               </Button>
             </Form>

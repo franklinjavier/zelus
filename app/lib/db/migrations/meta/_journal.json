@@ -50,6 +50,13 @@
       "when": 1771097685267,
       "tag": "0006_add-supplier-contact-fields",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771258869710,
+      "tag": "0007_add-invite-link",
+      "breakpoints": true
     }
   ]
 }

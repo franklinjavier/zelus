@@ -126,7 +126,7 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
               {errors?.password && <FieldError>{errors.password}</FieldError>}
             </Field>
             <Turnstile />
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" size="lg" disabled={isSubmitting}>
               {isSubmitting ? 'A entrar…' : 'Entrar'}
             </Button>
           </Form>

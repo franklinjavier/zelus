@@ -98,7 +98,7 @@ export default function OnboardingOrg() {
           <FieldLabel htmlFor="notes">Notas internas</FieldLabel>
           <Input id="notes" name="notes" placeholder="Opcional" />
         </Field>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" size="lg" disabled={isSubmitting}>
           {isSubmitting ? 'A criar…' : 'Continuar'}
         </Button>
       </fetcher.Form>

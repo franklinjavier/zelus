@@ -161,7 +161,7 @@ export default function NewInvitePage({ loaderData, actionData }: Route.Componen
           </Select>
         </Field>
 
-        <Button type="submit" className="mt-1">
+        <Button type="submit" size="lg" className="mt-1">
           Criar convite
         </Button>
       </Form>

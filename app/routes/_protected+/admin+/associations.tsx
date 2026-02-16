@@ -120,9 +120,9 @@ function AssociationRow({
           <p className="text-muted-foreground mt-0.5 text-sm">{association.userEmail}</p>
         </div>
       </div>
-      <div className="flex shrink-0 gap-1.5">
+      <div className="flex shrink-0 gap-2">
         <AlertDialog>
-          <AlertDialogTrigger render={<Button variant="ghost" size="xs" disabled={isProcessing} />}>
+          <AlertDialogTrigger render={<Button variant="destructive" disabled={isProcessing} />}>
             Rejeitar
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -147,7 +147,7 @@ function AssociationRow({
         <fetcher.Form method="post">
           <input type="hidden" name="intent" value="approve" />
           <input type="hidden" name="associationId" value={association.id} />
-          <Button type="submit" size="xs" disabled={isProcessing}>
+          <Button type="submit" disabled={isProcessing}>
             Aprovar
           </Button>
         </fetcher.Form>

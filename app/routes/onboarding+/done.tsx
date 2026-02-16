@@ -51,7 +51,7 @@ export default function OnboardingDone() {
       </p>
       <fetcher.Form method="post">
         <input type="hidden" name="orgId" value={orgId} />
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'A entrar…' : 'Ir para o painel'}
         </Button>
       </fetcher.Form>

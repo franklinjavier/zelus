@@ -75,7 +75,7 @@ export default function NewFractionPage({ actionData }: Route.ComponentProps) {
               <Button render={<Link to={href('/fractions')} />} variant="outline">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" size="lg" disabled={isSubmitting}>
                 {isSubmitting ? 'A criar…' : 'Criar fração'}
               </Button>
             </div>

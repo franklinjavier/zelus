@@ -116,7 +116,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
 
           {!expired && !accepted && authenticated && (
             <Form method="post">
-              <Button type="submit" className="w-full">
+              <Button type="submit" size="lg" className="w-full">
                 Aceitar convite
               </Button>
             </Form>
@@ -128,6 +128,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
                 Inicie sessão para aceitar o convite.
               </p>
               <Button
+                size="lg"
                 render={
                   <Link
                     to={`${href('/login')}?redirect=${href('/invite/:token', { token: invite.token })}&email=${encodeURIComponent(invite.email)}`}
@@ -137,6 +138,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
                 Entrar
               </Button>
               <Button
+                size="lg"
                 render={
                   <Link
                     to={`${href('/register')}?redirect=${href('/invite/:token', { token: invite.token })}&email=${encodeURIComponent(invite.email)}`}

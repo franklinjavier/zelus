@@ -193,7 +193,7 @@ export default function AccountSettingsPage({ actionData }: Route.ComponentProps
               {changeErrors?.newPassword && <FieldError>{changeErrors.newPassword}</FieldError>}
             </Field>
 
-            <Button type="submit" disabled={isChangingPassword}>
+            <Button type="submit" size="lg" disabled={isChangingPassword}>
               {isChangingPassword ? 'A guardar…' : 'Guardar'}
             </Button>
           </Form>

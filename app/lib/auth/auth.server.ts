@@ -113,6 +113,17 @@ export const auth = betterAuth({
               input: true,
               defaultValue: 'Europe/Lisbon',
             },
+            inviteCode: {
+              type: 'string',
+              required: false,
+              input: false,
+            },
+            inviteEnabled: {
+              type: 'boolean',
+              required: false,
+              input: false,
+              defaultValue: false,
+            },
           },
         },
       },

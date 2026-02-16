@@ -141,7 +141,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
               <div className="bg-muted rounded-xl px-3 py-2 text-center text-sm">
                 Já é membro deste condomínio.
               </div>
-              <Button render={<Link to={href('/dashboard')} />} className="w-full">
+              <Button size="lg" render={<Link to={href('/dashboard')} />} className="w-full">
                 Ir para o painel
               </Button>
             </div>
@@ -149,7 +149,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
 
           {!('error' in loaderData) && loaderData.authenticated && !loaderData.alreadyMember && (
             <Form method="post">
-              <Button type="submit" className="w-full">
+              <Button type="submit" size="lg" className="w-full">
                 Juntar-se
               </Button>
             </Form>
@@ -161,6 +161,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
                 Inicie sessão para se juntar ao condomínio.
               </p>
               <Button
+                size="lg"
                 render={
                   <Link
                     to={`${href('/login')}?redirect=${href('/join/:code', { code: loaderData.code })}`}
@@ -170,6 +171,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
                 Entrar
               </Button>
               <Button
+                size="lg"
                 render={
                   <Link
                     to={`${href('/register')}?redirect=${href('/join/:code', { code: loaderData.code })}`}

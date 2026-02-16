@@ -120,7 +120,7 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
                       <Form method="post">
                         <input type="hidden" name="intent" value="revoke-invite" />
                         <input type="hidden" name="inviteId" value={invite.id} />
-                        <Button type="submit" variant="destructive" size="sm">
+                        <Button type="submit" variant="destructive">
                           Revogar
                         </Button>
                       </Form>
@@ -166,7 +166,6 @@ function CopyLinkButton({ token }: { token: string }) {
     <Button
       type="button"
       variant="outline"
-      size="sm"
       onClick={handleCopy}
       aria-label="Copiar link do convite"
     >

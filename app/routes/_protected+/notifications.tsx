@@ -1,4 +1,5 @@
-import { Notification03Icon } from '@hugeicons/core-free-icons'
+import { Notification03Icon, TickDouble02Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { Form, href, Link, useNavigation } from 'react-router'
 import { redirect } from 'react-router'
 
@@ -63,7 +64,7 @@ export default function NotificationsPage({ loaderData }: Route.ComponentProps) 
         {unreadCount > 0 && (
           <Form method="post">
             <input type="hidden" name="intent" value="mark-all-read" />
-            <Button type="submit" variant="outline" size="sm" disabled={isSubmitting}>
+            <Button type="submit" variant="outline" disabled={isSubmitting}>
               Marcar todas como lidas
             </Button>
           </Form>
@@ -73,52 +74,54 @@ export default function NotificationsPage({ loaderData }: Route.ComponentProps) 
       {notifications.length === 0 ? (
         <EmptyState icon={Notification03Icon} message="Sem notificações" />
       ) : (
-        <div className="mt-6 grid gap-2">
-          {notifications.map((notification) => {
-            const url = getNotificationUrl(notification.type, notification.metadata)
+        <Card className="mt-6 gap-0 py-0">
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {notifications.map((notification) => {
+                const url = getNotificationUrl(notification.type, notification.metadata)
 
-            return (
-              <Card
-                key={notification.id}
-                className={notification.readAt ? 'opacity-60' : undefined}
-              >
-                <CardContent className="flex items-start gap-3 px-5 py-4">
-                  {!notification.readAt && (
-                    <span className="bg-primary mt-1.5 size-2.5 shrink-0 rounded-full" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        {url ? (
-                          <Link to={url} className="font-medium hover:underline">
-                            {notification.title}
-                          </Link>
-                        ) : (
-                          <p className="font-medium">{notification.title}</p>
-                        )}
-                        <p className="text-muted-foreground mt-0.5 text-sm">
-                          {notification.message}
-                        </p>
-                      </div>
-                      <span className="text-muted-foreground shrink-0 text-sm">
-                        {formatDate(notification.createdAt)}
-                      </span>
+                return (
+                  <div
+                    key={notification.id}
+                    className={`flex items-center gap-3 px-4 py-3${notification.readAt ? 'opacity-50' : ''}`}
+                  >
+                    <span
+                      className={`size-2 shrink-0 rounded-full ${!notification.readAt ? 'bg-primary' : 'bg-transparent'}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      {url ? (
+                        <Link to={url} className="text-sm font-medium hover:underline">
+                          {notification.title}
+                        </Link>
+                      ) : (
+                        <p className="text-sm font-medium">{notification.title}</p>
+                      )}
+                      <p className="text-muted-foreground mt-0.5 text-sm">{notification.message}</p>
                     </div>
+                    <span className="text-muted-foreground shrink-0 text-sm">
+                      {formatDate(notification.createdAt)}
+                    </span>
+                    {!notification.readAt && (
+                      <Form method="post">
+                        <input type="hidden" name="intent" value="mark-read" />
+                        <input type="hidden" name="notificationId" value={notification.id} />
+                        <Button type="submit" variant="ghost" disabled={isSubmitting}>
+                          <HugeiconsIcon
+                            icon={TickDouble02Icon}
+                            data-icon="inline-start"
+                            size={16}
+                            strokeWidth={2}
+                          />
+                          Marcar como lida
+                        </Button>
+                      </Form>
+                    )}
                   </div>
-                  {!notification.readAt && (
-                    <Form method="post">
-                      <input type="hidden" name="intent" value="mark-read" />
-                      <input type="hidden" name="notificationId" value={notification.id} />
-                      <Button type="submit" variant="ghost" size="sm" disabled={isSubmitting}>
-                        Marcar como lida
-                      </Button>
-                    </Form>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

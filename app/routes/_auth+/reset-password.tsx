@@ -101,7 +101,7 @@ export default function ResetPasswordPage({ actionData }: Route.ComponentProps) 
               {errors?.newPassword && <FieldError>{errors.newPassword}</FieldError>}
             </Field>
 
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" size="lg" disabled={isSubmitting}>
               {isSubmitting ? 'A redefinir…' : 'Redefinir palavra‑passe'}
             </Button>
           </Form>

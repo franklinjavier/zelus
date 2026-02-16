@@ -236,7 +236,9 @@ export default function OrganizationPage({ loaderData, actionData }: Route.Compo
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit">Guardar alterações</Button>
+          <Button type="submit" size="lg">
+            Guardar alterações
+          </Button>
         </div>
       </Form>
 
@@ -289,7 +291,6 @@ function InviteLinkCard({
             <Button
               type="submit"
               variant={isEnabled ? 'outline' : 'default'}
-              size="sm"
               disabled={isSubmitting}
             >
               {isEnabled ? 'Desativar' : 'Ativar'}
@@ -314,16 +315,16 @@ function InviteLinkCard({
                 <span className="text-muted-foreground text-sm">O link atual será invalidado.</span>
                 <fetcher.Form method="post" onSubmit={() => setConfirmRegen(false)}>
                   <input type="hidden" name="intent" value="regenerate-invite" />
-                  <Button type="submit" variant="destructive" size="sm" disabled={isSubmitting}>
+                  <Button type="submit" variant="destructive" disabled={isSubmitting}>
                     Confirmar
                   </Button>
                 </fetcher.Form>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmRegen(false)}>
+                <Button variant="ghost" onClick={() => setConfirmRegen(false)}>
                   Cancelar
                 </Button>
               </div>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => setConfirmRegen(true)}>
+              <Button variant="ghost" onClick={() => setConfirmRegen(true)}>
                 <HugeiconsIcon
                   icon={RefreshIcon}
                   data-icon="inline-start"

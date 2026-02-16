@@ -81,7 +81,7 @@ export default function OnboardingFractions() {
         + Adicionar fração
       </Button>
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
+        <Button type="submit" size="lg" disabled={isSubmitting} className="flex-1">
           {isSubmitting ? 'A guardar…' : 'Continuar'}
         </Button>
         <Link

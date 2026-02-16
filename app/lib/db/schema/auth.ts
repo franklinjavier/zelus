@@ -79,6 +79,8 @@ export const organization = pgTable('organization', {
   notes: text('notes'),
   language: text('language').notNull().default('pt-PT'),
   timezone: text('timezone').notNull().default('Europe/Lisbon'),
+  inviteCode: text('invite_code'),
+  inviteEnabled: boolean('invite_enabled').notNull().default(false),
 })
 
 export const member = pgTable('member', {

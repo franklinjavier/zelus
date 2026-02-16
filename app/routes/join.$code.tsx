@@ -50,7 +50,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 export async function action({ request, params, context }: Route.ActionArgs) {
   const session = context.get(sessionContext)
   if (!session) {
-    throw redirect(`${href('/login')}?redirect=/join/${params.code}`)
+    throw redirect(`${href('/login')}?redirect=${href('/join/:code', { code: params.code })}`)
   }
 
   const org = await getOrgByInviteCode(params.code)
@@ -160,11 +160,21 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
               <p className="text-muted-foreground text-center text-sm">
                 Inicie sessão para se juntar ao condomínio.
               </p>
-              <Button render={<Link to={`${href('/login')}?redirect=/join/${loaderData.code}`} />}>
+              <Button
+                render={
+                  <Link
+                    to={`${href('/login')}?redirect=${href('/join/:code', { code: loaderData.code })}`}
+                  />
+                }
+              >
                 Entrar
               </Button>
               <Button
-                render={<Link to={`${href('/register')}?redirect=/join/${loaderData.code}`} />}
+                render={
+                  <Link
+                    to={`${href('/register')}?redirect=${href('/join/:code', { code: loaderData.code })}`}
+                  />
+                }
                 variant="outline"
               >
                 Criar conta

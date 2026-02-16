@@ -2,6 +2,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { File01Icon } from '@hugeicons/core-free-icons'
 
 import { statusLabels } from '~/components/tickets/status-badge'
+import { formatRelativeTime } from '~/lib/format'
 
 type CommentItem = {
   type: 'comment'
@@ -40,31 +41,6 @@ type AttachmentItem = {
 
 type TimelineItem = CommentItem | StatusChangeItem | AttachmentItem
 
-function formatRelativeTime(date: string): string {
-  const now = Date.now()
-  const then = new Date(date).getTime()
-  const diffMs = now - then
-
-  const seconds = Math.floor(diffMs / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-  const weeks = Math.floor(days / 7)
-  const months = Math.floor(days / 30)
-
-  if (seconds < 60) return 'agora'
-  if (minutes === 1) return 'há 1 minuto'
-  if (minutes < 60) return `há ${minutes} minutos`
-  if (hours === 1) return 'há 1 hora'
-  if (hours < 24) return `há ${hours} horas`
-  if (days === 1) return 'há 1 dia'
-  if (days < 7) return `há ${days} dias`
-  if (weeks === 1) return 'há 1 semana'
-  if (weeks < 4) return `há ${weeks} semanas`
-  if (months === 1) return 'há 1 mês'
-  return `há ${months} meses`
-}
-
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
@@ -88,7 +64,7 @@ function MemberAvatar({ name }: { name: string }) {
 
 function CommentEntry({ item }: { item: CommentItem }) {
   return (
-    <div className="flex gap-3">
+    <div className="my-2 flex gap-3">
       <MemberAvatar name={item.userName} />
       <div className="min-w-0 flex-1">
         <p className="text-sm">
@@ -123,8 +99,10 @@ function CommentEntry({ item }: { item: CommentItem }) {
 function StatusChangeEntry({ item }: { item: StatusChangeItem }) {
   const toLabel = statusLabels[item.toStatus as keyof typeof statusLabels] ?? item.toStatus
   return (
-    <div className="flex items-center gap-3 pl-2.5">
-      <span className="bg-muted-foreground/40 size-2 shrink-0 rounded-full" />
+    <div className="flex items-center gap-3">
+      <span className="flex size-8 shrink-0 items-center justify-center">
+        <span className="bg-muted-foreground/40 size-2 rounded-full" />
+      </span>
       <p className="text-muted-foreground text-sm">
         {item.userName} alterou o estado para{' '}
         <span className="text-foreground font-medium">{toLabel}</span>
@@ -137,13 +115,15 @@ function StatusChangeEntry({ item }: { item: StatusChangeItem }) {
 
 function AttachmentEntry({ item }: { item: AttachmentItem }) {
   return (
-    <div className="flex items-center gap-3 pl-2">
-      <HugeiconsIcon
-        icon={File01Icon}
-        size={14}
-        strokeWidth={1.5}
-        className="text-muted-foreground shrink-0"
-      />
+    <div className="flex items-center gap-3">
+      <span className="flex size-8 shrink-0 items-center justify-center">
+        <HugeiconsIcon
+          icon={File01Icon}
+          size={14}
+          strokeWidth={1.5}
+          className="text-muted-foreground"
+        />
+      </span>
       <p className="text-muted-foreground min-w-0 text-sm">
         {item.userName} anexou{' '}
         <a
@@ -173,5 +153,5 @@ function TimelineEntry({ item }: { item: TimelineItem }) {
   }
 }
 
-export { TimelineEntry, formatRelativeTime, formatFileSize }
+export { TimelineEntry, formatFileSize }
 export type { TimelineItem, CommentItem, StatusChangeItem, AttachmentItem }

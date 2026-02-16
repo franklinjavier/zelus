@@ -1,7 +1,7 @@
-import { eq, and } from 'drizzle-orm'
+import { eq, and, or } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { userFractions, fractions, user, organization } from '~/lib/db/schema'
+import { userFractions, fractions, user, organization, member } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
 import { createNotification } from './notifications'
 import { sendEmail } from '~/lib/email/client'
@@ -46,6 +46,44 @@ export async function requestAssociation(orgId: string, userId: string, fraction
     entityId: association.id,
     metadata: { fractionId },
   })
+
+  // Notify org admins
+  const [fraction] = await db
+    .select({ label: fractions.label })
+    .from(fractions)
+    .where(eq(fractions.id, fractionId))
+    .limit(1)
+  const [userData] = await db
+    .select({ name: user.name })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1)
+
+  if (fraction && userData) {
+    const admins = await db
+      .select({ userId: member.userId })
+      .from(member)
+      .where(
+        and(
+          eq(member.organizationId, orgId),
+          or(eq(member.role, 'owner'), eq(member.role, 'admin')),
+        ),
+      )
+
+    const fractionLabel = fraction.label
+    await Promise.all(
+      admins.map((admin) =>
+        createNotification({
+          orgId,
+          userId: admin.userId,
+          type: 'association_requested',
+          title: `Nova associação pendente — ${fractionLabel}`,
+          message: `${userData.name} solicitou associação à fração ${fractionLabel}.`,
+          metadata: { fractionId },
+        }),
+      ),
+    )
+  }
 
   return association
 }

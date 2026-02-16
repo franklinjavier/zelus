@@ -43,15 +43,12 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   const isAdmin = effectiveRole === 'org_admin'
   const fractionRole = isAdmin ? null : await getFractionRole(orgId, user.id, params.id)
-
-  if (!isAdmin && !fractionRole) {
-    throw new Response('Forbidden', { status: 403 })
-  }
+  const isMember = !!fractionRole
 
   const members = await listFractionMembers(orgId, params.id)
   const canInvite = isAdmin || fractionRole === 'fraction_owner_admin'
 
-  return { fraction, members, isAdmin, canInvite }
+  return { fraction, members, isAdmin, isMember, canInvite }
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -114,7 +111,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function FractionDetailPage({ loaderData, actionData }: Route.ComponentProps) {
-  const { fraction, members, isAdmin, canInvite } = loaderData
+  const { fraction, members, isAdmin, isMember, canInvite } = loaderData
   const fetcher = useFetcher()
   const hasLeftColumn = isAdmin || canInvite
 
@@ -204,14 +201,23 @@ export default function FractionDetailPage({ loaderData, actionData }: Route.Com
 
           {/* Right column: Members */}
           <div className="lg:col-span-3">
-            <MembersCard members={members} />
+            <MembersCard members={members} showEmail />
           </div>
         </div>
       )}
 
       {!hasLeftColumn && (
-        <div className="mt-6">
-          <MembersCard members={members} />
+        <div className="mt-6 space-y-4">
+          {!isMember && (
+            <fetcher.Form method="post" action={href('/fractions')}>
+              <input type="hidden" name="intent" value="request-association" />
+              <input type="hidden" name="fractionId" value={fraction.id} />
+              <Button type="submit" variant="outline">
+                Associar-me a esta fração
+              </Button>
+            </fetcher.Form>
+          )}
+          <MembersCard members={members} showEmail={isMember} />
         </div>
       )}
     </div>
@@ -220,8 +226,10 @@ export default function FractionDetailPage({ loaderData, actionData }: Route.Com
 
 function MembersCard({
   members,
+  showEmail = false,
 }: {
   members: { id: string; userName: string; userEmail: string; role: string; status: string }[]
+  showEmail?: boolean
 }) {
   return (
     <Card>
@@ -251,7 +259,9 @@ function MembersCard({
                 <MemberAvatar name={m.userName} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{m.userName}</p>
-                  <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
+                  {showEmail && (
+                    <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <RoleBadge role={m.role} />

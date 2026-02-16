@@ -1,4 +1,4 @@
-import { Logout03Icon, Settings02Icon } from '@hugeicons/core-free-icons'
+import { AccountSetting03Icon, LogoutCircle01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Form, Link, href } from 'react-router'
 
@@ -66,14 +66,14 @@ export function NavUser({ user }: { user: AppSidebarProps['user'] }) {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link to={href('/settings/account')} />}>
-              <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={2} />
-              Conta
+            <DropdownMenuItem render={<Link to={href('/settings/profile')} />}>
+              <HugeiconsIcon icon={AccountSetting03Icon} size={16} strokeWidth={2} />
+              Definições
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <Form method="post" action={href('/auth/signout')}>
               <DropdownMenuItem render={<button type="submit" className="w-full" />}>
-                <HugeiconsIcon icon={Logout03Icon} size={16} strokeWidth={2} />
+                <HugeiconsIcon icon={LogoutCircle01Icon} size={16} strokeWidth={2} />
                 Sair
               </DropdownMenuItem>
             </Form>

@@ -1,4 +1,4 @@
-import { data, href, Link, useFetcher } from 'react-router'
+import { data, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
 import { z } from 'zod'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -8,7 +8,7 @@ import {
   ArrowRight01Icon,
 } from '@hugeicons/core-free-icons'
 
-import type { Route } from './+types/index'
+import type { Route } from './+types/_layout'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { listFractions } from '~/lib/services/fractions'
 import { requestAssociation, getUserAssociatedFractionIds } from '~/lib/services/associations'
@@ -16,6 +16,13 @@ import { Button } from '~/components/ui/button'
 import { CardLink } from '~/components/brand/card-link'
 import { EmptyState } from '~/components/layout/empty-state'
 import { setToast } from '~/lib/toast.server'
+import {
+  Drawer,
+  DrawerPopup,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '~/components/ui/drawer'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Frações — Zelus' }]
@@ -27,7 +34,6 @@ export async function loader({ context }: Route.LoaderArgs) {
   const fractionsList = await listFractions(orgId)
 
   const isAdmin = effectiveRole === 'org_admin'
-  // For non-admins, fetch which fractions they already have an association with
   const userAssociations = isAdmin
     ? new Map<string, string>()
     : await getUserAssociatedFractionIds(orgId, user.id)
@@ -62,9 +68,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 }
 
-export default function FractionsPage({ loaderData }: Route.ComponentProps) {
+export default function FractionsLayout({ loaderData }: Route.ComponentProps) {
   const { fractions, effectiveRole, userAssociations } = loaderData
   const isAdmin = effectiveRole === 'org_admin'
+  const navigate = useNavigate()
+  const matches = useMatches()
+  const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
 
   return (
     <div>
@@ -103,6 +112,21 @@ export default function FractionsPage({ loaderData }: Route.ComponentProps) {
           ))}
         </div>
       )}
+
+      <Drawer
+        open={isDrawerOpen}
+        onOpenChange={(open) => {
+          if (!open) navigate(href('/fractions'))
+        }}
+      >
+        <DrawerPopup>
+          <DrawerHeader>
+            <DrawerTitle>Nova fração</DrawerTitle>
+            <DrawerDescription>Preencha os dados para criar uma nova fração.</DrawerDescription>
+          </DrawerHeader>
+          <Outlet />
+        </DrawerPopup>
+      </Drawer>
     </div>
   )
 }

@@ -220,7 +220,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
               {timeline.length === 0 ? (
                 <EmptyState icon={CheckmarkCircle01Icon} message="Sem atividade registada" />
               ) : (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col">
                   {timeline.map((item) => (
                     <TimelineEntry key={item.id} item={item} />
                   ))}

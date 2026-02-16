@@ -34,7 +34,7 @@ export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Condomínio — Zelus' }]
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
 
   const org = await db
@@ -57,7 +57,9 @@ export async function loader({ context }: Route.LoaderArgs) {
 
   if (!org) throw new Response('Not Found', { status: 404 })
 
-  return { org }
+  const origin = new URL(request.url).origin
+
+  return { org, origin }
 }
 
 const updateSchema = z.object({
@@ -238,14 +240,22 @@ export default function OrganizationPage({ loaderData, actionData }: Route.Compo
         </div>
       </Form>
 
-      <InviteLinkCard org={org} />
+      <InviteLinkCard org={org} origin={loaderData.origin} />
     </div>
   )
 }
 
-function InviteLinkCard({ org }: { org: { inviteCode: string | null; inviteEnabled: boolean } }) {
+function InviteLinkCard({
+  org,
+  origin,
+}: {
+  org: { inviteCode: string | null; inviteEnabled: boolean }
+  origin: string
+}) {
   const fetcher = useFetcher()
   const [copied, setCopied] = useState(false)
+  const [confirmRegen, setConfirmRegen] = useState(false)
+  const isSubmitting = fetcher.state !== 'idle'
 
   // Optimistic state
   const isEnabled = fetcher.formData
@@ -254,9 +264,7 @@ function InviteLinkCard({ org }: { org: { inviteCode: string | null; inviteEnabl
       : org.inviteEnabled
     : org.inviteEnabled
 
-  const inviteUrl = org.inviteCode
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/join/${org.inviteCode}`
-    : null
+  const inviteUrl = org.inviteCode ? `${origin}/join/${org.inviteCode}` : null
 
   const copyLink = () => {
     if (!inviteUrl) return
@@ -278,7 +286,12 @@ function InviteLinkCard({ org }: { org: { inviteCode: string | null; inviteEnabl
           <fetcher.Form method="post">
             <input type="hidden" name="intent" value="toggle-invite" />
             <input type="hidden" name="enabled" value={String(org.inviteEnabled)} />
-            <Button type="submit" variant={isEnabled ? 'outline' : 'default'} size="sm">
+            <Button
+              type="submit"
+              variant={isEnabled ? 'outline' : 'default'}
+              size="sm"
+              disabled={isSubmitting}
+            >
               {isEnabled ? 'Desativar' : 'Ativar'}
             </Button>
           </fetcher.Form>
@@ -296,9 +309,21 @@ function InviteLinkCard({ org }: { org: { inviteCode: string | null; inviteEnabl
             <p className="text-muted-foreground text-sm">
               {copied ? 'Copiado!' : 'Qualquer pessoa com este link pode juntar-se.'}
             </p>
-            <fetcher.Form method="post">
-              <input type="hidden" name="intent" value="regenerate-invite" />
-              <Button type="submit" variant="ghost" size="sm">
+            {confirmRegen ? (
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">O link atual será invalidado.</span>
+                <fetcher.Form method="post" onSubmit={() => setConfirmRegen(false)}>
+                  <input type="hidden" name="intent" value="regenerate-invite" />
+                  <Button type="submit" variant="destructive" size="sm" disabled={isSubmitting}>
+                    Confirmar
+                  </Button>
+                </fetcher.Form>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmRegen(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => setConfirmRegen(true)}>
                 <HugeiconsIcon
                   icon={RefreshIcon}
                   data-icon="inline-start"
@@ -307,7 +332,7 @@ function InviteLinkCard({ org }: { org: { inviteCode: string | null; inviteEnabl
                 />
                 Regenerar
               </Button>
-            </fetcher.Form>
+            )}
           </div>
         </CardContent>
       )}

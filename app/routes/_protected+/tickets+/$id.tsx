@@ -177,37 +177,35 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
 
   return (
     <div>
-      <BackButton to={href('/tickets')} />
+      <div className="flex items-center justify-between">
+        <BackButton to={href('/tickets')} />
+        {canEdit && (
+          <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <HugeiconsIcon icon={Edit02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
+            Editar
+          </Button>
+        )}
+      </div>
 
       {actionData && 'error' in actionData && (
         <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
       )}
 
       {/* Title + description header */}
-      <div className="mt-6 mb-5 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold tracking-tight">{ticket.title}</h1>
-            {ticket.private && (
-              <HugeiconsIcon
-                icon={LockIcon}
-                size={14}
-                strokeWidth={2}
-                className="text-muted-foreground"
-              />
-            )}
-          </div>
-          {ticket.description && (
-            <p className="text-muted-foreground mt-2 text-sm whitespace-pre-wrap">
-              {ticket.description}
-            </p>
+      <div className="mt-6 mb-5">
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-semibold tracking-tight">{ticket.title}</h1>
+          {ticket.private && (
+            <Badge variant="outline" className="gap-1">
+              <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
+              Privado
+            </Badge>
           )}
         </div>
-        {canEdit && (
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <HugeiconsIcon icon={Edit02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-            Editar
-          </Button>
+        {ticket.description && (
+          <p className="text-muted-foreground mt-2 text-sm whitespace-pre-wrap">
+            {ticket.description}
+          </p>
         )}
       </div>
 

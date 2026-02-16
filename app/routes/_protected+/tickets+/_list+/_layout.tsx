@@ -7,6 +7,7 @@ import { statusLabels, type Status } from '~/components/tickets/status-badge'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
+import { cn } from '~/lib/utils'
 import {
   Select,
   SelectContent,
@@ -39,11 +40,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { id: userId } = context.get(userContext)
 
   const url = new URL(request.url)
+  const scope = (url.searchParams.get('scope') || 'all') as 'mine' | 'all' | 'private'
   const filters = {
     status: url.searchParams.get('status') || undefined,
     priority: url.searchParams.get('priority') || undefined,
     category: url.searchParams.get('category') || undefined,
     fractionId: url.searchParams.get('fractionId') || undefined,
+    scope,
   }
 
   const [tickets, categories] = await Promise.all([
@@ -61,6 +64,20 @@ const statusDotColors: Record<Status, string> = {
   in_progress: 'bg-amber-500',
   resolved: 'bg-emerald-500',
   closed: 'bg-muted-foreground',
+}
+
+const statusBadgeColors: Record<Status, string> = {
+  open: 'bg-primary/15 text-primary',
+  in_progress: 'bg-amber-500/15 text-amber-600',
+  resolved: 'bg-emerald-500/15 text-emerald-600',
+  closed: 'bg-muted-foreground/15 text-muted-foreground',
+}
+
+const statusGradients: Record<Status, string> = {
+  open: 'from-primary/5',
+  in_progress: 'from-amber-500/5',
+  resolved: 'from-emerald-500/5',
+  closed: 'from-muted-foreground/5',
 }
 
 export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
@@ -105,6 +122,45 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
 
       {/* Filters */}
       <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="border-border flex overflow-hidden rounded-full border">
+          <button
+            type="button"
+            onClick={() => setFilter('scope', '_all')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium transition-colors',
+              !searchParams.get('scope') || searchParams.get('scope') === 'all'
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted',
+            )}
+          >
+            Todas
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('scope', 'mine')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium transition-colors',
+              searchParams.get('scope') === 'mine'
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted',
+            )}
+          >
+            Minhas
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('scope', 'private')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium transition-colors',
+              searchParams.get('scope') === 'private'
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted',
+            )}
+          >
+            Privadas
+          </button>
+        </div>
+
         <Select
           value={searchParams.get('status') ?? '_all'}
           onValueChange={(v) => setFilter('status', v)}
@@ -167,11 +223,17 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
           {statusOrder.map((status) => {
             const groupTickets = tickets.filter((t) => t.status === status)
             return (
-              <Card key={status} className="gap-0 py-0">
+              <Card
+                key={status}
+                className={cn(
+                  'gap-0 bg-gradient-to-b to-transparent py-0',
+                  statusGradients[status],
+                  groupTickets.length === 0 && 'opacity-40',
+                )}
+              >
                 <div className="flex items-center gap-2 px-4 py-3">
-                  <span className={`size-2 rounded-full ${statusDotColors[status]}`} />
                   <span className="text-sm font-medium">{statusLabels[status]}</span>
-                  <Badge variant="secondary">{groupTickets.length}</Badge>
+                  <Badge className={statusBadgeColors[status]}>{groupTickets.length}</Badge>
                 </div>
                 <CardContent className="p-0">
                   {groupTickets.length === 0 ? (
@@ -190,12 +252,10 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
                             </span>
                             <span className="truncate font-medium">{ticket.title}</span>
                             {ticket.private && (
-                              <HugeiconsIcon
-                                icon={LockIcon}
-                                size={14}
-                                strokeWidth={2}
-                                className="text-muted-foreground shrink-0"
-                              />
+                              <Badge variant="outline" className="shrink-0 gap-1">
+                                <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
+                                Privado
+                              </Badge>
                             )}
                           </div>
                           <span className="text-muted-foreground shrink-0 text-sm">

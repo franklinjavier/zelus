@@ -1,7 +1,7 @@
-import { eq, and, or, sql, desc } from 'drizzle-orm'
+import { eq, and, or, inArray, sql, desc } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { tickets, ticketEvents, fractions, user } from '~/lib/db/schema'
+import { tickets, ticketEvents, fractions, userFractions, user } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
 import { createNotification } from './notifications'
 import { sendEmail } from '~/lib/email/client'
@@ -53,12 +53,35 @@ export async function listTickets(
     priority?: string
     category?: string
     fractionId?: string
+    scope?: 'mine' | 'all' | 'private'
   },
 ) {
   const conditions = [
     eq(tickets.orgId, orgId),
     or(eq(tickets.private, false), and(eq(tickets.private, true), eq(tickets.createdBy, userId))),
   ]
+
+  if (filters?.scope === 'private') {
+    conditions.push(and(eq(tickets.private, true), eq(tickets.createdBy, userId))!)
+  } else if (filters?.scope === 'mine') {
+    const myFractionIds = await db
+      .select({ fractionId: userFractions.fractionId })
+      .from(userFractions)
+      .where(
+        and(
+          eq(userFractions.orgId, orgId),
+          eq(userFractions.userId, userId),
+          eq(userFractions.status, 'approved'),
+        ),
+      )
+      .then((rows) => rows.map((r) => r.fractionId))
+
+    const mineConditions = [eq(tickets.createdBy, userId)]
+    if (myFractionIds.length > 0) {
+      mineConditions.push(inArray(tickets.fractionId, myFractionIds))
+    }
+    conditions.push(or(...mineConditions)!)
+  }
 
   if (filters?.status) {
     conditions.push(

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Building06Icon,
   Copy01Icon,
@@ -117,15 +117,37 @@ function StatTile({
   icon: Parameters<typeof HugeiconsIcon>[0]['icon']
   href: string
 }) {
+  const display = useCountUp(value, 400)
+
   return (
     <CardLink to={href} className="p-5">
       <div className="flex items-start justify-between">
-        <p className="text-3xl font-medium tracking-tight tabular-nums">{value}</p>
+        <p className="text-3xl font-medium tracking-tight tabular-nums">{display}</p>
         <HugeiconsIcon icon={icon} size={20} strokeWidth={1.5} className="text-muted-foreground" />
       </div>
       <p className="text-muted-foreground mt-1 text-sm font-medium">{label}</p>
     </CardLink>
   )
+}
+
+function useCountUp(target: number, duration = 400) {
+  const [current, setCurrent] = useState(0)
+  const ref = useRef({ start: 0, raf: 0 })
+
+  useEffect(() => {
+    if (target === 0) return
+    ref.current.start = performance.now()
+    const tick = (now: number) => {
+      const progress = Math.min((now - ref.current.start) / duration, 1)
+      const eased = 1 - (1 - progress) ** 3
+      setCurrent(Math.round(eased * target))
+      if (progress < 1) ref.current.raf = requestAnimationFrame(tick)
+    }
+    ref.current.raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(ref.current.raf)
+  }, [target, duration])
+
+  return current
 }
 
 function InviteLinkCard({ url }: { url: string }) {

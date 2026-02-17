@@ -74,7 +74,9 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Convites</h1>
-        <Button render={<Link to={href('/admin/invites/new')} />}>Novo convite</Button>
+        <Button nativeButton={false} render={<Link to={href('/admin/invites/new')} />}>
+          Novo convite
+        </Button>
       </div>
 
       {actionData && 'error' in actionData && (
@@ -106,7 +108,7 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
                   <div className="min-w-0">
                     <p className="truncate font-medium">{invite.email}</p>
                     <p className="text-muted-foreground mt-0.5 text-sm">
-                      {invite.type === 'org' ? 'Organização' : (invite.fractionLabel ?? 'Fração')}
+                      {invite.type === 'org' ? 'Condomínio' : (invite.fractionLabel ?? 'Fração')}
                       {' · '}
                       {roleLabel(invite.role)}
                     </p>

@@ -1,9 +1,33 @@
-import { eq, and } from 'drizzle-orm'
+import { eq, and, asc, isNull } from 'drizzle-orm'
 import { del } from '@vercel/blob'
 
 import { db } from '~/lib/db'
-import { ticketAttachments } from '~/lib/db/schema'
+import { ticketAttachments, user } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
+
+export async function listTicketAttachments(orgId: string, ticketId: string) {
+  return db
+    .select({
+      id: ticketAttachments.id,
+      fileName: ticketAttachments.fileName,
+      fileUrl: ticketAttachments.fileUrl,
+      fileSize: ticketAttachments.fileSize,
+      mimeType: ticketAttachments.mimeType,
+      uploadedBy: ticketAttachments.uploadedBy,
+      uploaderName: user.name,
+      createdAt: ticketAttachments.createdAt,
+    })
+    .from(ticketAttachments)
+    .innerJoin(user, eq(user.id, ticketAttachments.uploadedBy))
+    .where(
+      and(
+        eq(ticketAttachments.orgId, orgId),
+        eq(ticketAttachments.ticketId, ticketId),
+        isNull(ticketAttachments.commentId),
+      ),
+    )
+    .orderBy(asc(ticketAttachments.createdAt))
+}
 
 export async function createAttachment(
   orgId: string,

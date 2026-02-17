@@ -77,13 +77,13 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 const intentItems = [
-  { label: 'Organização', value: 'create-org-invite' },
+  { label: 'Condomínio', value: 'create-org-invite' },
   { label: 'Fração', value: 'create-fraction-invite' },
 ]
 
 const roleItems = [
   { label: 'Membro', value: 'fraction_member' },
-  { label: 'Admin organização', value: 'org_admin' },
+  { label: 'Admin condomínio', value: 'org_admin' },
   { label: 'Admin fração', value: 'fraction_owner_admin' },
 ]
 

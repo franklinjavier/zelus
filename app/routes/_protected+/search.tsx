@@ -8,7 +8,6 @@ import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { Form, Link, useNavigation } from 'react-router'
 
 import { Badge } from '~/components/ui/badge'
-import { Card, CardContent } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { formatShortDate } from '~/lib/format'
@@ -102,8 +101,8 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
             {grouped.map(({ scope, items }) => {
               const config = scopeConfig[scope]
               return (
-                <Card key={scope}>
-                  <div className="flex items-center gap-2.5 px-6 pt-5 pb-1">
+                <div key={scope}>
+                  <div className="flex items-center gap-2.5">
                     <HugeiconsIcon
                       icon={config.icon}
                       size={16}
@@ -115,30 +114,28 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
                       {items.length}
                     </Badge>
                   </div>
-                  <CardContent className="p-0">
-                    <div className="divide-y">
-                      {items.map((item) => (
-                        <Link
-                          key={item.id}
-                          to={item.url}
-                          className="hover:bg-accent flex items-center justify-between gap-3 px-5 py-3.5 transition-colors"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate font-medium">{item.title}</p>
-                            {item.description && (
-                              <p className="text-muted-foreground mt-0.5 truncate text-sm">
-                                {item.description}
-                              </p>
-                            )}
-                          </div>
-                          <span className="text-muted-foreground shrink-0 text-sm">
-                            {formatShortDate(item.createdAt)}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="mt-3 flex flex-col gap-2">
+                    {items.map((item) => (
+                      <Link
+                        key={item.id}
+                        to={item.url}
+                        className="ring-foreground/5 hover:bg-accent flex items-center justify-between gap-3 rounded-2xl p-3 ring-1 transition-colors"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{item.title}</p>
+                          {item.description && (
+                            <p className="text-muted-foreground mt-0.5 truncate text-sm">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-muted-foreground shrink-0 text-sm">
+                          {formatShortDate(item.createdAt)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               )
             })}
           </div>

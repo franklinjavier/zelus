@@ -11,4 +11,9 @@ export const orgContext = createContext<{
   effectiveRole: string
 }>()
 
-export const userContext = createContext<{ id: string; name: string; email: string }>()
+export const userContext = createContext<{
+  id: string
+  name: string
+  email: string
+  image: string | null
+}>()

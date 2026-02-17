@@ -56,7 +56,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   if (!res.ok) {
     const errData = await res.json().catch(() => null)
-    return data({ error: errData?.message || 'Erro ao criar organização.' }, { status: 500 })
+    return data({ error: errData?.message || 'Erro ao criar condomínio.' }, { status: 500 })
   }
 
   const orgData = await res.json()

@@ -11,7 +11,6 @@ import { listRecords } from '~/lib/services/maintenance'
 import { listSuppliers } from '~/lib/services/suppliers'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
-import { Card, CardContent } from '~/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -58,7 +57,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to={href('/maintenance/new')} />}>
+          <Button nativeButton={false} render={<Link to={href('/maintenance/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Novo registo
           </Button>
@@ -89,40 +88,40 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
       {records.length === 0 ? (
         <EmptyState icon={WrenchIcon} message="Nenhum registo de manutenção encontrado">
           {isAdmin && (
-            <Button render={<Link to={href('/maintenance/new')} />} variant="outline">
+            <Button
+              nativeButton={false}
+              render={<Link to={href('/maintenance/new')} />}
+              variant="outline"
+            >
               Criar primeiro registo
             </Button>
           )}
         </EmptyState>
       ) : (
-        <Card className="mt-6">
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {records.map((record) => (
-                <Link
-                  key={record.id}
-                  to={href('/maintenance/:id', { id: record.id })}
-                  className="hover:bg-accent flex items-center gap-3 px-5 py-3.5 transition-colors"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    <span className="truncate font-medium">{record.title}</span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    {record.supplierName && <Badge variant="outline">{record.supplierName}</Badge>}
-                    <span className="text-muted-foreground text-sm">
-                      {formatDate(record.performedAt)}
-                    </span>
-                    {formatCost(record.cost) && (
-                      <span className="text-sm font-medium tabular-nums">
-                        {formatCost(record.cost)}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-6 flex flex-col gap-2">
+          {records.map((record) => (
+            <Link
+              key={record.id}
+              to={href('/maintenance/:id', { id: record.id })}
+              className="ring-foreground/5 hover:bg-accent flex items-center gap-3 rounded-2xl p-3 ring-1 transition-colors"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                <span className="truncate text-sm font-medium">{record.title}</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                {record.supplierName && <Badge variant="outline">{record.supplierName}</Badge>}
+                <span className="text-muted-foreground text-sm">
+                  {formatDate(record.performedAt)}
+                </span>
+                {formatCost(record.cost) && (
+                  <span className="text-sm font-medium tabular-nums">
+                    {formatCost(record.cost)}
+                  </span>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   )

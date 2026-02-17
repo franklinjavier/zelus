@@ -85,7 +85,7 @@ export default function FractionsLayout({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to={href('/fractions/new')} />}>
+          <Button nativeButton={false} render={<Link to={href('/fractions/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Nova fração
           </Button>
@@ -95,7 +95,11 @@ export default function FractionsLayout({ loaderData }: Route.ComponentProps) {
       {fractions.length === 0 ? (
         <EmptyState icon={Building06Icon} message="Nenhuma fração criada">
           {isAdmin && (
-            <Button render={<Link to={href('/fractions/new')} />} variant="outline">
+            <Button
+              nativeButton={false}
+              render={<Link to={href('/fractions/new')} />}
+              variant="outline"
+            >
               Criar primeira fração
             </Button>
           )}

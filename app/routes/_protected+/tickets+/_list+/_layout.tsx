@@ -6,7 +6,7 @@ import { priorityLabels } from '~/components/tickets/priority-indicator'
 import { statusLabels, type Status } from '~/components/tickets/status-badge'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
+import { Card } from '~/components/ui/card'
 import { cn } from '~/lib/utils'
 import {
   Select,
@@ -114,7 +114,7 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
             {tickets.length} {tickets.length === 1 ? 'ocorrência' : 'ocorrências'}
           </p>
         </div>
-        <Button render={<Link to={href('/tickets/new')} />}>
+        <Button nativeButton={false} render={<Link to={href('/tickets/new')} />}>
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
           Nova ocorrência
         </Button>
@@ -235,37 +235,35 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
                   <span className="text-sm font-medium">{statusLabels[status]}</span>
                   <Badge className={statusBadgeColors[status]}>{groupTickets.length}</Badge>
                 </div>
-                <CardContent className="p-0">
+                <div className="flex flex-col gap-1.5 px-3 pb-3">
                   {groupTickets.length === 0 ? (
-                    <p className="text-muted-foreground px-4 pb-3 text-sm">Nenhuma ocorrência</p>
+                    <p className="text-muted-foreground px-1 text-sm">Nenhuma ocorrência</p>
                   ) : (
-                    <div className="divide-y">
-                      {groupTickets.map((ticket) => (
-                        <Link
-                          key={ticket.id}
-                          to={href('/tickets/:id', { id: ticket.id })}
-                          className="hover:bg-accent flex items-center gap-3 px-4 py-3 transition-colors"
-                        >
-                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                            <span className="shrink-0">
-                              <PriorityIndicatorIcon priority={ticket.priority} />
-                            </span>
-                            <span className="truncate font-medium">{ticket.title}</span>
-                            {ticket.private && (
-                              <Badge variant="outline" className="shrink-0 gap-1">
-                                <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
-                                Privado
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-muted-foreground shrink-0 text-sm">
-                            {formatShortDate(ticket.createdAt)}
+                    groupTickets.map((ticket) => (
+                      <Link
+                        key={ticket.id}
+                        to={href('/tickets/:id', { id: ticket.id })}
+                        className="hover:bg-accent/50 flex items-center gap-3 rounded-xl p-2.5 transition-colors"
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                          <span className="shrink-0">
+                            <PriorityIndicatorIcon priority={ticket.priority} />
                           </span>
-                        </Link>
-                      ))}
-                    </div>
+                          <span className="truncate text-sm font-medium">{ticket.title}</span>
+                          {ticket.private && (
+                            <Badge variant="outline" className="shrink-0 gap-1">
+                              <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
+                              Privado
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-muted-foreground shrink-0 text-sm">
+                          {formatShortDate(ticket.createdAt)}
+                        </span>
+                      </Link>
+                    ))
                   )}
-                </CardContent>
+                </div>
               </Card>
             )
           })}

@@ -143,7 +143,11 @@ export default function NewMaintenancePage({ loaderData, actionData }: Route.Com
             </Field>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button render={<Link to={href('/maintenance')} />} variant="outline">
+              <Button
+                nativeButton={false}
+                render={<Link to={href('/maintenance')} />}
+                variant="outline"
+              >
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>

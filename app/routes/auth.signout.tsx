@@ -16,3 +16,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   return redirect(href('/login'), { headers })
 }
+
+export async function loader() {
+  throw redirect('/')
+}

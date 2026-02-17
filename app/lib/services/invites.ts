@@ -264,7 +264,7 @@ export async function acceptInvite(token: string, userId: string) {
     userId: invite.invitedBy,
     type: 'invite.accepted',
     title: 'Convite aceite',
-    message: `${acceptorName} aceitou o convite para ${invite.type === 'org' ? 'a organização' : 'a fração'}.`,
+    message: `${acceptorName} aceitou o convite para ${invite.type === 'org' ? 'o condomínio' : 'a fração'}.`,
     metadata: { inviteId: invite.id, email: invite.email, type: invite.type },
   }).catch(() => {})
 

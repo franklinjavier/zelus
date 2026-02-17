@@ -73,7 +73,7 @@ export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to={href('/suppliers/new')} />}>
+          <Button nativeButton={false} render={<Link to={href('/suppliers/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Novo fornecedor
           </Button>
@@ -104,7 +104,11 @@ export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
       {suppliers.length === 0 ? (
         <EmptyState icon={TruckDeliveryIcon} message="Nenhum fornecedor encontrado">
           {isAdmin && (
-            <Button render={<Link to={href('/suppliers/new')} />} variant="outline">
+            <Button
+              nativeButton={false}
+              render={<Link to={href('/suppliers/new')} />}
+              variant="outline"
+            >
               Criar primeiro fornecedor
             </Button>
           )}

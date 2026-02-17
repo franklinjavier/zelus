@@ -50,6 +50,7 @@ const mainNav = [
 
 const adminNav = [
   { label: 'Condomínio', to: href('/admin/organization') },
+  { label: 'Membros', to: href('/admin/members') },
   { label: 'Associações', to: href('/admin/associations') },
   { label: 'Convites', to: href('/admin/invites') },
   { label: 'Categorias', to: href('/admin/categories') },
@@ -110,7 +111,7 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
                           <SidebarMenuSubItem key={item.to}>
                             <NavLink to={item.to}>
                               {({ isActive }) => (
-                                <SidebarMenuSubButton isActive={isActive}>
+                                <SidebarMenuSubButton isActive={isActive} render={<span />}>
                                   <span>{item.label}</span>
                                 </SidebarMenuSubButton>
                               )}

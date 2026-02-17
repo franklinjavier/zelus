@@ -84,7 +84,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
           <CardTitle>Convite Zelus</CardTitle>
           <CardDescription>
             {invite.type === 'org'
-              ? 'Convite para a organização'
+              ? 'Convite para o condomínio'
               : `Convite para a fração ${invite.fractionLabel ?? ''}`}
           </CardDescription>
         </CardHeader>
@@ -129,6 +129,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
               </p>
               <Button
                 size="lg"
+                nativeButton={false}
                 render={
                   <Link
                     to={`${href('/login')}?redirect=${href('/invite/:token', { token: invite.token })}&email=${encodeURIComponent(invite.email)}`}
@@ -139,6 +140,7 @@ export default function InvitePage({ loaderData, actionData }: Route.ComponentPr
               </Button>
               <Button
                 size="lg"
+                nativeButton={false}
                 render={
                   <Link
                     to={`${href('/register')}?redirect=${href('/invite/:token', { token: invite.token })}&email=${encodeURIComponent(invite.email)}`}

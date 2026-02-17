@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
+  Add01Icon,
   ArrowUp01Icon,
+  Attachment01Icon,
+  Camera01Icon,
   CheckmarkCircle01Icon,
+  Delete02Icon,
   Edit02Icon,
+  File01Icon,
   LockIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -13,7 +18,7 @@ import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { PriorityIndicator, PrioritySelector } from '~/components/tickets/priority-indicator'
 import { StatusBadge, statusLabels, type Status } from '~/components/tickets/status-badge'
-import { TimelineEntry } from '~/components/tickets/timeline-entry'
+import { TimelineEntry, ImagePreview, formatFileSize } from '~/components/tickets/timeline-entry'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
@@ -28,6 +33,7 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip'
 import { Checkbox } from '~/components/ui/checkbox'
 import {
   Drawer,
@@ -41,7 +47,11 @@ import { getFractionRole } from '~/lib/auth/rbac'
 import { hasCategoryLabel, translateCategory } from '~/lib/category-labels'
 import { formatDate } from '~/lib/format'
 import { listCategories } from '~/lib/services/categories'
-import { deleteAttachment } from '~/lib/services/ticket-attachments'
+import {
+  createAttachment,
+  deleteAttachment,
+  listTicketAttachments,
+} from '~/lib/services/ticket-attachments'
 import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments'
 import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets'
 import { setToast } from '~/lib/toast.server'
@@ -66,9 +76,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     }
   }
 
-  const [timeline, categories] = await Promise.all([
+  const [timeline, categories, attachments] = await Promise.all([
     getTicketTimeline(orgId, params.id),
     listCategories(),
+    listTicketAttachments(orgId, params.id),
   ])
 
   // canManage: org_admin OR fraction_owner_admin for the ticket's fraction
@@ -81,7 +92,16 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const isAdmin = effectiveRole === 'org_admin'
   const isCreator = ticket.createdBy === user.id
 
-  return { ticket, timeline, categories, canManage, isAdmin, isCreator }
+  return {
+    ticket,
+    timeline,
+    categories,
+    attachments,
+    canManage,
+    isAdmin,
+    isCreator,
+    userId: user.id,
+  }
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -115,6 +135,34 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
+  if (intent === 'update-field') {
+    const ticket = await getTicket(orgId, params.id, user.id)
+    if (!ticket) throw new Response('Not Found', { status: 404 })
+    if (effectiveRole !== 'org_admin' && ticket.createdBy !== user.id) {
+      throw new Response('Forbidden', { status: 403 })
+    }
+
+    const field = formData.get('field') as string
+    const value = formData.get('value') as string
+
+    if (field === 'priority') {
+      await updateTicket(
+        orgId,
+        params.id,
+        { priority: (value as 'urgent' | 'high' | 'medium' | 'low') || null },
+        user.id,
+      )
+      return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
+    }
+
+    if (field === 'category') {
+      await updateTicket(orgId, params.id, { category: value || null }, user.id)
+      return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
+    }
+
+    return { error: 'Campo desconhecido.' }
+  }
+
   if (intent === 'update-ticket') {
     // Only creator or admin can edit
     const ticket = await getTicket(orgId, params.id, user.id)
@@ -146,6 +194,26 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
   }
 
+  if (intent === 'attach') {
+    const fileName = formData.get('fileName') as string
+    const fileUrl = formData.get('fileUrl') as string
+    const fileSize = formData.get('fileSize') as string
+    const mimeType = formData.get('mimeType') as string
+    if (!fileName || !fileUrl) return { error: 'Ficheiro inválido.' }
+    await createAttachment(
+      orgId,
+      {
+        ticketId: params.id,
+        fileName,
+        fileUrl,
+        fileSize: Number(fileSize),
+        mimeType,
+      },
+      user.id,
+    )
+    return data({ success: true }, { headers: await setToast('Ficheiro anexado.') })
+  }
+
   if (intent === 'delete-attachment') {
     const attachmentId = formData.get('attachmentId') as string
     if (!attachmentId) return { error: 'Anexo não encontrado.' }
@@ -161,10 +229,21 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function TicketDetailPage({ loaderData, actionData }: Route.ComponentProps) {
-  const { ticket, timeline, categories, canManage, isAdmin, isCreator } = loaderData
+  const { ticket, timeline, categories, attachments, canManage, isAdmin, isCreator, userId } =
+    loaderData
   const statusFetcher = useFetcher()
+  const priorityFetcher = useFetcher()
+  const categoryFetcher = useFetcher()
+  const attachFetcher = useFetcher()
+  const evidenceFetcher = useFetcher()
   const canEdit = isAdmin || isCreator
   const [editOpen, setEditOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isEvidenceUploading, setIsEvidenceUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const evidenceFileInputRef = useRef<HTMLInputElement>(null)
+  const priorityCurrent =
+    (priorityFetcher.formData?.get('value') as string) ?? ticket.priority ?? ''
 
   const statusItems = (Object.entries(statusLabels) as [Status, string][]).map(
     ([value, label]) => ({
@@ -194,7 +273,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
       {/* Title + description header */}
       <div className="mt-6 mb-5">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold tracking-tight">{ticket.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{ticket.title}</h1>
           {ticket.private && (
             <Badge variant="outline" className="gap-1">
               <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
@@ -203,11 +282,130 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
           )}
         </div>
         {ticket.description && (
-          <p className="text-muted-foreground mt-2 text-sm whitespace-pre-wrap">
+          <p className="text-muted-foreground mt-2 text-base whitespace-pre-wrap">
             {ticket.description}
           </p>
         )}
       </div>
+
+      {/* Evidence thumbnails */}
+      {(attachments.length > 0 || canEdit) && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger className="text-muted-foreground mr-1 flex items-center gap-1.5">
+              <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
+              <span className="text-sm">Evidências</span>
+            </TooltipTrigger>
+            <TooltipContent>Fotos e ficheiros que documentam a ocorrência</TooltipContent>
+          </Tooltip>
+          {attachments.map((att) => {
+            const isImage = att.mimeType.startsWith('image/')
+            return (
+              <div key={att.id} className="group relative">
+                {isImage ? (
+                  <ImagePreview
+                    src={att.fileUrl}
+                    alt={att.fileName}
+                    className="block size-14 cursor-zoom-in overflow-hidden rounded-md border"
+                    caption={`${att.uploaderName} · ${formatDate(att.createdAt)}`}
+                  />
+                ) : (
+                  <a
+                    href={att.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`${att.fileName} (${formatFileSize(att.fileSize)})`}
+                    className="border-border bg-muted/50 hover:bg-muted flex size-14 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors"
+                  >
+                    <HugeiconsIcon
+                      icon={File01Icon}
+                      size={18}
+                      strokeWidth={1.5}
+                      className="text-muted-foreground"
+                    />
+                    <span className="text-muted-foreground w-12 truncate text-center text-[10px]">
+                      {att.fileName.split('.').pop()}
+                    </span>
+                  </a>
+                )}
+                {canEdit && att.uploadedBy === userId && (
+                  <evidenceFetcher.Form method="post" className="absolute -top-1.5 -right-1.5">
+                    <input type="hidden" name="intent" value="delete-attachment" />
+                    <input type="hidden" name="attachmentId" value={att.id} />
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      size="icon-sm"
+                      className="size-5 rounded-full opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} size={12} strokeWidth={2} />
+                    </Button>
+                  </evidenceFetcher.Form>
+                )}
+              </div>
+            )
+          })}
+          {canEdit && (
+            <>
+              <input
+                ref={evidenceFileInputRef}
+                type="file"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  setIsEvidenceUploading(true)
+                  try {
+                    const body = new FormData()
+                    body.append('file', file)
+                    const res = await fetch(href('/api/upload'), { method: 'POST', body })
+                    const json = await res.json()
+                    if (!res.ok || !json.url) return
+                    evidenceFetcher.submit(
+                      {
+                        intent: 'attach',
+                        fileName: json.fileName,
+                        fileUrl: json.url,
+                        fileSize: String(json.fileSize),
+                        mimeType: json.mimeType,
+                      },
+                      { method: 'post' },
+                    )
+                  } finally {
+                    setIsEvidenceUploading(false)
+                    if (evidenceFileInputRef.current) evidenceFileInputRef.current.value = ''
+                  }
+                }}
+              />
+              {attachments.length > 0 ? (
+                <button
+                  type="button"
+                  disabled={isEvidenceUploading || evidenceFetcher.state !== 'idle'}
+                  onClick={() => evidenceFileInputRef.current?.click()}
+                  className="border-border text-muted-foreground hover:bg-muted flex size-14 items-center justify-center rounded-md border border-dashed transition-colors disabled:opacity-50"
+                >
+                  <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={1.5} />
+                </button>
+              ) : (
+                <Button
+                  variant="outline"
+                  disabled={isEvidenceUploading || evidenceFetcher.state !== 'idle'}
+                  onClick={() => evidenceFileInputRef.current?.click()}
+                >
+                  <HugeiconsIcon
+                    icon={Add01Icon}
+                    data-icon="inline-start"
+                    size={16}
+                    strokeWidth={2}
+                  />
+                  Adicionar
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-5">
         {/* Left column: Timeline + Comment */}
@@ -221,9 +419,11 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                 <EmptyState icon={CheckmarkCircle01Icon} message="Sem atividade registada" />
               ) : (
                 <div className="flex flex-col">
-                  {timeline.map((item) => (
-                    <TimelineEntry key={item.id} item={item} />
-                  ))}
+                  {timeline
+                    .filter((item) => item.type !== 'attachment')
+                    .map((item) => (
+                      <TimelineEntry key={item.id} item={item} />
+                    ))}
                 </div>
               )}
 
@@ -238,6 +438,47 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                   className="pr-12 pb-10"
                 />
                 <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      setIsUploading(true)
+                      try {
+                        const body = new FormData()
+                        body.append('file', file)
+                        const res = await fetch(href('/api/upload'), { method: 'POST', body })
+                        const json = await res.json()
+                        if (!res.ok || !json.url) return
+                        attachFetcher.submit(
+                          {
+                            intent: 'attach',
+                            fileName: json.fileName,
+                            fileUrl: json.url,
+                            fileSize: String(json.fileSize),
+                            mimeType: json.mimeType,
+                          },
+                          { method: 'post' },
+                        )
+                      } finally {
+                        setIsUploading(false)
+                        if (fileInputRef.current) fileInputRef.current.value = ''
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-8 rounded-lg"
+                    disabled={isUploading || attachFetcher.state !== 'idle'}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <HugeiconsIcon icon={Attachment01Icon} size={16} strokeWidth={2} />
+                  </Button>
                   <Button type="submit" size="icon" variant="default" className="size-8 rounded-lg">
                     <HugeiconsIcon icon={ArrowUp01Icon} size={16} strokeWidth={2} />
                   </Button>
@@ -266,7 +507,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                           name="status"
                           defaultValue={ticket.status}
                           onValueChange={(value) => {
-                            if (!value) return
+                            if (!value || value === ticket.status) return
                             const formData = new FormData()
                             formData.set('intent', 'update-status')
                             formData.set('status', value)
@@ -296,7 +537,23 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground text-sm">Prioridade</dt>
                   <dd>
-                    <PriorityIndicator priority={ticket.priority} />
+                    {canEdit ? (
+                      <PrioritySelector
+                        value={priorityCurrent}
+                        className="h-10 w-auto min-w-32"
+                        onValueChange={(value) => {
+                          const v = value ?? ''
+                          if (v === priorityCurrent) return
+                          const formData = new FormData()
+                          formData.set('intent', 'update-field')
+                          formData.set('field', 'priority')
+                          formData.set('value', v)
+                          priorityFetcher.submit(formData, { method: 'post' })
+                        }}
+                      />
+                    ) : (
+                      <PriorityIndicator priority={ticket.priority} />
+                    )}
                   </dd>
                 </div>
 
@@ -304,7 +561,13 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                 <div className="flex items-center justify-between">
                   <dt className="text-muted-foreground text-sm">Categoria</dt>
                   <dd>
-                    {ticket.category && hasCategoryLabel(ticket.category) ? (
+                    {canEdit ? (
+                      <InlineCategorySelect
+                        categories={categories}
+                        defaultValue={ticket.category}
+                        fetcher={categoryFetcher}
+                      />
+                    ) : ticket.category && hasCategoryLabel(ticket.category) ? (
                       <Badge variant="secondary">{translateCategory(ticket.category)}</Badge>
                     ) : (
                       <span className="text-muted-foreground text-sm">&mdash;</span>
@@ -388,5 +651,32 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
         </Drawer>
       )}
     </div>
+  )
+}
+
+function InlineCategorySelect({
+  categories,
+  defaultValue,
+  fetcher,
+}: {
+  categories: { key: string }[]
+  defaultValue: string | null
+  fetcher: ReturnType<typeof useFetcher>
+}) {
+  const current = defaultValue
+
+  return (
+    <CategorySelect
+      categories={categories}
+      defaultValue={current}
+      onValueChange={(value) => {
+        if (value === current) return
+        const formData = new FormData()
+        formData.set('intent', 'update-field')
+        formData.set('field', 'category')
+        formData.set('value', value ?? '')
+        fetcher.submit(formData, { method: 'post' })
+      }}
+    />
   )
 }

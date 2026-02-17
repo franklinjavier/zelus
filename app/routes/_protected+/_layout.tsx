@@ -30,7 +30,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       id: user.id,
       name: user.name,
       email: user.email,
-      image: null as string | null,
+      image: user.image,
     },
     org: { id: org.orgId, name: org.orgName },
     orgs: userOrgs,

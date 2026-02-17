@@ -13,6 +13,7 @@ export function Header({ unreadCount }: { unreadCount?: number }) {
         <Button
           variant="ghost"
           size="icon"
+          nativeButton={false}
           render={<Link to={href('/search')} />}
           title="Pesquisar"
         >
@@ -21,6 +22,7 @@ export function Header({ unreadCount }: { unreadCount?: number }) {
         <Button
           variant="ghost"
           size="icon"
+          nativeButton={false}
           render={<Link to={href('/notifications')} />}
           title="Notificações"
           className="relative"

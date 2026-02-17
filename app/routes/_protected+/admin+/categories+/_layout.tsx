@@ -59,7 +59,9 @@ export default function CategoriesLayout({ loaderData, actionData }: Route.Compo
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Categorias</h1>
-        <Button render={<Link to={href('/admin/categories/new')} />}>Nova categoria</Button>
+        <Button nativeButton={false} render={<Link to={href('/admin/categories/new')} />}>
+          Nova categoria
+        </Button>
       </div>
 
       {actionData && 'error' in actionData && (
@@ -70,23 +72,23 @@ export default function CategoriesLayout({ loaderData, actionData }: Route.Compo
         {categories.length === 0 ? (
           <EmptyState icon={Tag01Icon} message="Nenhuma categoria criada" />
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {categories.map((cat) => (
               <div
                 key={cat.key}
-                className="bg-primary/5 ring-primary/10 hover:bg-primary/10 flex items-center justify-between gap-4 rounded-2xl p-5 ring-1 transition-colors"
+                className="ring-foreground/5 flex items-center gap-3 rounded-2xl p-3 ring-1"
               >
-                <div className="flex min-w-0 items-center gap-4">
-                  <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
-                    <HugeiconsIcon
-                      icon={Tag01Icon}
-                      size={18}
-                      strokeWidth={1.5}
-                      className="text-primary"
-                    />
-                  </div>
-                  <p className="truncate font-medium">{translateCategory(cat.key)}</p>
+                <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
+                  <HugeiconsIcon
+                    icon={Tag01Icon}
+                    size={18}
+                    strokeWidth={1.5}
+                    className="text-primary"
+                  />
                 </div>
+                <p className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {translateCategory(cat.key)}
+                </p>
                 <DeleteConfirmDialog
                   title="Apagar categoria?"
                   description={`A categoria "${translateCategory(cat.key)}" será removida permanentemente.`}

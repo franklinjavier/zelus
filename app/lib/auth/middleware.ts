@@ -78,7 +78,7 @@ export const orgMemberMiddleware: AnyMiddlewareFunction = async (
   }
 
   context.set(orgContext, { orgId: activeOrgId, orgName: org.name, orgRole, effectiveRole })
-  context.set(userContext, { id: user.id, name: user.name, email: user.email })
+  context.set(userContext, { id: user.id, name: user.name, email: user.email, image: user.image })
 
   return next()
 }

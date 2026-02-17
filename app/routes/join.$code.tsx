@@ -141,7 +141,12 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
               <div className="bg-muted rounded-xl px-3 py-2 text-center text-sm">
                 Já é membro deste condomínio.
               </div>
-              <Button size="lg" render={<Link to={href('/dashboard')} />} className="w-full">
+              <Button
+                size="lg"
+                nativeButton={false}
+                render={<Link to={href('/dashboard')} />}
+                className="w-full"
+              >
                 Ir para o painel
               </Button>
             </div>
@@ -162,6 +167,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
               </p>
               <Button
                 size="lg"
+                nativeButton={false}
                 render={
                   <Link
                     to={`${href('/login')}?redirect=${href('/join/:code', { code: loaderData.code })}`}
@@ -172,6 +178,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
               </Button>
               <Button
                 size="lg"
+                nativeButton={false}
                 render={
                   <Link
                     to={`${href('/register')}?redirect=${href('/join/:code', { code: loaderData.code })}`}

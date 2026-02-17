@@ -1,6 +1,4 @@
-import { HugeiconsIcon } from '@hugeicons/react'
-import { AlertDiamondIcon, Alert02Icon, MinusSignIcon } from '@hugeicons/core-free-icons'
-
+import { useState } from 'react'
 import { cn } from '~/lib/utils'
 import {
   Select,
@@ -9,6 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import {
+  NoPriorityIcon,
+  UrgentIcon,
+  HighPriorityIcon,
+  MediumPriorityIcon,
+  LowPriorityIcon,
+} from './priority-icons'
 
 type Priority = 'urgent' | 'high' | 'medium' | 'low' | null
 
@@ -20,22 +25,25 @@ const priorityLabels: Record<string, string> = {
   low: 'Baixa',
 }
 
-const priorityConfig: Record<string, { icon: typeof AlertDiamondIcon; className: string }> = {
-  urgent: { icon: AlertDiamondIcon, className: 'text-red-600' },
-  high: { icon: Alert02Icon, className: 'text-orange-500' },
-  medium: { icon: Alert02Icon, className: 'text-amber-500' },
-  low: { icon: Alert02Icon, className: 'text-emerald-600' },
-  '': { icon: MinusSignIcon, className: 'text-muted-foreground' },
+const priorityConfig: Record<
+  string,
+  { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; className: string }
+> = {
+  urgent: { icon: UrgentIcon, className: 'text-red-600' },
+  high: { icon: HighPriorityIcon, className: 'text-orange-500' },
+  medium: { icon: MediumPriorityIcon, className: 'text-amber-500' },
+  low: { icon: LowPriorityIcon, className: 'text-emerald-600' },
+  '': { icon: NoPriorityIcon, className: 'text-muted-foreground' },
 }
 
 function PriorityIndicator({ priority }: { priority: Priority }) {
   const key = priority ?? ''
-  const { icon, className } = priorityConfig[key]
+  const { icon: Icon, className } = priorityConfig[key]
   const label = priorityLabels[key]
 
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-sm', className)}>
-      <HugeiconsIcon icon={icon} size={14} strokeWidth={2} />
+      <Icon className="size-4" />
       {label}
     </span>
   )
@@ -43,17 +51,44 @@ function PriorityIndicator({ priority }: { priority: Priority }) {
 
 const priorityItems = Object.entries(priorityLabels).map(([value, label]) => ({ label, value }))
 
-function PrioritySelector({ name, defaultValue }: { name: string; defaultValue?: string }) {
+function PrioritySelector({
+  name,
+  defaultValue,
+  value: controlledValue,
+  onValueChange,
+  className: triggerClassName,
+}: {
+  name?: string
+  defaultValue?: string
+  value?: string
+  onValueChange?: (value: string | null) => void
+  className?: string
+}) {
+  const isControlled = controlledValue !== undefined
+  const [internal, setInternal] = useState(defaultValue ?? '')
+  const current = isControlled ? controlledValue : internal
+  const { icon: CurrentIcon, className: currentClassName } =
+    priorityConfig[current] ?? priorityConfig['']
+
   return (
-    <Select name={name} defaultValue={defaultValue ?? ''} items={priorityItems}>
-      <SelectTrigger className="w-full">
+    <Select
+      name={name}
+      value={current}
+      onValueChange={(v) => {
+        if (!isControlled) setInternal(v ?? '')
+        onValueChange?.(v)
+      }}
+      items={priorityItems}
+    >
+      <SelectTrigger className={cn('w-full', currentClassName, triggerClassName)}>
+        <CurrentIcon className="size-5" />
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
-        {Object.entries(priorityConfig).map(([value, { icon, className }]) => (
-          <SelectItem key={value} value={value}>
-            <HugeiconsIcon icon={icon} size={14} strokeWidth={2} className={className} />
-            <span className={className}>{priorityLabels[value]}</span>
+      <SelectContent className="min-w-48">
+        {Object.entries(priorityConfig).map(([value, { icon: Icon, className }]) => (
+          <SelectItem key={value} value={value} className={cn(className)}>
+            <Icon className="size-5" />
+            {priorityLabels[value]}
           </SelectItem>
         ))}
       </SelectContent>
@@ -61,5 +96,5 @@ function PrioritySelector({ name, defaultValue }: { name: string; defaultValue?:
   )
 }
 
-export { PriorityIndicator, PrioritySelector, priorityLabels }
+export { PriorityIndicator, PrioritySelector, priorityConfig, priorityLabels }
 export type { Priority }

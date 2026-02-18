@@ -108,11 +108,16 @@ function ImagePreview({
       {mounted &&
         createPortal(
           <div
+            role="button"
+            tabIndex={0}
             className="fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ease-out"
             style={{
               backgroundColor: visible ? 'rgb(0 0 0 / 0.9)' : 'rgb(0 0 0 / 0)',
             }}
             onClick={close}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') close()
+            }}
             onTransitionEnd={() => {
               if (!visible) setMounted(false)
             }}
@@ -132,12 +137,14 @@ function ImagePreview({
               <HugeiconsIcon icon={Cancel01Icon} size={24} strokeWidth={2} className="text-white" />
             </button>
             <div
+              role="presentation"
               className="flex flex-col items-center gap-3 transition-all duration-200 ease-out"
               style={{
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'scale(1)' : 'scale(0.95)',
               }}
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
             >
               <img src={src} alt={alt} className="max-h-[85vh] max-w-[90vw] object-contain" />
               {caption && <p className="text-sm text-white/70">{caption}</p>}

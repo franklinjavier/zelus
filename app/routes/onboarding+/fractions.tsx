@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { redirect, useFetcher, useSearchParams, Link, href } from 'react-router'
 
 import type { Route } from './+types/fractions'
@@ -41,7 +41,8 @@ export default function OnboardingFractions() {
   const orgId = searchParams.get('orgId')!
   const fetcher = useFetcher<typeof action>()
   const isSubmitting = fetcher.state === 'submitting'
-  const [fractionLabels, setFractionLabels] = useState([''])
+  const nextId = useRef(1)
+  const [fractionItems, setFractionItems] = useState([{ id: 0, label: '' }])
 
   return (
     <fetcher.Form method="post" className="grid gap-4">
@@ -49,24 +50,24 @@ export default function OnboardingFractions() {
       <p className="text-muted-foreground text-sm">
         Adicione as frações do edifício. Pode usar nomes livres (ex: &quot;T3 – 2º Esq.&quot;).
       </p>
-      {fractionLabels.map((value, index) => (
-        <div key={index} className="flex gap-2">
+      {fractionItems.map((item, index) => (
+        <div key={item.id} className="flex gap-2">
           <Input
             name="label"
-            value={value}
+            value={item.label}
             onChange={(e) => {
-              const next = [...fractionLabels]
-              next[index] = e.target.value
-              setFractionLabels(next)
+              const next = [...fractionItems]
+              next[index] = { ...item, label: e.target.value }
+              setFractionItems(next)
             }}
             placeholder={`Fração ${index + 1}`}
             className="flex-1"
           />
-          {fractionLabels.length > 1 && (
+          {fractionItems.length > 1 && (
             <Button
               type="button"
               variant="ghost"
-              onClick={() => setFractionLabels(fractionLabels.filter((_, i) => i !== index))}
+              onClick={() => setFractionItems(fractionItems.filter((f) => f.id !== item.id))}
             >
               ✕
             </Button>
@@ -76,7 +77,9 @@ export default function OnboardingFractions() {
       <Button
         type="button"
         variant="outline"
-        onClick={() => setFractionLabels([...fractionLabels, ''])}
+        onClick={() => {
+          setFractionItems([...fractionItems, { id: nextId.current++, label: '' }])
+        }}
       >
         + Adicionar fração
       </Button>

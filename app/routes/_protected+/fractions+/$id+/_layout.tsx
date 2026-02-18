@@ -5,7 +5,7 @@ import {
   UserMultiple02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { data, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
 
 import { BackButton } from '~/components/layout/back-button'
@@ -145,11 +145,16 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
     (m) => m.pathname.endsWith('/edit') || m.pathname.endsWith('/invite'),
   )
 
-  useEffect(() => {
-    if (bulkFetcher.state === 'idle' && bulkFetcher.data && 'success' in bulkFetcher.data) {
-      setBulkDrawerOpen(false)
-    }
-  }, [bulkFetcher.state, bulkFetcher.data])
+  const prevBulkStateRef = useRef(bulkFetcher.state)
+  if (
+    prevBulkStateRef.current !== 'idle' &&
+    bulkFetcher.state === 'idle' &&
+    bulkFetcher.data &&
+    'success' in bulkFetcher.data
+  ) {
+    setBulkDrawerOpen(false)
+  }
+  prevBulkStateRef.current = bulkFetcher.state
 
   return (
     <div>
@@ -463,9 +468,11 @@ function BulkAssignMembersDrawer({
                 {unassigned.map((m) => (
                   <label
                     key={m.userId}
+                    htmlFor={`bulk-user-${m.userId}`}
                     className="ring-foreground/5 hover:bg-muted/50 flex items-center gap-3 rounded-2xl p-3 ring-1 transition-colors"
                   >
                     <Checkbox
+                      id={`bulk-user-${m.userId}`}
                       name="userIds"
                       value={m.userId}
                       checked={selected.has(m.userId)}

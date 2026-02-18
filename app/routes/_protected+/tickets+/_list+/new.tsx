@@ -128,8 +128,8 @@ export default function NewTicketDrawer({ loaderData, actionData }: Route.Compon
           <PrioritySelector name="priority" />
         </Field>
 
-        <label className="flex items-center gap-2">
-          <Checkbox name="private" />
+        <label htmlFor="new-ticket-private" className="flex items-center gap-2">
+          <Checkbox id="new-ticket-private" name="private" />
           <span className="text-sm">Marcar como privado</span>
         </label>
 

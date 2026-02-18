@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 declare global {
   interface Window {
@@ -39,6 +39,9 @@ export function Turnstile() {
   const widgetIdRef = useRef<string | null>(null)
   const [token, setToken] = useState('')
 
+  const onVerify = useCallback((t: string) => setToken(t), [])
+  const onExpire = useCallback(() => setToken(''), [])
+
   useEffect(() => {
     let cancelled = false
 
@@ -52,8 +55,8 @@ export function Turnstile() {
 
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
-        callback: (t: string) => setToken(t),
-        'expired-callback': () => setToken(''),
+        callback: onVerify,
+        'expired-callback': onExpire,
       })
     }
 
@@ -66,7 +69,7 @@ export function Turnstile() {
         widgetIdRef.current = null
       }
     }
-  }, [])
+  }, [onVerify, onExpire])
 
   return (
     <>

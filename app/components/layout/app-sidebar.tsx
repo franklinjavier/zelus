@@ -40,7 +40,7 @@ export type AppSidebarProps = {
 }
 
 const mainNav = [
-  { label: 'Assistente', to: href('/dashboard'), icon: AiChat02Icon },
+  { label: 'Assistente', to: href('/assistant'), icon: AiChat02Icon },
   { label: 'Pesquisa', to: href('/search'), icon: Search01Icon },
   { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
@@ -66,7 +66,7 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
     <Sidebar variant="floating">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1">
-          <Link to={href('/dashboard')} className="shrink-0">
+          <Link to={href('/assistant')} className="shrink-0">
             <ZelusLogoTile size={24} className="text-primary" />
           </Link>
           <OrgSwitcher org={org} orgs={orgs} />

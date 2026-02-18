@@ -24,8 +24,8 @@ export function chunkText(text: string, maxChars = 2000, overlap = 200): string[
     }
 
     chunks.push(text.slice(start, end).trim())
+    if (end >= text.length) break
     start = end - overlap
-    if (start >= text.length) break
   }
 
   return chunks.filter((c) => c.length > 0)

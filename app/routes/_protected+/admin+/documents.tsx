@@ -1,5 +1,6 @@
-import { Form, useNavigation } from 'react-router'
-import { useState } from 'react'
+import { Form, useRevalidator } from 'react-router'
+import { upload } from '@vercel/blob/client'
+import { useState, useEffect } from 'react'
 import {
   File02Icon,
   Upload04Icon,
@@ -11,6 +12,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { Route } from './+types/documents'
 import { orgContext, userContext } from '~/lib/auth/context'
+import { waitUntilContext } from '~/lib/vercel/context'
 import { createDocument, listDocuments, deleteDocument } from '~/lib/services/documents'
 import { processDocument } from '~/lib/ai/rag'
 import { Button } from '~/components/ui/button'
@@ -49,8 +51,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     const doc = await createDocument(orgId, { fileName, fileUrl, fileSize, mimeType }, userId)
 
-    // Trigger async processing (fire-and-forget)
-    processDocument(doc.id, orgId, fileUrl, mimeType).catch(console.error)
+    const backgroundProcess = context.get(waitUntilContext)
+    backgroundProcess(processDocument(doc.id, orgId, fileUrl, mimeType))
 
     return { success: true }
   }
@@ -82,34 +84,44 @@ function formatFileSize(bytes: number) {
 
 export default function AdminDocumentsPage({ loaderData, actionData }: Route.ComponentProps) {
   const { documents } = loaderData
-  const navigation = useNavigation()
+  const revalidator = useRevalidator()
+  const hasProcessing = documents.some((d) => d.status === 'processing')
   const [uploading, setUploading] = useState(false)
+
+  useEffect(() => {
+    if (!hasProcessing) return
+    const interval = setInterval(() => revalidator.revalidate(), 5000)
+    return () => clearInterval(interval)
+  }, [hasProcessing, revalidator])
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
     setUploading(true)
+    setUploadProgress(0)
+    setUploadError(null)
     try {
-      // Upload to Vercel Blob via existing API
-      const uploadForm = new FormData()
-      uploadForm.append('file', file)
-      const res = await fetch('/api/upload', { method: 'POST', body: uploadForm })
-      const data = await res.json()
+      const blob = await upload(`documents/${file.name}`, file, {
+        access: 'public',
+        handleUploadUrl: '/api/document-upload',
+        multipart: true,
+        onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
+      })
 
-      if (!res.ok) throw new Error(data.error)
-
-      // Save document record via form action
+      // Save document record + trigger background processing via form action
       const form = document.createElement('form')
       form.method = 'POST'
       form.style.display = 'none'
 
       const fields = {
         intent: 'upload',
-        fileUrl: data.url,
-        fileName: data.fileName,
-        fileSize: String(data.fileSize),
-        mimeType: data.mimeType,
+        fileUrl: blob.url,
+        fileName: file.name,
+        fileSize: String(file.size),
+        mimeType: file.type || 'application/octet-stream',
       }
 
       for (const [key, value] of Object.entries(fields)) {
@@ -122,8 +134,8 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
       document.body.appendChild(form)
       form.requestSubmit()
       document.body.removeChild(form)
-    } catch {
-      // Error handled by actionData
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Erro ao enviar ficheiro.')
     } finally {
       setUploading(false)
       e.target.value = ''
@@ -139,7 +151,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
             type="file"
             id="file-upload"
             className="hidden"
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
             onChange={handleFileSelect}
             disabled={uploading}
           />
@@ -150,10 +162,12 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
             disabled={uploading}
           >
             <HugeiconsIcon icon={Upload04Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-            {uploading ? 'A enviar...' : 'Carregar documento'}
+            {uploading ? `A enviar... ${uploadProgress}%` : 'Carregar documento'}
           </Button>
         </div>
       </div>
+
+      {uploadError && <ErrorBanner className="mt-4">{uploadError}</ErrorBanner>}
 
       {actionData && 'error' in actionData && (
         <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>

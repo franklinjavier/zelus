@@ -1,3 +1,6 @@
+import { generateText } from 'ai'
+import { anthropic } from '@ai-sdk/anthropic'
+
 import { db } from '~/lib/db'
 import { documentChunks } from '~/lib/db/schema'
 import { sql } from 'drizzle-orm'
@@ -7,47 +10,96 @@ import { generateEmbedding, generateEmbeddings } from './embeddings'
 import { updateDocumentStatus } from '~/lib/services/documents'
 
 /**
- * Process a document: fetch text, chunk it, generate embeddings, store chunks.
- * Called after file upload. Runs async (fire-and-forget from the upload action).
+ * Process a document: extract text via Claude, chunk, generate embeddings, store.
+ * Runs synchronously (awaited in the action) so it works on Vercel serverless.
  */
 export async function processDocument(
   documentId: string,
   orgId: string,
   fileUrl: string,
-  _mimeType: string,
+  mimeType: string,
 ) {
   try {
-    // Fetch the file content
-    const response = await fetch(fileUrl)
-    const text = await response.text()
+    console.log(`[RAG] Extracting text from ${mimeType} (${fileUrl.slice(0, 80)}...)`)
+    const text = await extractText(fileUrl, mimeType)
+    console.log(`[RAG] Extracted ${text.length} chars`)
 
-    if (!text.trim()) {
+    if (!text || text.length < 10) {
       await updateDocumentStatus(documentId, 'error')
       return
     }
 
-    // Chunk the text
     const chunks = chunkText(text)
+    console.log(`[RAG] Split into ${chunks.length} chunks`)
 
-    // Generate embeddings for all chunks
-    const embeddings = await generateEmbeddings(chunks)
+    const BATCH_SIZE = 20
 
-    // Store chunks + embeddings
-    await db.insert(documentChunks).values(
-      chunks.map((content, i) => ({
-        documentId,
-        orgId,
-        content,
-        embedding: `[${embeddings[i].join(',')}]`,
-        chunkIndex: i,
-      })),
-    )
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE)
+      const batchEmbeddings = await generateEmbeddings(batch)
+
+      await db.insert(documentChunks).values(
+        batch.map((content, j) => ({
+          documentId,
+          orgId,
+          content,
+          embedding: `[${batchEmbeddings[j].join(',')}]`,
+          chunkIndex: i + j,
+        })),
+      )
+      console.log(
+        `[RAG] Embedded batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(chunks.length / BATCH_SIZE)}`,
+      )
+    }
 
     await updateDocumentStatus(documentId, 'ready')
+    console.log(`[RAG] Document ${documentId} ready`)
   } catch (error) {
-    console.error('Error processing document:', error)
+    console.error('[RAG] Error processing document:', error)
     await updateDocumentStatus(documentId, 'error')
   }
+}
+
+/**
+ * Extract plain text from a document.
+ * Sends the file URL to Claude which fetches it directly — zero local memory usage.
+ */
+async function extractText(fileUrl: string, mimeType: string): Promise<string> {
+  if (mimeType === 'application/pdf') {
+    return extractWithClaude(fileUrl, mimeType)
+  }
+
+  // Plain text fallback — these are small, safe to fetch locally
+  const response = await fetch(fileUrl)
+  return response.text()
+}
+
+/**
+ * Send the file URL to Claude for text extraction.
+ * Claude fetches the file directly from Vercel Blob — nothing loaded into our process.
+ */
+async function extractWithClaude(fileUrl: string, mimeType: string): Promise<string> {
+  const { text } = await generateText({
+    model: anthropic('claude-haiku-4-5-20251001'),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'file',
+            data: new URL(fileUrl),
+            mediaType: mimeType,
+          },
+          {
+            type: 'text',
+            text: 'Extraia todo o conteúdo de texto visível neste documento, incluindo texto em imagens, digitalizações, tabelas, cabeçalhos, rodapés e anotações. Se o documento contiver páginas digitalizadas (fotografias ou scans de papel), leia e transcreva todo o texto visível nessas imagens. Devolva apenas o texto bruto, sem comentários nem formatação adicional.',
+          },
+        ],
+      },
+    ],
+  })
+
+  return text
 }
 
 /**

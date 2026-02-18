@@ -57,6 +57,13 @@
       "when": 1771258869710,
       "tag": "0007_add-invite-link",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771426459449,
+      "tag": "0008_add-conversations",
+      "breakpoints": true
     }
   ]
 }

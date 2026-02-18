@@ -50,6 +50,7 @@ const mainNav = [
 
 const adminNav = [
   { label: 'Painel', to: href('/admin/dashboard') },
+  { label: 'Documentos', to: href('/admin/documents') },
   { label: 'Condomínio', to: href('/admin/organization') },
   { label: 'Membros', to: href('/admin/members') },
   { label: 'Associações', to: href('/admin/associations') },

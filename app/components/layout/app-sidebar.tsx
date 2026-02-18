@@ -1,8 +1,8 @@
 import { Collapsible } from '@base-ui/react/collapsible'
 import {
+  AiChat02Icon,
   ArrowDown01Icon,
   Building06Icon,
-  DashboardSquare01Icon,
   Search01Icon,
   ShieldKeyIcon,
   Ticket02Icon,
@@ -40,7 +40,7 @@ export type AppSidebarProps = {
 }
 
 const mainNav = [
-  { label: 'Painel', to: href('/dashboard'), icon: DashboardSquare01Icon },
+  { label: 'Assistente', to: href('/dashboard'), icon: AiChat02Icon },
   { label: 'Pesquisa', to: href('/search'), icon: Search01Icon },
   { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
@@ -49,6 +49,7 @@ const mainNav = [
 ]
 
 const adminNav = [
+  { label: 'Painel', to: href('/admin/dashboard') },
   { label: 'Condomínio', to: href('/admin/organization') },
   { label: 'Membros', to: href('/admin/members') },
   { label: 'Associações', to: href('/admin/associations') },

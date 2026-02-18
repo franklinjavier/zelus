@@ -11,5 +11,6 @@ export function roleLabel(role: string): string {
 }
 
 export function RoleBadge({ role }: { role: string }) {
+  if (role === 'fraction_member') return null
   return <Badge variant="secondary">{roleLabel(role)}</Badge>
 }

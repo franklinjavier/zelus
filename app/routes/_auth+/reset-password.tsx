@@ -1,4 +1,4 @@
-import { data, Form, Link, redirect, useNavigation, useSearchParams } from 'react-router'
+import { data, Form, href, Link, redirect, useNavigation, useSearchParams } from 'react-router'
 import { z } from 'zod'
 
 import type { Route } from './+types/reset-password'
@@ -45,7 +45,7 @@ export async function action({ request }: Route.ActionArgs) {
     headers.append('set-cookie', cookie)
   }
 
-  return redirect('/login?reset=1', { headers })
+  return redirect(`${href('/login')}?reset=1`, { headers })
 }
 
 export default function ResetPasswordPage({ actionData }: Route.ComponentProps) {
@@ -101,13 +101,13 @@ export default function ResetPasswordPage({ actionData }: Route.ComponentProps) 
               {errors?.newPassword && <FieldError>{errors.newPassword}</FieldError>}
             </Field>
 
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" size="lg" disabled={isSubmitting}>
               {isSubmitting ? 'A redefinir…' : 'Redefinir palavra‑passe'}
             </Button>
           </Form>
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            <Link to="/login" className="text-primary hover:underline">
+            <Link to={href('/login')} className="text-primary hover:underline">
               Voltar ao login
             </Link>
           </p>

@@ -6,7 +6,7 @@ import { Button } from '~/components/ui/button'
 
 export function BackButton({ to }: { to: string }) {
   return (
-    <Button render={<Link to={to} />} variant="ghost">
+    <Button render={<Link to={to} />} variant="ghost" nativeButton={false}>
       <HugeiconsIcon icon={ArrowLeft02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
       Voltar
     </Button>

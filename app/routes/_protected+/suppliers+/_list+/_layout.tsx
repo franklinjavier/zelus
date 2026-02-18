@@ -1,14 +1,13 @@
-import { Link } from 'react-router'
+import { href, Link, Outlet, useMatches, useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Add01Icon,
-  TruckDeliveryIcon,
-  ArrowRight01Icon,
   Call02Icon,
-  Mail01Icon,
+  TruckDeliveryIcon,
+  UserCircleIcon,
 } from '@hugeicons/core-free-icons'
 
-import type { Route } from './+types/index'
+import type { Route } from './+types/_layout'
 import { orgContext } from '~/lib/auth/context'
 import { listSuppliers } from '~/lib/services/suppliers'
 import { listCategories } from '~/lib/services/categories'
@@ -25,6 +24,13 @@ import {
 } from '~/components/ui/select'
 import { useFilterParams } from '~/lib/use-filter-params'
 import { EmptyState } from '~/components/layout/empty-state'
+import {
+  Drawer,
+  DrawerPopup,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '~/components/ui/drawer'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Fornecedores — Zelus' }]
@@ -44,10 +50,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { suppliers: suppliersList, categories, effectiveRole }
 }
 
-export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
+export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
   const { suppliers, categories, effectiveRole } = loaderData
   const isAdmin = effectiveRole === 'org_admin'
   const { searchParams, setFilter } = useFilterParams()
+  const navigate = useNavigate()
+  const matches = useMatches()
+  const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
 
   const categoryItems = [
     { label: 'Todas as categorias', value: '_all' },
@@ -64,7 +73,7 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         {isAdmin && (
-          <Button render={<Link to="/suppliers/new" />}>
+          <Button nativeButton={false} render={<Link to={href('/suppliers/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
             Novo fornecedor
           </Button>
@@ -95,7 +104,11 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
       {suppliers.length === 0 ? (
         <EmptyState icon={TruckDeliveryIcon} message="Nenhum fornecedor encontrado">
           {isAdmin && (
-            <Button render={<Link to="/suppliers/new" />} variant="outline">
+            <Button
+              nativeButton={false}
+              render={<Link to={href('/suppliers/new')} />}
+              variant="outline"
+            >
               Criar primeiro fornecedor
             </Button>
           )}
@@ -103,38 +116,57 @@ export default function SuppliersPage({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {suppliers.map((supplier) => (
-            <CardLink key={supplier.id} to={`/suppliers/${supplier.id}`}>
-              <div>
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium">{supplier.name}</p>
-                  <Badge variant="secondary">{translateCategory(supplier.category)}</Badge>
-                </div>
-                <div className="text-muted-foreground mt-3 flex flex-col gap-1.5 text-sm">
-                  {supplier.phone && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <HugeiconsIcon icon={Call02Icon} size={14} strokeWidth={2} />
-                      {supplier.phone}
-                    </span>
-                  )}
-                  {supplier.email && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <HugeiconsIcon icon={Mail01Icon} size={14} strokeWidth={2} />
-                      {supplier.email}
-                    </span>
-                  )}
-                </div>
+            <CardLink key={supplier.id} to={href('/suppliers/:id', { id: supplier.id })}>
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium">{supplier.name}</p>
+                <Badge variant="secondary">{translateCategory(supplier.category)}</Badge>
               </div>
-              <div className="mt-4 flex items-center justify-end">
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  size={16}
-                  strokeWidth={2}
-                  className="text-muted-foreground"
-                />
+              <div className="text-muted-foreground mt-1.5 flex flex-col gap-1 text-sm">
+                {supplier.contactName && (
+                  <span className="inline-flex items-center gap-1.5 truncate">
+                    <HugeiconsIcon
+                      icon={UserCircleIcon}
+                      size={14}
+                      strokeWidth={2}
+                      className="shrink-0"
+                    />
+                    {supplier.contactName}
+                  </span>
+                )}
+                {(supplier.contactPhone || supplier.phone) && (
+                  <span className="inline-flex items-center gap-1.5 truncate">
+                    <HugeiconsIcon
+                      icon={Call02Icon}
+                      size={14}
+                      strokeWidth={2}
+                      className="shrink-0"
+                    />
+                    {supplier.contactPhone || supplier.phone}
+                  </span>
+                )}
               </div>
             </CardLink>
           ))}
         </div>
+      )}
+
+      {isAdmin && (
+        <Drawer
+          open={isDrawerOpen}
+          onOpenChange={(open) => {
+            if (!open) navigate(href('/suppliers'))
+          }}
+        >
+          <DrawerPopup>
+            <DrawerHeader>
+              <DrawerTitle>Novo fornecedor</DrawerTitle>
+              <DrawerDescription>
+                Preencha os dados para registar um novo fornecedor.
+              </DrawerDescription>
+            </DrawerHeader>
+            <Outlet />
+          </DrawerPopup>
+        </Drawer>
       )}
     </div>
   )

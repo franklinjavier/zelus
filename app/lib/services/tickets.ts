@@ -1,8 +1,11 @@
-import { eq, and, or, sql, desc } from 'drizzle-orm'
+import { eq, and, or, inArray, sql, desc } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { tickets, ticketEvents, fractions, user } from '~/lib/db/schema'
+import { tickets, ticketEvents, fractions, userFractions, user } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
+import { createNotification } from './notifications'
+import { sendEmail } from '~/lib/email/client'
+import { ticketUpdateEmail } from '~/lib/email/templates/ticket-update'
 
 export async function createTicket(
   orgId: string,
@@ -50,12 +53,35 @@ export async function listTickets(
     priority?: string
     category?: string
     fractionId?: string
+    scope?: 'mine' | 'all' | 'private'
   },
 ) {
   const conditions = [
     eq(tickets.orgId, orgId),
     or(eq(tickets.private, false), and(eq(tickets.private, true), eq(tickets.createdBy, userId))),
   ]
+
+  if (filters?.scope === 'private') {
+    conditions.push(and(eq(tickets.private, true), eq(tickets.createdBy, userId))!)
+  } else if (filters?.scope === 'mine') {
+    const myFractionIds = await db
+      .select({ fractionId: userFractions.fractionId })
+      .from(userFractions)
+      .where(
+        and(
+          eq(userFractions.orgId, orgId),
+          eq(userFractions.userId, userId),
+          eq(userFractions.status, 'approved'),
+        ),
+      )
+      .then((rows) => rows.map((r) => r.fractionId))
+
+    const mineConditions = [eq(tickets.createdBy, userId)]
+    if (myFractionIds.length > 0) {
+      mineConditions.push(inArray(tickets.fractionId, myFractionIds))
+    }
+    conditions.push(or(...mineConditions)!)
+  }
 
   if (filters?.status) {
     conditions.push(
@@ -197,6 +223,33 @@ export async function updateTicketStatus(
     entityId: ticketId,
     metadata: { from: fromStatus, to: newStatus },
   })
+
+  // Notify ticket creator if someone else changed the status
+  if (updated && updated.createdBy !== userId) {
+    const [creator] = await db
+      .select({ email: user.email })
+      .from(user)
+      .where(eq(user.id, updated.createdBy))
+      .limit(1)
+
+    await createNotification({
+      orgId,
+      userId: updated.createdBy,
+      type: 'ticket_update',
+      title: `Ocorrência atualizada — ${updated.title}`,
+      message: `O estado foi alterado para "${newStatus}".`,
+      metadata: { ticketId },
+    })
+
+    if (creator) {
+      const emailData = ticketUpdateEmail({
+        ticketTitle: updated.title,
+        newStatus,
+        ticketUrl: `${process.env.APP_URL ?? ''}/tickets/${ticketId}`,
+      })
+      sendEmail({ to: creator.email, ...emailData }).catch(() => {})
+    }
+  }
 
   return updated
 }

@@ -1,6 +1,6 @@
 import { data, useFetcher } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
+import { CheckmarkCircle01Icon, UserIcon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/associations'
 import { orgContext, userContext } from '~/lib/auth/context'
@@ -12,7 +12,7 @@ import {
 import { setToast } from '~/lib/toast.server'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
-import { Card, CardContent } from '~/components/ui/card'
+import { EmptyState } from '~/components/layout/empty-state'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,29 +79,15 @@ function AssociationsList({
   associations: Awaited<ReturnType<typeof listPendingAssociations>>
 }) {
   if (associations.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12">
-        <div className="bg-muted flex size-12 items-center justify-center rounded-xl">
-          <HugeiconsIcon
-            icon={CheckmarkCircle01Icon}
-            size={20}
-            strokeWidth={1.5}
-            className="text-muted-foreground"
-          />
-        </div>
-        <p className="text-muted-foreground text-sm">Nenhuma associação pendente</p>
-      </div>
-    )
+    return <EmptyState icon={CheckmarkCircle01Icon} message="Nenhuma associação pendente" />
   }
 
   return (
-    <Card>
-      <CardContent className="divide-y p-0">
-        {associations.map((assoc) => (
-          <AssociationRow key={assoc.id} association={assoc} />
-        ))}
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-3">
+      {associations.map((assoc) => (
+        <AssociationRow key={assoc.id} association={assoc} />
+      ))}
+    </div>
   )
 }
 
@@ -121,17 +107,22 @@ function AssociationRow({
   const isProcessing = fetcher.state !== 'idle'
 
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-medium">{association.userName}</p>
-          <Badge variant="outline">{association.fractionLabel}</Badge>
+    <div className="bg-primary/5 ring-primary/10 hover:bg-primary/10 flex items-center justify-between gap-4 rounded-2xl p-5 ring-1 transition-colors">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
+          <HugeiconsIcon icon={UserIcon} size={18} strokeWidth={1.5} className="text-primary" />
         </div>
-        <p className="text-muted-foreground text-sm">{association.userEmail}</p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="truncate font-medium">{association.userName}</p>
+            <Badge variant="outline">{association.fractionLabel}</Badge>
+          </div>
+          <p className="text-muted-foreground mt-0.5 text-sm">{association.userEmail}</p>
+        </div>
       </div>
-      <div className="flex shrink-0 gap-1.5">
+      <div className="flex shrink-0 gap-2">
         <AlertDialog>
-          <AlertDialogTrigger render={<Button variant="ghost" size="xs" disabled={isProcessing} />}>
+          <AlertDialogTrigger render={<Button variant="destructive" disabled={isProcessing} />}>
             Rejeitar
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -156,7 +147,7 @@ function AssociationRow({
         <fetcher.Form method="post">
           <input type="hidden" name="intent" value="approve" />
           <input type="hidden" name="associationId" value={association.id} />
-          <Button type="submit" size="xs" disabled={isProcessing}>
+          <Button type="submit" disabled={isProcessing}>
             Aprovar
           </Button>
         </fetcher.Form>

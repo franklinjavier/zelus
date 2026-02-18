@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { redirect, useFetcher, useSearchParams, Link } from 'react-router'
+import { redirect, useFetcher, useSearchParams, Link, href } from 'react-router'
 
 import type { Route } from './+types/fractions'
 import { requireAuth } from '~/lib/auth/rbac'
@@ -12,7 +12,7 @@ import { Input } from '~/components/ui/input'
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const orgId = url.searchParams.get('orgId')
-  if (!orgId) throw redirect('/onboarding/org')
+  if (!orgId) throw redirect(href('/onboarding/org'))
   return { orgId }
 }
 
@@ -22,7 +22,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const orgId = formData.get('orgId') as string
   const labels = formData.getAll('label') as string[]
 
-  if (!orgId) throw redirect('/onboarding/org')
+  if (!orgId) throw redirect(href('/onboarding/org'))
 
   for (const label of labels) {
     if (label.trim()) {
@@ -33,7 +33,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
-  throw redirect(`/onboarding/done?orgId=${orgId}`)
+  throw redirect(`${href('/onboarding/done')}?orgId=${orgId}`)
 }
 
 export default function OnboardingFractions() {
@@ -81,11 +81,11 @@ export default function OnboardingFractions() {
         + Adicionar fração
       </Button>
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
+        <Button type="submit" size="lg" disabled={isSubmitting} className="flex-1">
           {isSubmitting ? 'A guardar…' : 'Continuar'}
         </Button>
         <Link
-          to={`/onboarding/done?orgId=${orgId}`}
+          to={`${href('/onboarding/done')}?orgId=${orgId}`}
           className={buttonVariants({ variant: 'ghost' })}
         >
           Saltar

@@ -70,7 +70,7 @@ shadcn `base-maia` style provides the generous rounding natively. Base: `--radiu
 
 ## Sizing
 
-- **Buttons:** h-10 (40px) default (size="lg" override), maia's rounded-4xl shape
+- **Buttons:** h-8 (32px) default (size="sm"), use size="lg" (h-10) for prominent actions
 - **Inputs:** h-10 (40px, customized from maia's h-9)
 - **Selects:** h-10 (40px), matching inputs
 - **Textareas:** same horizontal padding as inputs (px-3)
@@ -110,6 +110,26 @@ Base styles: `bg-card ring-1 ring-foreground/10 hover:ring-primary/20 rounded-2x
 
 Use for: fraction tiles, dashboard stat cards, any clickable card-like navigation.
 
+## List Items — Card-per-Item Pattern
+
+The standard pattern for rendering lists (members, notifications, categories, etc.):
+
+- **Container:** `flex flex-col gap-2` — tight vertical stack
+- **Item:** `flex items-center gap-3 rounded-2xl p-3 ring-1 ring-foreground/5` — compact card with whisper-quiet border
+- **Icon container:** `flex size-9 shrink-0 items-center justify-center rounded-xl` + contextual `bg-{color}/10 text-{color}`
+- **Text:** `text-sm font-medium` for primary, `text-muted-foreground text-sm` for secondary
+- **Section heading:** lightweight `h2 text-sm font-medium` with muted count — not a heavy Card header
+- **Empty state:** dashed border container (`rounded-2xl border border-dashed py-10`) with centered icon + message
+
+Variations:
+
+- **Unread/active:** `bg-primary/5 ring-primary/10` with colored icon
+- **Read/muted:** `bg-muted/30 ring-foreground/5` with muted icon
+- **Clickable:** wrap item in `<Link>` with `className="block"`
+- **Status gradients:** `bg-gradient-to-b from-{color}/5 to-transparent` on kanban cards
+
+Do NOT wrap lists in a `<Card>` with `CardHeader`/`CardContent` — use the flat card-per-item pattern instead.
+
 ## Components
 
 - Built on **shadcn/ui** (`base-maia` style — soft, rounded, generous spacing) + **@base-ui/react** headless primitives
@@ -118,7 +138,7 @@ Use for: fraction tiles, dashboard stat cards, any clickable card-like navigatio
 - `data-slot` attributes for styling scopes
 - Icons: `@hugeicons/react` + `@hugeicons/core-free-icons`
 - `ui/` folder is shadcn-managed — re-add with `bunx shadcn@latest add [component] --overwrite`
-- Custom overrides on top of maia: button default size `lg`, input `h-10`, sidebar `text-base` + `rounded-xl`
+- Custom overrides on top of maia: button default size `sm`, input `h-10`, sidebar `text-base` + `rounded-xl`
 
 ## Accessibility
 

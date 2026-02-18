@@ -14,6 +14,10 @@ export const user = pgTable('user', {
   image: text('image'),
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
+  role: text('role'),
+  banned: boolean('banned').default(false),
+  banReason: text('ban_reason'),
+  banExpires: timestamp('ban_expires'),
 })
 
 export const session = pgTable('session', {
@@ -28,6 +32,7 @@ export const session = pgTable('session', {
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   activeOrganizationId: text('active_organization_id'),
+  impersonatedBy: text('impersonated_by'),
 })
 
 export const account = pgTable('account', {
@@ -74,6 +79,8 @@ export const organization = pgTable('organization', {
   notes: text('notes'),
   language: text('language').notNull().default('pt-PT'),
   timezone: text('timezone').notNull().default('Europe/Lisbon'),
+  inviteCode: text('invite_code'),
+  inviteEnabled: boolean('invite_enabled').notNull().default(false),
 })
 
 export const member = pgTable('member', {

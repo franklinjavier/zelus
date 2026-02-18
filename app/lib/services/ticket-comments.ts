@@ -12,6 +12,7 @@ type CommentItem = {
   type: 'comment'
   id: string
   userName: string
+  userImage: string | null
   content: string
   createdAt: string
   attachments: {
@@ -27,6 +28,7 @@ type StatusChangeItem = {
   type: 'status_change'
   id: string
   userName: string
+  userImage: string | null
   fromStatus: string
   toStatus: string
   createdAt: string
@@ -36,6 +38,7 @@ type AttachmentItem = {
   type: 'attachment'
   id: string
   userName: string
+  userImage: string | null
   fileName: string
   fileUrl: string
   fileSize: number
@@ -82,6 +85,7 @@ export async function getTicketTimeline(orgId: string, ticketId: string): Promis
     .select({
       id: ticketComments.id,
       userName: user.name,
+      userImage: user.image,
       content: ticketComments.content,
       createdAt: ticketComments.createdAt,
     })
@@ -127,6 +131,7 @@ export async function getTicketTimeline(orgId: string, ticketId: string): Promis
     type: 'comment' as const,
     id: c.id,
     userName: c.userName,
+    userImage: c.userImage,
     content: c.content,
     createdAt: c.createdAt.toISOString(),
     attachments: attachmentsByComment.get(c.id) ?? [],
@@ -137,6 +142,7 @@ export async function getTicketTimeline(orgId: string, ticketId: string): Promis
     .select({
       id: ticketEvents.id,
       userName: user.name,
+      userImage: user.image,
       fromStatus: ticketEvents.fromStatus,
       toStatus: ticketEvents.toStatus,
       createdAt: ticketEvents.createdAt,
@@ -150,6 +156,7 @@ export async function getTicketTimeline(orgId: string, ticketId: string): Promis
     type: 'status_change' as const,
     id: e.id,
     userName: e.userName,
+    userImage: e.userImage,
     fromStatus: e.fromStatus,
     toStatus: e.toStatus,
     createdAt: e.createdAt.toISOString(),
@@ -160,6 +167,7 @@ export async function getTicketTimeline(orgId: string, ticketId: string): Promis
     .select({
       id: ticketAttachments.id,
       userName: user.name,
+      userImage: user.image,
       fileName: ticketAttachments.fileName,
       fileUrl: ticketAttachments.fileUrl,
       fileSize: ticketAttachments.fileSize,
@@ -181,6 +189,7 @@ export async function getTicketTimeline(orgId: string, ticketId: string): Promis
     type: 'attachment' as const,
     id: a.id,
     userName: a.userName,
+    userImage: a.userImage,
     fileName: a.fileName,
     fileUrl: a.fileUrl,
     fileSize: a.fileSize,

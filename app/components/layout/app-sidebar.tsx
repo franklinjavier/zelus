@@ -1,19 +1,18 @@
-import { NavLink, Form, useLocation } from 'react-router'
 import { Collapsible } from '@base-ui/react/collapsible'
-import { HugeiconsIcon } from '@hugeicons/react'
 import {
-  DashboardSquare01Icon,
-  Ticket02Icon,
+  ArrowDown01Icon,
   Building06Icon,
+  DashboardSquare01Icon,
+  Search01Icon,
+  ShieldKeyIcon,
+  Ticket02Icon,
   TruckDeliveryIcon,
   WrenchIcon,
-  Settings02Icon,
-  Logout03Icon,
-  ArrowDown01Icon,
 } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Link, NavLink, href, useLocation } from 'react-router'
 
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
-import { Button } from '~/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -27,30 +26,37 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarSeparator,
 } from '~/components/ui/sidebar'
+import { NavUser } from './nav-user'
+import { OrgSwitcher } from './org-switcher'
 
-type AppSidebarProps = {
+type Org = { id: string; name: string }
+
+export type AppSidebarProps = {
   user: { id: string; name: string; email: string; image: string | null }
+  org: Org
+  orgs: Org[]
   isOrgAdmin: boolean
 }
 
 const mainNav = [
-  { label: 'Painel', to: '/dashboard', icon: DashboardSquare01Icon },
-  { label: 'Ocorrências', to: '/tickets', icon: Ticket02Icon },
-  { label: 'Frações', to: '/fractions', icon: Building06Icon },
-  { label: 'Fornecedores', to: '/suppliers', icon: TruckDeliveryIcon },
-  { label: 'Manutenções', to: '/maintenance', icon: WrenchIcon },
-  { label: 'Conta', to: '/settings/account', icon: Settings02Icon },
+  { label: 'Painel', to: href('/dashboard'), icon: DashboardSquare01Icon },
+  { label: 'Pesquisa', to: href('/search'), icon: Search01Icon },
+  { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
+  { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
+  { label: 'Fornecedores', to: href('/suppliers'), icon: TruckDeliveryIcon },
+  { label: 'Manutenções', to: href('/maintenance'), icon: WrenchIcon },
 ]
 
 const adminNav = [
-  { label: 'Associações', to: '/admin/associations' },
-  { label: 'Convites', to: '/admin/invites' },
-  { label: 'Categorias', to: '/admin/categories' },
+  { label: 'Condomínio', to: href('/admin/organization') },
+  { label: 'Membros', to: href('/admin/members') },
+  { label: 'Associações', to: href('/admin/associations') },
+  { label: 'Convites', to: href('/admin/invites') },
+  { label: 'Categorias', to: href('/admin/categories') },
 ]
 
-export function AppSidebar({ user, isOrgAdmin }: AppSidebarProps) {
+export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
 
@@ -58,8 +64,10 @@ export function AppSidebar({ user, isOrgAdmin }: AppSidebarProps) {
     <Sidebar variant="floating">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1">
-          <ZelusLogoTile size={24} className="text-primary" />
-          <span className="text-sm font-semibold tracking-tight">Zelus</span>
+          <Link to={href('/dashboard')} className="shrink-0">
+            <ZelusLogoTile size={24} className="text-primary" />
+          </Link>
+          <OrgSwitcher org={org} orgs={orgs} />
         </div>
       </SidebarHeader>
 
@@ -86,7 +94,7 @@ export function AppSidebar({ user, isOrgAdmin }: AppSidebarProps) {
                     <Collapsible.Trigger
                       render={
                         <SidebarMenuButton tooltip="Administração">
-                          <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={2} />
+                          <HugeiconsIcon icon={ShieldKeyIcon} size={16} strokeWidth={2} />
                           <span>Administração</span>
                           <HugeiconsIcon
                             icon={ArrowDown01Icon}
@@ -103,7 +111,7 @@ export function AppSidebar({ user, isOrgAdmin }: AppSidebarProps) {
                           <SidebarMenuSubItem key={item.to}>
                             <NavLink to={item.to}>
                               {({ isActive }) => (
-                                <SidebarMenuSubButton isActive={isActive}>
+                                <SidebarMenuSubButton isActive={isActive} render={<span />}>
                                   <span>{item.label}</span>
                                 </SidebarMenuSubButton>
                               )}
@@ -121,18 +129,7 @@ export function AppSidebar({ user, isOrgAdmin }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="flex items-center justify-between gap-2 px-2">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{user.name}</p>
-            <p className="text-muted-foreground truncate text-sm">{user.email}</p>
-          </div>
-          <Form method="post" action="/auth/signout">
-            <Button type="submit" variant="ghost" size="icon-sm" title="Sair">
-              <HugeiconsIcon icon={Logout03Icon} size={16} strokeWidth={2} />
-              <span className="sr-only">Sair</span>
-            </Button>
-          </Form>
-        </div>
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

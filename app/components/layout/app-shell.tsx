@@ -1,7 +1,8 @@
+import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { Header } from './header'
-import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
-import { SidebarProvider, SidebarInset } from '~/components/ui/sidebar'
+
+type Org = { id: string; name: string }
 
 type AppShellProps = {
   user: {
@@ -10,17 +11,19 @@ type AppShellProps = {
     email: string
     image: string | null
   }
+  org: Org
+  orgs: Org[]
   isOrgAdmin: boolean
+  unreadCount?: number
   children: React.ReactNode
 }
 
-export function AppShell({ user, isOrgAdmin, children }: AppShellProps) {
+export function AppShell({ user, org, orgs, isOrgAdmin, unreadCount, children }: AppShellProps) {
   return (
     <SidebarProvider>
-      <AppSidebar user={user} isOrgAdmin={isOrgAdmin} />
+      <AppSidebar user={user} org={org} orgs={orgs} isOrgAdmin={isOrgAdmin} />
       <SidebarInset className="relative flex h-svh flex-col overflow-hidden">
-        <AzulejoPattern baseOpacity={0.04} hoverOpacity={0.15} />
-        <Header />
+        <Header unreadCount={unreadCount} />
         <div className="relative min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">{children}</div>
       </SidebarInset>
     </SidebarProvider>

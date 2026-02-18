@@ -19,11 +19,15 @@ export function AzulejoOverlay({
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100',
+        'pointer-events-none absolute inset-0 overflow-hidden opacity-0 transition-opacity duration-300 group-hover:opacity-100',
         className,
       )}
     >
-      <svg className="text-primary h-full w-full" style={{ opacity }} aria-hidden="true">
+      <svg
+        className="text-primary absolute -inset-12 h-[calc(100%+96px)] w-[calc(100%+96px)] animate-[azulejo-drift_8s_linear_infinite]"
+        style={{ opacity }}
+        aria-hidden="true"
+      >
         <defs>
           <pattern id={patternId} width={TILE} height={TILE} patternUnits="userSpaceOnUse">
             <rect width={TILE} height={TILE} fill="none" stroke="currentColor" strokeWidth={0.5} />

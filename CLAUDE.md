@@ -124,6 +124,8 @@ Key facts:
 
 Prettier: no semicolons, single quotes, trailing commas, print width 100. Pre-commit hook runs `pretty-quick --staged`.
 
+**No barrel files (index.ts re-exports).** Always import directly from the source file, never through an index.ts that re-exports. The only exception is `app/lib/db/schema/index.ts` which Drizzle Kit requires as a single schema entry point.
+
 ## Git
 
 - Do not include `Co-Authored-By` in commit messages

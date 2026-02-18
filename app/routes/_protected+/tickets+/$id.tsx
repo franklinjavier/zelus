@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import {
-  Add01Icon,
   ArrowUp01Icon,
   Attachment01Icon,
   Camera01Icon,
@@ -33,7 +32,6 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { Textarea } from '~/components/ui/textarea'
-import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip'
 import { Checkbox } from '~/components/ui/checkbox'
 import {
   Drawer,
@@ -290,61 +288,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
 
       {/* Evidence thumbnails */}
       {(attachments.length > 0 || canEdit) && (
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger className="text-muted-foreground mr-1 flex items-center gap-1.5">
-              <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
-              <span className="text-sm">Evidências</span>
-            </TooltipTrigger>
-            <TooltipContent>Fotos e ficheiros que documentam a ocorrência</TooltipContent>
-          </Tooltip>
-          {attachments.map((att) => {
-            const isImage = att.mimeType.startsWith('image/')
-            return (
-              <div key={att.id} className="group relative">
-                {isImage ? (
-                  <ImagePreview
-                    src={att.fileUrl}
-                    alt={att.fileName}
-                    className="block size-14 cursor-zoom-in overflow-hidden rounded-md border"
-                    caption={`${att.uploaderName} · ${formatDate(att.createdAt)}`}
-                  />
-                ) : (
-                  <a
-                    href={att.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={`${att.fileName} (${formatFileSize(att.fileSize)})`}
-                    className="border-border bg-muted/50 hover:bg-muted flex size-14 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors"
-                  >
-                    <HugeiconsIcon
-                      icon={File01Icon}
-                      size={18}
-                      strokeWidth={1.5}
-                      className="text-muted-foreground"
-                    />
-                    <span className="text-muted-foreground w-12 truncate text-center text-[10px]">
-                      {att.fileName.split('.').pop()}
-                    </span>
-                  </a>
-                )}
-                {canEdit && att.uploadedBy === userId && (
-                  <evidenceFetcher.Form method="post" className="absolute -top-1.5 -right-1.5">
-                    <input type="hidden" name="intent" value="delete-attachment" />
-                    <input type="hidden" name="attachmentId" value={att.id} />
-                    <Button
-                      type="submit"
-                      variant="destructive"
-                      size="icon-sm"
-                      className="size-5 rounded-full opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
-                    >
-                      <HugeiconsIcon icon={Delete02Icon} size={12} strokeWidth={2} />
-                    </Button>
-                  </evidenceFetcher.Form>
-                )}
-              </div>
-            )
-          })}
+        <div className="bg-muted/30 mb-5 flex flex-wrap items-center gap-2 rounded-2xl p-2">
           {canEdit && (
             <>
               <input
@@ -378,32 +322,74 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
                   }
                 }}
               />
-              {attachments.length > 0 ? (
-                <button
-                  type="button"
-                  disabled={isEvidenceUploading || evidenceFetcher.state !== 'idle'}
-                  onClick={() => evidenceFileInputRef.current?.click()}
-                  className="border-border text-muted-foreground hover:bg-muted flex size-14 items-center justify-center rounded-md border border-dashed transition-colors disabled:opacity-50"
-                >
-                  <HugeiconsIcon icon={Add01Icon} size={18} strokeWidth={1.5} />
-                </button>
-              ) : (
-                <Button
-                  variant="outline"
-                  disabled={isEvidenceUploading || evidenceFetcher.state !== 'idle'}
-                  onClick={() => evidenceFileInputRef.current?.click()}
-                >
-                  <HugeiconsIcon
-                    icon={Add01Icon}
-                    data-icon="inline-start"
-                    size={16}
-                    strokeWidth={2}
-                  />
-                  Adicionar
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                disabled={isEvidenceUploading || evidenceFetcher.state !== 'idle'}
+                onClick={() => evidenceFileInputRef.current?.click()}
+              >
+                <HugeiconsIcon
+                  icon={Camera01Icon}
+                  data-icon="inline-start"
+                  size={16}
+                  strokeWidth={1.5}
+                />
+                Adicionar evidência
+              </Button>
             </>
           )}
+          {!canEdit && attachments.length > 0 && (
+            <span className="text-muted-foreground mr-1 flex items-center gap-1.5">
+              <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
+              <span className="text-sm">Evidências</span>
+            </span>
+          )}
+          {attachments.map((att) => {
+            const isImage = att.mimeType.startsWith('image/')
+            return (
+              <div key={att.id} className="group relative">
+                {isImage ? (
+                  <ImagePreview
+                    src={att.fileUrl}
+                    alt={att.fileName}
+                    className="block size-16 cursor-zoom-in overflow-hidden rounded-xl border"
+                    caption={`${att.uploaderName} · ${formatDate(att.createdAt)}`}
+                  />
+                ) : (
+                  <a
+                    href={att.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`${att.fileName} (${formatFileSize(att.fileSize)})`}
+                    className="border-border bg-muted/50 hover:bg-muted flex size-16 flex-col items-center justify-center gap-1 rounded-xl border transition-colors"
+                  >
+                    <HugeiconsIcon
+                      icon={File01Icon}
+                      size={18}
+                      strokeWidth={1.5}
+                      className="text-muted-foreground"
+                    />
+                    <span className="text-muted-foreground w-14 truncate text-center text-sm">
+                      {att.fileName.split('.').pop()}
+                    </span>
+                  </a>
+                )}
+                {canEdit && att.uploadedBy === userId && (
+                  <evidenceFetcher.Form method="post" className="absolute -top-2 -right-2">
+                    <input type="hidden" name="intent" value="delete-attachment" />
+                    <input type="hidden" name="attachmentId" value={att.id} />
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      size="icon-sm"
+                      className="size-7 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <HugeiconsIcon icon={Delete02Icon} size={14} strokeWidth={2} />
+                    </Button>
+                  </evidenceFetcher.Form>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 

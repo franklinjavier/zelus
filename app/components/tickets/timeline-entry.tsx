@@ -100,7 +100,7 @@ function ImagePreview({
           alt={alt}
           className={
             className
-              ? 'size-full rounded-md border object-cover'
+              ? 'size-full rounded-xl border object-cover'
               : 'max-h-64 rounded-lg border object-contain'
           }
         />

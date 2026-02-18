@@ -5,7 +5,7 @@ import {
   UserMultiple02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { data, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
 
 import { BackButton } from '~/components/layout/back-button'
@@ -432,9 +432,11 @@ function BulkAssignMembersDrawer({
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    if (open) setSelected(new Set())
-  }, [open])
+  const prevOpenRef = useRef(open)
+  if (open && !prevOpenRef.current) {
+    setSelected(new Set())
+  }
+  prevOpenRef.current = open
 
   function toggle(id: string) {
     setSelected((prev) => {

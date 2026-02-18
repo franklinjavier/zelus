@@ -115,6 +115,8 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
               isStreaming={
                 status === 'streaming' && message.role === 'assistant' && i === messages.length - 1
               }
+              isLast={i === messages.length - 1}
+              onOptionClick={!isLoading ? (option) => sendMessage({ text: option }) : undefined}
             />
           ))}
           {isLoading && messages[messages.length - 1]?.role === 'user' && <LoadingBubble />}

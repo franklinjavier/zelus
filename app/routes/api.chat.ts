@@ -12,6 +12,7 @@ import {
   getRecentMessages,
   updateConversationTitle,
 } from '~/lib/services/conversations'
+import { listCategories } from '~/lib/services/categories'
 import { getAssistantTools } from '~/lib/ai/tools'
 import { buildSystemPrompt } from '~/lib/ai/system-prompt'
 
@@ -59,12 +60,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
-  // Load conversation history from DB (capped at 20 for token control)
-  const history = await getRecentMessages(convId, 20)
+  // Load conversation history and categories
+  const [history, categories] = await Promise.all([getRecentMessages(convId, 20), listCategories()])
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
-    system: buildSystemPrompt(org.orgName, user.name),
+    system: buildSystemPrompt(
+      org.orgName,
+      user.name,
+      categories.map((c) => c.key),
+    ),
     messages: history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     tools: getAssistantTools(org.orgId, user.id),
     stopWhen: stepCountIs(5),

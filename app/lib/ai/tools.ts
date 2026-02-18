@@ -2,17 +2,18 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { eq, and } from 'drizzle-orm'
 
-import { createTicket, listTickets, getTicket } from '~/lib/services/tickets'
+import { createTicket, listTickets, getTicket, updateTicketStatus } from '~/lib/services/tickets'
+import { addComment } from '~/lib/services/ticket-comments'
 import { listCategories } from '~/lib/services/categories'
 import { listSuppliers } from '~/lib/services/suppliers'
 import { db } from '~/lib/db'
-import { userFractions, fractions } from '~/lib/db/schema'
+import { tickets, userFractions, fractions } from '~/lib/db/schema'
 
 export function getAssistantTools(orgId: string, userId: string) {
   return {
     create_ticket: tool({
       description:
-        'Criar uma nova ocorrência/ticket. Usar APENAS depois de confirmar os detalhes com o utilizador.',
+        'Criar uma nova ocorrência/ticket. Usar APENAS depois de verificar duplicados e confirmar detalhes com o utilizador.',
       inputSchema: z.object({
         title: z.string().describe('Título curto da ocorrência'),
         description: z.string().describe('Descrição detalhada do problema'),
@@ -21,15 +22,46 @@ export function getAssistantTools(orgId: string, userId: string) {
           .enum(['urgent', 'high', 'medium', 'low'])
           .optional()
           .describe('Prioridade: urgent, high, medium, low'),
+        fractionId: z
+          .string()
+          .optional()
+          .describe('ID da fração/unidade do utilizador (obtido via get_my_fractions)'),
       }),
-      execute: async ({ title, description, category, priority }) => {
-        const ticket = await createTicket(orgId, { title, description, category, priority }, userId)
+      execute: async ({ title, description, category, priority, fractionId }) => {
+        const ticket = await createTicket(
+          orgId,
+          { title, description, category, priority, fractionId },
+          userId,
+        )
         return {
           success: true,
           ticketId: ticket.id,
+          ticketUrl: `/tickets/${ticket.id}`,
           title: ticket.title,
           status: ticket.status,
         }
+      },
+    }),
+
+    search_org_tickets: tool({
+      description:
+        'Pesquisar ocorrências existentes no condomínio. Usar SEMPRE antes de criar uma nova ocorrência para verificar duplicados.',
+      inputSchema: z.object({
+        status: z
+          .enum(['open', 'in_progress', 'resolved', 'closed'])
+          .optional()
+          .describe('Filtrar por estado'),
+      }),
+      execute: async ({ status }) => {
+        const allTickets = await listTickets(orgId, userId, { status })
+        return allTickets.slice(0, 20).map((t) => ({
+          id: t.id,
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          category: t.category,
+          createdAt: t.createdAt,
+        }))
       },
     }),
 
@@ -74,6 +106,61 @@ export function getAssistantTools(orgId: string, userId: string) {
           category: ticket.category,
           createdAt: ticket.createdAt,
           fractionLabel: ticket.fractionLabel,
+        }
+      },
+    }),
+
+    update_ticket_status: tool({
+      description:
+        'Alterar o estado de uma ocorrência do utilizador (ex: reabrir uma ocorrência fechada/resolvida).',
+      inputSchema: z.object({
+        ticketId: z.string().describe('ID da ocorrência'),
+        newStatus: z.enum(['open', 'in_progress', 'resolved', 'closed']).describe('Novo estado'),
+      }),
+      execute: async ({ ticketId, newStatus }) => {
+        // Verify ticket belongs to this user
+        const [ticket] = await db
+          .select({ createdBy: tickets.createdBy })
+          .from(tickets)
+          .where(and(eq(tickets.id, ticketId), eq(tickets.orgId, orgId)))
+          .limit(1)
+
+        if (!ticket) return { error: 'Ocorrência não encontrada.' }
+        if (ticket.createdBy !== userId) {
+          return { error: 'Só pode alterar ocorrências criadas por si.' }
+        }
+
+        const result = await updateTicketStatus(orgId, ticketId, newStatus, userId)
+        if (!result) return { error: 'Erro ao atualizar.' }
+        return {
+          success: true,
+          ticketUrl: `/tickets/${result.id}`,
+          title: result.title,
+          newStatus: result.status,
+        }
+      },
+    }),
+
+    add_ticket_comment: tool({
+      description: 'Adicionar um comentário/atualização a uma ocorrência existente.',
+      inputSchema: z.object({
+        ticketId: z.string().describe('ID da ocorrência'),
+        content: z.string().describe('Conteúdo do comentário'),
+      }),
+      execute: async ({ ticketId, content }) => {
+        // Verify ticket exists in this org
+        const [ticket] = await db
+          .select({ id: tickets.id })
+          .from(tickets)
+          .where(and(eq(tickets.id, ticketId), eq(tickets.orgId, orgId)))
+          .limit(1)
+
+        if (!ticket) return { error: 'Ocorrência não encontrada.' }
+
+        await addComment(orgId, ticketId, `${content} — via Assistente`, userId)
+        return {
+          success: true,
+          ticketUrl: `/tickets/${ticketId}`,
         }
       },
     }),

@@ -117,8 +117,13 @@ export default function AssistantIndexPage({ loaderData }: Route.ComponentProps)
           <EmptyState userName={userName} onSuggestion={handleSuggestion} />
         ) : (
           <div className="mx-auto max-w-2xl space-y-4 pb-4">
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+            {messages.map((message, i) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isLast={i === messages.length - 1}
+                onOptionClick={!isLoading ? (option) => sendMessage({ text: option }) : undefined}
+              />
             ))}
             {isLoading && messages[messages.length - 1]?.role === 'user' && <LoadingBubble />}
           </div>

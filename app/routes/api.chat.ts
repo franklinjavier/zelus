@@ -23,10 +23,19 @@ export async function action({ request, context }: Route.ActionArgs) {
   // Get or create the single conversation for this user+org
   const conversation = await getOrCreateConversation(org.orgId, user.id)
 
-  // Save the incoming user message
+  // Save the incoming user message (v6: parts array, not content string)
   const lastMessage = messages[messages.length - 1]
   if (lastMessage?.role === 'user') {
-    await saveMessage(conversation.id, 'user', lastMessage.content)
+    const text =
+      lastMessage.content ??
+      lastMessage.parts
+        ?.filter((p: { type: string }) => p.type === 'text')
+        .map((p: { text: string }) => p.text)
+        .join('') ??
+      ''
+    if (text) {
+      await saveMessage(conversation.id, 'user', text)
+    }
   }
 
   // Load conversation history from DB (capped at 20 for token control)

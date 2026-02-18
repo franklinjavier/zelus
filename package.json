@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.45",
+    "@ai-sdk/openai": "^3.0.29",
+    "@ai-sdk/react": "^3.0.92",
     "@base-ui/react": "1.2.0",
     "@hugeicons/core-free-icons": "^3.1.1",
     "@hugeicons/react": "^1.1.5",

@@ -1,193 +1,216 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
 import {
-  Building06Icon,
-  Copy01Icon,
-  Link01Icon,
-  Tick02Icon,
+  AiChat02Icon,
+  SentIcon,
   Ticket02Icon,
-  TruckDeliveryIcon,
-  WrenchIcon,
+  Search01Icon,
+  BookOpen01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-
 import { href } from 'react-router'
 
-import { and, count, eq } from 'drizzle-orm'
-import { AzulejoOverlay } from '~/components/brand/azulejo-overlay'
-import { CardLink } from '~/components/brand/card-link'
-import { Button } from '~/components/ui/button'
-import { orgContext } from '~/lib/auth/context'
-import { db } from '~/lib/db'
-import { fractions, maintenanceRecords, suppliers, tickets } from '~/lib/db/schema'
-import { getInviteLink } from '~/lib/services/invite-link'
 import type { Route } from './+types/dashboard'
+import { orgContext, userContext } from '~/lib/auth/context'
+import { loadConversation } from '~/lib/services/conversations'
+import { Button } from '~/components/ui/button'
+import { cn } from '~/lib/utils'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Painel — Zelus' }]
+  return [{ title: 'Assistente — Zelus' }]
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
-  const { orgId } = context.get(orgContext)
-  const origin = new URL(request.url).origin
+export async function loader({ context }: Route.LoaderArgs) {
+  const org = context.get(orgContext)
+  const user = context.get(userContext)
 
-  const [
-    [ticketCount],
-    [openTickets],
-    [fractionCount],
-    [supplierCount],
-    [maintenanceCount],
-    inviteLink,
-  ] = await Promise.all([
-    db.select({ count: count() }).from(tickets).where(eq(tickets.orgId, orgId)),
-    db
-      .select({ count: count() })
-      .from(tickets)
-      .where(and(eq(tickets.orgId, orgId), eq(tickets.status, 'open'))),
-    db.select({ count: count() }).from(fractions).where(eq(fractions.orgId, orgId)),
-    db.select({ count: count() }).from(suppliers).where(eq(suppliers.orgId, orgId)),
-    db
-      .select({ count: count() })
-      .from(maintenanceRecords)
-      .where(eq(maintenanceRecords.orgId, orgId)),
-    getInviteLink(orgId),
-  ])
-
-  const joinCode = inviteLink?.inviteEnabled ? inviteLink.inviteCode : null
-  const joinUrl = joinCode ? `${origin}${href('/join/:code', { code: joinCode })}` : null
+  const { messages } = await loadConversation(org.orgId, user.id)
 
   return {
-    stats: {
-      totalTickets: ticketCount?.count ?? 0,
-      openTickets: openTickets?.count ?? 0,
-      totalFractions: fractionCount?.count ?? 0,
-      totalSuppliers: supplierCount?.count ?? 0,
-      totalMaintenance: maintenanceCount?.count ?? 0,
-    },
-    joinUrl,
+    initialMessages: messages.map((m) => ({
+      id: crypto.randomUUID(),
+      role: m.role as 'user' | 'assistant',
+      parts: [{ type: 'text' as const, text: m.content }],
+    })),
+    userName: user.name,
   }
 }
 
-export default function DashboardPage({ loaderData }: Route.ComponentProps) {
-  const { stats, joinUrl } = loaderData
+const suggestions = [
+  {
+    label: 'Reportar um problema',
+    prompt: 'Quero reportar um problema no edifício.',
+    icon: Ticket02Icon,
+  },
+  {
+    label: 'Ver as minhas ocorrências',
+    prompt: 'Mostra-me as minhas ocorrências recentes.',
+    icon: Search01Icon,
+  },
+  {
+    label: 'Consultar regulamento',
+    prompt: 'Tenho uma dúvida sobre o regulamento do condomínio.',
+    icon: BookOpen01Icon,
+  },
+]
+
+const transport = new DefaultChatTransport({ api: href('/api/chat') })
+
+export default function AssistantPage({ loaderData }: Route.ComponentProps) {
+  const { initialMessages, userName } = loaderData
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState('')
+
+  const { messages, sendMessage, status } = useChat({
+    id: 'zelus-chat',
+    transport,
+    messages: initialMessages,
+  })
+
+  const isLoading = status === 'submitted' || status === 'streaming'
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const text = input.trim()
+    if (!text || isLoading) return
+    setInput('')
+    sendMessage({ text })
+  }
+
+  function handleSuggestion(prompt: string) {
+    sendMessage({ text: prompt })
+  }
+
+  const isEmpty = messages.length === 0
 
   return (
-    <div>
-      <h1 className="text-lg font-semibold tracking-tight">Painel</h1>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-4">
-        <StatTile
-          label="Ocorrências"
-          value={stats.totalTickets}
-          icon={Ticket02Icon}
-          href={href('/tickets')}
-        />
-        <StatTile
-          label="Frações"
-          value={stats.totalFractions}
-          icon={Building06Icon}
-          href={href('/fractions')}
-        />
-        <StatTile
-          label="Fornecedores"
-          value={stats.totalSuppliers}
-          icon={TruckDeliveryIcon}
-          href={href('/suppliers')}
-        />
-        <StatTile
-          label="Manutenções"
-          value={stats.totalMaintenance}
-          icon={WrenchIcon}
-          href={href('/maintenance')}
-        />
+    <div className="flex h-full flex-col">
+      {/* Messages area */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        {isEmpty ? (
+          <EmptyState userName={userName} onSuggestion={handleSuggestion} />
+        ) : (
+          <div className="mx-auto max-w-2xl space-y-4 pb-4">
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))}
+            {isLoading && messages[messages.length - 1]?.role === 'user' && (
+              <div className="flex gap-3">
+                <div className="bg-primary/10 flex size-8 shrink-0 items-center justify-center rounded-xl">
+                  <HugeiconsIcon icon={AiChat02Icon} size={16} className="text-primary" />
+                </div>
+                <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="flex gap-1">
+                    <span
+                      className="bg-foreground/30 size-2 animate-bounce rounded-full"
+                      style={{ animationDelay: '0ms' }}
+                    />
+                    <span
+                      className="bg-foreground/30 size-2 animate-bounce rounded-full"
+                      style={{ animationDelay: '150ms' }}
+                    />
+                    <span
+                      className="bg-foreground/30 size-2 animate-bounce rounded-full"
+                      style={{ animationDelay: '300ms' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {joinUrl && <InviteLinkCard url={joinUrl} />}
+      {/* Input area */}
+      <div className="bg-background border-t px-4 py-3">
+        <form onSubmit={handleSubmit} className="mx-auto flex max-w-2xl gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Escreva a sua mensagem..."
+            className="bg-muted ring-foreground/10 placeholder:text-muted-foreground focus:ring-primary/40 h-10 flex-1 rounded-4xl px-4 text-sm ring-1 outline-none"
+            disabled={isLoading}
+          />
+          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+            <HugeiconsIcon icon={SentIcon} size={18} />
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }
 
-function StatTile({
-  label,
-  value,
-  icon,
-  href,
+function EmptyState({
+  userName,
+  onSuggestion,
 }: {
-  label: string
-  value: number
-  icon: Parameters<typeof HugeiconsIcon>[0]['icon']
-  href: string
+  userName: string
+  onSuggestion: (prompt: string) => void
 }) {
-  const display = useCountUp(value, 400)
+  const firstName = userName.split(' ')[0]
 
   return (
-    <CardLink to={href} className="p-5">
-      <div className="flex items-start justify-between">
-        <p className="text-3xl font-medium tracking-tight tabular-nums">{display}</p>
-        <HugeiconsIcon icon={icon} size={20} strokeWidth={1.5} className="text-muted-foreground" />
+    <div className="flex h-full flex-col items-center justify-center px-4">
+      <div className="bg-primary/10 mb-4 flex size-14 items-center justify-center rounded-2xl">
+        <HugeiconsIcon icon={AiChat02Icon} size={28} className="text-primary" />
       </div>
-      <p className="text-muted-foreground mt-1 text-sm font-medium">{label}</p>
-    </CardLink>
+      <h1 className="text-lg font-semibold tracking-tight">Olá, {firstName}!</h1>
+      <p className="text-muted-foreground mt-1 text-center text-sm">
+        Sou o assistente do condomínio. Como posso ajudar?
+      </p>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {suggestions.map((s) => (
+          <button
+            key={s.label}
+            type="button"
+            onClick={() => onSuggestion(s.prompt)}
+            className="bg-card hover:bg-primary/[0.03] hover:ring-primary/20 ring-foreground/10 flex items-center gap-2 rounded-4xl px-4 py-2 text-sm font-medium ring-1 transition-all"
+          >
+            <HugeiconsIcon icon={s.icon} size={16} strokeWidth={2} className="text-primary" />
+            {s.label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
-function useCountUp(target: number, duration = 400) {
-  const [current, setCurrent] = useState(0)
-  const ref = useRef({ start: 0, raf: 0 })
+function MessageBubble({
+  message,
+}: {
+  message: { role: string; parts: Array<{ type: string; text?: string }> }
+}) {
+  const isUser = message.role === 'user'
+  const text = message.parts
+    .filter((p) => p.type === 'text')
+    .map((p) => p.text)
+    .join('')
 
-  useEffect(() => {
-    if (target === 0) return
-    ref.current.start = performance.now()
-    const tick = (now: number) => {
-      const progress = Math.min((now - ref.current.start) / duration, 1)
-      const eased = 1 - (1 - progress) ** 3
-      setCurrent(Math.round(eased * target))
-      if (progress < 1) ref.current.raf = requestAnimationFrame(tick)
-    }
-    ref.current.raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(ref.current.raf)
-  }, [target, duration])
-
-  return current
-}
-
-function InviteLinkCard({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function copy() {
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  if (!text) return null
 
   return (
-    <div className="group bg-card ring-foreground/10 hover:ring-primary/20 relative mt-6 overflow-hidden rounded-2xl p-5 ring-1 transition-all duration-300">
-      <AzulejoOverlay />
-      <div className="relative">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-primary/10 flex size-9 items-center justify-center rounded-xl">
-            <HugeiconsIcon icon={Link01Icon} size={18} strokeWidth={2} className="text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold">Convidar para o condomínio</p>
-            <p className="text-muted-foreground text-sm">
-              Partilhe este link para novos membros se juntarem.
-            </p>
-          </div>
+    <div className={cn('flex gap-3', isUser && 'flex-row-reverse')}>
+      {!isUser && (
+        <div className="bg-primary/10 flex size-8 shrink-0 items-center justify-center rounded-xl">
+          <HugeiconsIcon icon={AiChat02Icon} size={16} className="text-primary" />
         </div>
-        <div className="mt-3 flex items-center gap-2">
-          <div className="bg-muted flex-1 truncate rounded-xl px-3 py-2 font-mono text-sm">
-            {url}
-          </div>
-          <Button variant="outline" size="sm" onClick={copy}>
-            <HugeiconsIcon
-              icon={copied ? Tick02Icon : Copy01Icon}
-              data-icon="inline-start"
-              size={16}
-              strokeWidth={2}
-            />
-            {copied ? 'Copiado' : 'Copiar'}
-          </Button>
-        </div>
+      )}
+      <div
+        className={cn(
+          'max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap',
+          isUser ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted rounded-tl-sm',
+        )}
+      >
+        {text}
       </div>
     </div>
   )

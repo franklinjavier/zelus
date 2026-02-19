@@ -2,7 +2,7 @@ import { Badge } from '~/components/ui/badge'
 
 const roleLabels: Record<string, string> = {
   org_admin: 'Admin',
-  fraction_owner_admin: 'Admin Fração',
+  fraction_owner_admin: 'Admin da fração',
   fraction_member: 'Membro',
 }
 

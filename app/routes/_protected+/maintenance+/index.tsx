@@ -20,7 +20,7 @@ import {
 } from '~/components/ui/select'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Manutenções — Zelus' }]
+  return [{ title: 'Intervenções — Zelus' }]
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -43,7 +43,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
   const { searchParams, setFilter } = useFilterParams()
 
   const supplierItems = [
-    { label: 'Todos os fornecedores', value: '_all' },
+    { label: 'Todos os prestadores', value: '_all' },
     ...suppliers.map((s) => ({ label: s.name, value: s.id })),
   ]
 
@@ -51,7 +51,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">Manutenções</h1>
+          <h1 className="text-lg font-semibold tracking-tight">Intervenções</h1>
           <p className="text-muted-foreground text-sm">
             {records.length} {records.length === 1 ? 'registo' : 'registos'}
           </p>
@@ -86,7 +86,7 @@ export default function MaintenancePage({ loaderData }: Route.ComponentProps) {
       )}
 
       {records.length === 0 ? (
-        <EmptyState icon={WrenchIcon} message="Nenhum registo de manutenção encontrado">
+        <EmptyState icon={WrenchIcon} message="Nenhuma intervenção encontrada">
           {isAdmin && (
             <Button
               nativeButton={false}

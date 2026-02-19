@@ -34,7 +34,7 @@ import {
 } from '~/components/ui/drawer'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Fornecedores — Zelus' }]
+  return [{ title: 'Prestadores — Zelus' }]
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -68,15 +68,15 @@ export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">Fornecedores</h1>
+          <h1 className="text-lg font-semibold tracking-tight">Prestadores</h1>
           <p className="text-muted-foreground text-sm">
-            {suppliers.length} {suppliers.length === 1 ? 'fornecedor' : 'fornecedores'}
+            {suppliers.length} {suppliers.length === 1 ? 'prestador' : 'prestadores'}
           </p>
         </div>
         {isAdmin && (
           <Button nativeButton={false} render={<Link to={href('/suppliers/new')} />}>
             <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-            Novo fornecedor
+            Novo prestador
           </Button>
         )}
       </div>
@@ -103,14 +103,14 @@ export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
       )}
 
       {suppliers.length === 0 ? (
-        <EmptyState icon={TruckDeliveryIcon} message="Nenhum fornecedor encontrado">
+        <EmptyState icon={TruckDeliveryIcon} message="Nenhum prestador encontrado">
           {isAdmin && (
             <Button
               nativeButton={false}
               render={<Link to={href('/suppliers/new')} />}
               variant="outline"
             >
-              Criar primeiro fornecedor
+              Criar primeiro prestador
             </Button>
           )}
         </EmptyState>
@@ -160,9 +160,9 @@ export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
         >
           <DrawerPopup>
             <DrawerHeader>
-              <DrawerTitle>Novo fornecedor</DrawerTitle>
+              <DrawerTitle>Novo prestador</DrawerTitle>
               <DrawerDescription>
-                Preencha os dados para registar um novo fornecedor.
+                Preencha os dados para registar um novo prestador de serviços.
               </DrawerDescription>
             </DrawerHeader>
             <Outlet />

@@ -80,7 +80,7 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
             <ZelusLogoTile size={40} className="text-primary" />
           </div>
           <CardTitle>Entrar no Zelus</CardTitle>
-          <CardDescription>Acesse o sistema do seu condomínio</CardDescription>
+          <CardDescription>Aceda ao sistema do seu condomínio</CardDescription>
         </CardHeader>
         <CardContent>
           <Button

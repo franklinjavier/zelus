@@ -88,13 +88,13 @@ export default function AdminDashboardPage({ loaderData }: Route.ComponentProps)
           href={href('/fractions')}
         />
         <StatTile
-          label="Fornecedores"
+          label="Prestadores"
           value={stats.totalSuppliers}
           icon={TruckDeliveryIcon}
           href={href('/suppliers')}
         />
         <StatTile
-          label="Manutenções"
+          label="Intervenções"
           value={stats.totalMaintenance}
           icon={WrenchIcon}
           href={href('/maintenance')}

@@ -282,7 +282,7 @@ function InviteLinkCard({
           <div>
             <CardTitle>Link de convite</CardTitle>
             <CardDescription>
-              Partilhe este link para que novos moradores possam juntar-se ao condomínio.
+              Partilhe este link para que novos membros possam juntar-se ao condomínio.
             </CardDescription>
           </div>
           <fetcher.Form method="post">

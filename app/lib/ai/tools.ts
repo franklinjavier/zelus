@@ -179,7 +179,7 @@ export function getAssistantTools(orgId: string, userId: string) {
     }),
 
     get_building_info: tool({
-      description: 'Obter informações gerais do condomínio e fornecedores.',
+      description: 'Obter informações gerais do condomínio e prestadores de serviços.',
       inputSchema: z.object({}),
       execute: async () => {
         const [supplierList, categories] = await Promise.all([

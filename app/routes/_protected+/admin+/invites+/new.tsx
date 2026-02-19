@@ -83,8 +83,8 @@ const intentItems = [
 
 const roleItems = [
   { label: 'Membro', value: 'fraction_member' },
-  { label: 'Admin condomínio', value: 'org_admin' },
-  { label: 'Admin fração', value: 'fraction_owner_admin' },
+  { label: 'Admin do condomínio', value: 'org_admin' },
+  { label: 'Admin da fração', value: 'fraction_owner_admin' },
 ]
 
 export default function NewInvitePage({ loaderData, actionData }: Route.ComponentProps) {

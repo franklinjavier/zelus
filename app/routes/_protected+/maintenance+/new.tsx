@@ -21,7 +21,7 @@ import { BackButton } from '~/components/layout/back-button'
 import { ErrorBanner } from '~/components/layout/feedback'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Novo Registo de Manutenção — Zelus' }]
+  return [{ title: 'Nova Intervenção — Zelus' }]
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -88,7 +88,7 @@ export default function NewMaintenancePage({ loaderData, actionData }: Route.Com
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Dados do registo</CardTitle>
+          <CardTitle>Dados da intervenção</CardTitle>
         </CardHeader>
         <CardContent>
           <Form method="post" className="grid gap-4">
@@ -98,7 +98,7 @@ export default function NewMaintenancePage({ loaderData, actionData }: Route.Com
               <FieldLabel htmlFor="title">
                 Título <span className="text-destructive">*</span>
               </FieldLabel>
-              <Input id="title" name="title" placeholder="Resumo da manutenção" required />
+              <Input id="title" name="title" placeholder="Resumo da intervenção" required />
             </Field>
 
             <Field>
@@ -115,7 +115,7 @@ export default function NewMaintenancePage({ loaderData, actionData }: Route.Com
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="supplierId">Fornecedor</FieldLabel>
+              <FieldLabel htmlFor="supplierId">Prestador</FieldLabel>
               <Select name="supplierId" defaultValue="" items={supplierItems}>
                 <SelectTrigger className="w-full">
                   <SelectValue />

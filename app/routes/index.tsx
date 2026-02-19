@@ -25,7 +25,7 @@ export default function Home() {
             Gestão de condomínios, simplificada.
           </p>
           <p className="text-muted-foreground mt-3">
-            Centralize ocorrências, manutenções e fornecedores num único lugar. Sem ruído, sem
+            Centralize ocorrências, intervenções e prestadores num único lugar. Sem ruído, sem
             complicações.
           </p>
           <div className="mt-8 flex justify-center gap-3">

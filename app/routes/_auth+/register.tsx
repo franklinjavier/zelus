@@ -75,7 +75,7 @@ export default function RegisterPage({ actionData }: Route.ComponentProps) {
             {error && <ErrorBanner>{error}</ErrorBanner>}
             <Field>
               <FieldLabel htmlFor="name">Nome</FieldLabel>
-              <Input id="name" name="name" placeholder="Seu nome" autoComplete="name" required />
+              <Input id="name" name="name" placeholder="Nome" autoComplete="name" required />
               {errors?.name && <FieldError>{errors.name}</FieldError>}
             </Field>
             <Field>
@@ -122,7 +122,7 @@ export default function RegisterPage({ actionData }: Route.ComponentProps) {
             onClick={() => signIn.social({ provider: 'google', callbackURL })}
           >
             <GoogleIcon />
-            Registrar com Google
+            Registar com Google
           </Button>
 
           <p className="text-muted-foreground mt-4 text-center text-sm">

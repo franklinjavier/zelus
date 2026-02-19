@@ -34,7 +34,7 @@ import { setToast } from '~/lib/toast.server'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const name = loaderData?.supplier?.name ?? 'Fornecedor'
+  const name = loaderData?.supplier?.name ?? 'Prestador'
   return [{ title: `${name} — Zelus` }]
 }
 
@@ -93,7 +93,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       await deleteSupplier(orgId, params.id, user.id)
       return redirect(href('/suppliers'))
     } catch (e) {
-      return { error: e instanceof Error ? e.message : 'Erro ao apagar fornecedor.' }
+      return { error: e instanceof Error ? e.message : 'Erro ao apagar prestador.' }
     }
   }
 
@@ -121,7 +121,7 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
           {isAdmin ? (
             <Card>
               <CardHeader>
-                <CardTitle>Dados do fornecedor</CardTitle>
+                <CardTitle>Dados do prestador</CardTitle>
               </CardHeader>
               <CardContent>
                 <Form method="post" className="grid gap-4">
@@ -226,8 +226,8 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
 
                   <div className="flex items-center justify-between pt-2">
                     <DeleteConfirmDialog
-                      title="Apagar fornecedor?"
-                      description="Esta ação não pode ser revertida. Todos os dados do fornecedor serão apagados."
+                      title="Apagar prestador?"
+                      description="Esta ação não pode ser revertida. Todos os dados do prestador serão apagados."
                     >
                       <fetcher.Form method="post">
                         <input type="hidden" name="intent" value="delete" />
@@ -319,7 +319,7 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                         strokeWidth={2}
                         className="text-muted-foreground"
                       />
-                      Manutenções
+                      Intervenções
                     </span>
                   </dt>
                   <dd className="text-sm">

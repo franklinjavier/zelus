@@ -37,7 +37,7 @@ export async function deleteCategory(key: string, userId: string, orgId: string)
 
   if (totalUsed > 0) {
     throw new Error(
-      'Categoria em uso por ocorrências ou fornecedores. Remova a categoria antes de apagar.',
+      'Categoria em uso por ocorrências ou prestadores. Remova a categoria antes de apagar.',
     )
   }
 

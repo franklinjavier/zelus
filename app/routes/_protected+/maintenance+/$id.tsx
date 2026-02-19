@@ -26,7 +26,7 @@ import { setToast } from '~/lib/toast.server'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const title = loaderData?.record?.title ?? 'Manutenção'
+  const title = loaderData?.record?.title ?? 'Intervenção'
   return [{ title: `${title} — Zelus` }]
 }
 
@@ -133,7 +133,7 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <dt className="text-muted-foreground text-sm">Fornecedor</dt>
+                  <dt className="text-muted-foreground text-sm">Prestador</dt>
                   <dd className="text-sm">
                     {record.supplierName && record.supplierId ? (
                       <Link
@@ -193,7 +193,7 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="supplierId">Fornecedor</FieldLabel>
+                    <FieldLabel htmlFor="supplierId">Prestador</FieldLabel>
                     <Select
                       name="supplierId"
                       defaultValue={record.supplierId ?? ''}
@@ -240,7 +240,7 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                   <div className="flex items-center justify-between pt-2">
                     <DeleteConfirmDialog
                       title="Apagar registo?"
-                      description="Esta ação não pode ser revertida. O registo de manutenção será apagado."
+                      description="Esta ação não pode ser revertida. O registo de intervenção será apagado."
                     >
                       <fetcher.Form method="post">
                         <input type="hidden" name="intent" value="delete" />
@@ -264,7 +264,7 @@ export default function MaintenanceDetailPage({ loaderData, actionData }: Route.
                     <dd className="text-sm">{formattedDate}</dd>
                   </div>
                   <div className="flex items-center justify-between">
-                    <dt className="text-muted-foreground text-sm">Fornecedor</dt>
+                    <dt className="text-muted-foreground text-sm">Prestador</dt>
                     <dd className="text-sm">
                       {record.supplierName && record.supplierId ? (
                         <Link

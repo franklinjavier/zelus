@@ -38,8 +38,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 const scopeConfig = {
   tickets: { label: 'Ocorrências', icon: Ticket02Icon },
-  suppliers: { label: 'Fornecedores', icon: TruckDeliveryIcon },
-  maintenance: { label: 'Manutenções', icon: WrenchIcon },
+  suppliers: { label: 'Prestadores', icon: TruckDeliveryIcon },
+  maintenance: { label: 'Intervenções', icon: WrenchIcon },
 } satisfies Partial<{ [K in SearchScope]: { label: string; icon: IconSvgElement } }>
 
 export default function SearchPage({ loaderData }: Route.ComponentProps) {
@@ -61,7 +61,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Pesquisa</h1>
         <p className="text-muted-foreground text-sm">
-          Pesquise por ocorrências, fornecedores e manutenções
+          Pesquise por ocorrências, prestadores e intervenções
         </p>
       </div>
 

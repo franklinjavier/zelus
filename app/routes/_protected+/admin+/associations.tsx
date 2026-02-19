@@ -26,7 +26,7 @@ import {
 } from '~/components/ui/alert-dialog'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Associações — Zelus' }]
+  return [{ title: 'Pedidos de acesso — Zelus' }]
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
@@ -65,7 +65,7 @@ export default function AssociationsPage({ loaderData }: Route.ComponentProps) {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold tracking-tight">Associações</h1>
+      <h1 className="text-lg font-semibold tracking-tight">Pedidos de acesso</h1>
       <div className="mt-6">
         <AssociationsList associations={associations} />
       </div>
@@ -79,7 +79,7 @@ function AssociationsList({
   associations: Awaited<ReturnType<typeof listPendingAssociations>>
 }) {
   if (associations.length === 0) {
-    return <EmptyState icon={CheckmarkCircle01Icon} message="Nenhuma associação pendente" />
+    return <EmptyState icon={CheckmarkCircle01Icon} message="Nenhum pedido de acesso pendente" />
   }
 
   return (

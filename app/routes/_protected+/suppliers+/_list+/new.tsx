@@ -72,7 +72,7 @@ export default function NewSupplierDrawer({ loaderData, actionData }: Route.Comp
           <FieldLabel htmlFor="name">
             Nome <span className="text-destructive">*</span>
           </FieldLabel>
-          <Input id="name" name="name" placeholder="Nome do fornecedor" required />
+          <Input id="name" name="name" placeholder="Nome do prestador" required />
         </Field>
 
         <Field>
@@ -120,7 +120,7 @@ export default function NewSupplierDrawer({ loaderData, actionData }: Route.Comp
 
         <Field>
           <FieldLabel htmlFor="address">Morada</FieldLabel>
-          <Input id="address" name="address" placeholder="Morada do fornecedor" />
+          <Input id="address" name="address" placeholder="Morada do prestador" />
         </Field>
 
         <Field>
@@ -128,13 +128,13 @@ export default function NewSupplierDrawer({ loaderData, actionData }: Route.Comp
           <Textarea
             id="notes"
             name="notes"
-            placeholder="Observações sobre este fornecedor"
+            placeholder="Observações sobre este prestador"
             rows={3}
           />
         </Field>
 
         <Button type="submit" disabled={isSubmitting} className="mt-1">
-          {isSubmitting ? 'A criar…' : 'Criar fornecedor'}
+          {isSubmitting ? 'A criar…' : 'Criar prestador'}
         </Button>
       </Form>
     </div>

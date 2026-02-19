@@ -133,7 +133,7 @@ export async function deleteSupplier(orgId: string, supplierId: string, adminUse
   const maintenanceCount = await getSupplierMaintenanceCount(orgId, supplierId)
 
   if (maintenanceCount > 0) {
-    throw new Error('Não é possível apagar fornecedor com registos de manutenção associados.')
+    throw new Error('Não é possível apagar prestador com intervenções associadas.')
   }
 
   const [deleted] = await db

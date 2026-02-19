@@ -45,8 +45,8 @@ const mainNav = [
   { label: 'Pesquisa', to: href('/search'), icon: Search01Icon },
   { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
-  { label: 'Fornecedores', to: href('/suppliers'), icon: TruckDeliveryIcon },
-  { label: 'Manutenções', to: href('/maintenance'), icon: WrenchIcon },
+  { label: 'Prestadores', to: href('/suppliers'), icon: TruckDeliveryIcon },
+  { label: 'Intervenções', to: href('/maintenance'), icon: WrenchIcon },
 ]
 
 const adminNav = [
@@ -54,7 +54,7 @@ const adminNav = [
   { label: 'Documentos', to: href('/admin/documents') },
   { label: 'Condomínio', to: href('/admin/organization') },
   { label: 'Membros', to: href('/admin/members') },
-  { label: 'Associações', to: href('/admin/associations') },
+  { label: 'Pedidos de acesso', to: href('/admin/associations') },
   { label: 'Convites', to: href('/admin/invites') },
   { label: 'Categorias', to: href('/admin/categories') },
 ]

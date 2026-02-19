@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm'
 
 import { createTicket, listTickets, getTicket, updateTicketStatus } from '~/lib/services/tickets'
 import { addComment } from '~/lib/services/ticket-comments'
+import { searchTicketsByText } from '~/lib/search'
 import { listCategories } from '~/lib/services/categories'
 import { listSuppliers } from '~/lib/services/suppliers'
 import { db } from '~/lib/db'
@@ -45,23 +46,16 @@ export function getAssistantTools(orgId: string, userId: string) {
 
     search_org_tickets: tool({
       description:
-        'Pesquisar ocorrências existentes no condomínio. Usar SEMPRE antes de criar uma nova ocorrência para verificar duplicados.',
+        'Pesquisar ocorrências existentes no condomínio por texto (full-text search). Usar SEMPRE antes de criar uma nova ocorrência para verificar duplicados.',
       inputSchema: z.object({
-        status: z
-          .enum(['open', 'in_progress', 'resolved', 'closed'])
-          .optional()
-          .describe('Filtrar por estado'),
+        query: z
+          .string()
+          .describe(
+            'Termos de pesquisa baseados no problema descrito (ex: "luz garagem", "elevador avariado")',
+          ),
       }),
-      execute: async ({ status }) => {
-        const allTickets = await listTickets(orgId, userId, { status })
-        return allTickets.slice(0, 20).map((t) => ({
-          id: t.id,
-          title: t.title,
-          status: t.status,
-          priority: t.priority,
-          category: t.category,
-          createdAt: t.createdAt,
-        }))
+      execute: async ({ query }) => {
+        return searchTicketsByText(orgId, query, userId)
       },
     }),
 

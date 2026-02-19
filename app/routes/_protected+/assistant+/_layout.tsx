@@ -5,8 +5,8 @@ import {
   AiChat02Icon,
   Cancel01Icon,
   Delete02Icon,
-  Menu01Icon,
   MoreVerticalIcon,
+  Clock02Icon,
   PencilEdit02Icon,
   Tick02Icon,
 } from '@hugeicons/core-free-icons'
@@ -170,15 +170,21 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Mobile header with sidebar toggle */}
         <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Abrir conversas"
-          >
-            <HugeiconsIcon icon={Menu01Icon} size={18} />
-          </Button>
-          <span className="flex-1 text-sm font-medium">Assistente</span>
+          {conversations.length > 1 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Abrir histórico"
+            >
+              <HugeiconsIcon icon={Clock02Icon} size={16} />
+              Histórico
+            </Button>
+          ) : (
+            <span className="text-sm font-medium">Assistente</span>
+          )}
+          <span className="flex-1" />
           <Button
             nativeButton={false}
             render={<Link to={href('/assistant')} />}
@@ -187,7 +193,7 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
             className="gap-1.5"
           >
             <HugeiconsIcon icon={AiChat02Icon} size={16} />
-            Novo chat
+            Nova conversa
           </Button>
         </div>
 

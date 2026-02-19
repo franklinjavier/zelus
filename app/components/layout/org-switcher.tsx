@@ -1,11 +1,12 @@
-import { ArrowDown01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Add01Icon, ArrowDown01Icon, Building06Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useFetcher } from 'react-router'
+import { href, Link, useFetcher } from 'react-router'
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '~/components/ui/sidebar'
@@ -14,10 +15,6 @@ type Org = { id: string; name: string }
 
 export function OrgSwitcher({ org, orgs }: { org: Org; orgs: Org[] }) {
   const fetcher = useFetcher()
-
-  if (orgs.length <= 1) {
-    return <span className="truncate text-sm font-semibold tracking-tight">{org.name}</span>
-  }
 
   return (
     <SidebarMenu>
@@ -60,6 +57,15 @@ export function OrgSwitcher({ org, orgs }: { org: Org; orgs: Org[] }) {
                 )}
               </DropdownMenuItem>
             ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link to={href('/orgs/new')} />}>
+              <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
+              <span>Criar condomínio</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link to={href('/orgs')} />}>
+              <HugeiconsIcon icon={Building06Icon} size={16} strokeWidth={2} />
+              <span>Ver todos</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

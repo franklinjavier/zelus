@@ -88,7 +88,7 @@ export const auth = betterAuth({
     organization({
       allowUserToCreateOrganization: true,
       creatorRole: 'owner',
-      organizationLimit: 1,
+      organizationLimit: 10,
       membershipLimit: 100,
       schema: {
         organization: {

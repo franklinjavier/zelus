@@ -3,7 +3,6 @@ import {
   AiChat02Icon,
   ArrowDown01Icon,
   Building06Icon,
-  Search01Icon,
   ShieldKeyIcon,
   Ticket02Icon,
   TruckDeliveryIcon,
@@ -40,23 +39,22 @@ export type AppSidebarProps = {
   isOrgAdmin: boolean
 }
 
-const mainNav = [
+export const mainNav = [
   { label: 'Assistente', to: href('/assistant'), icon: AiChat02Icon },
-  { label: 'Pesquisa', to: href('/search'), icon: Search01Icon },
   { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
   { label: 'Prestadores', to: href('/suppliers'), icon: TruckDeliveryIcon },
   { label: 'Intervenções', to: href('/maintenance'), icon: WrenchIcon },
 ]
 
-const adminNav = [
-  { label: 'Painel', to: href('/admin/dashboard') },
-  { label: 'Documentos', to: href('/admin/documents') },
-  { label: 'Condomínio', to: href('/admin/organization') },
-  { label: 'Membros', to: href('/admin/members') },
-  { label: 'Pedidos de acesso', to: href('/admin/associations') },
-  { label: 'Convites', to: href('/admin/invites') },
-  { label: 'Categorias', to: href('/admin/categories') },
+export const adminNav = [
+  { label: 'Dashboard', to: href('/admin/dashboard'), icon: ShieldKeyIcon },
+  { label: 'Categorias', to: href('/admin/categories'), icon: ShieldKeyIcon },
+  { label: 'Condomínio', to: href('/admin/organization'), icon: ShieldKeyIcon },
+  { label: 'Convites', to: href('/admin/invites'), icon: ShieldKeyIcon },
+  { label: 'Documentos', to: href('/admin/documents'), icon: ShieldKeyIcon },
+  { label: 'Membros', to: href('/admin/members'), icon: ShieldKeyIcon },
+  { label: 'Pedidos de acesso', to: href('/admin/associations'), icon: ShieldKeyIcon },
 ]
 
 export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {

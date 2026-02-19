@@ -1,17 +1,10 @@
 import { Collapsible } from '@base-ui/react/collapsible'
-import {
-  AiChat02Icon,
-  ArrowDown01Icon,
-  Building06Icon,
-  ShieldKeyIcon,
-  Ticket02Icon,
-  TruckDeliveryIcon,
-  WrenchIcon,
-} from '@hugeicons/core-free-icons'
+import { ArrowDown01Icon, ShieldKeyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link, NavLink, href, useLocation } from 'react-router'
 
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
+import { mainNav, adminNav } from '~/lib/navigation'
 import {
   Sidebar,
   SidebarContent,
@@ -38,24 +31,6 @@ export type AppSidebarProps = {
   orgs: Org[]
   isOrgAdmin: boolean
 }
-
-export const mainNav = [
-  { label: 'Assistente', to: href('/assistant'), icon: AiChat02Icon },
-  { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
-  { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
-  { label: 'Prestadores', to: href('/suppliers'), icon: TruckDeliveryIcon },
-  { label: 'Intervenções', to: href('/maintenance'), icon: WrenchIcon },
-]
-
-export const adminNav = [
-  { label: 'Dashboard', to: href('/admin/dashboard'), icon: ShieldKeyIcon },
-  { label: 'Categorias', to: href('/admin/categories'), icon: ShieldKeyIcon },
-  { label: 'Condomínio', to: href('/admin/organization'), icon: ShieldKeyIcon },
-  { label: 'Convites', to: href('/admin/invites'), icon: ShieldKeyIcon },
-  { label: 'Documentos', to: href('/admin/documents'), icon: ShieldKeyIcon },
-  { label: 'Membros', to: href('/admin/members'), icon: ShieldKeyIcon },
-  { label: 'Pedidos de acesso', to: href('/admin/associations'), icon: ShieldKeyIcon },
-]
 
 export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
   const location = useLocation()

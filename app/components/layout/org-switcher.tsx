@@ -37,11 +37,11 @@ export function OrgSwitcher({ org, orgs }: { org: Org; orgs: Org[] }) {
             {orgs.map((o) => (
               <DropdownMenuItem
                 key={o.id}
-                onSelect={() => {
+                onClick={() => {
                   if (o.id !== org.id) {
                     fetcher.submit(
                       { organizationId: o.id },
-                      { method: 'post', action: '/api/switch-org' },
+                      { method: 'post', action: href('/api/switch-org') },
                     )
                   }
                 }}

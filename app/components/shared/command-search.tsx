@@ -12,7 +12,7 @@ import {
   CommandGroup,
   CommandItem,
 } from '~/components/ui/command'
-import { mainNav, adminNav } from '~/components/layout/app-sidebar'
+import { mainNav, adminNav, extraNav } from '~/lib/navigation'
 import type { SearchScope } from '~/lib/search/provider'
 
 type LoaderData = {
@@ -97,7 +97,7 @@ export function CommandSearch({
   const hasQuery = query.trim().length > 0
 
   const allPages = useMemo(
-    () => (isOrgAdmin ? [...mainNav, ...adminNav] : [...mainNav]),
+    () => (isOrgAdmin ? [...mainNav, ...adminNav, ...extraNav] : [...mainNav, ...extraNav]),
     [isOrgAdmin],
   )
 

@@ -110,7 +110,7 @@ export default function AssistantIndexPage({ loaderData }: Route.ComponentProps)
   const isEmpty = messages.length === 0
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {isEmpty ? (

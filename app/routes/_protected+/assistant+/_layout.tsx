@@ -167,7 +167,7 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
       <div className="hidden w-14 shrink-0 md:block" />
 
       {/* Chat area */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Mobile header with sidebar toggle */}
         <div className="flex items-center gap-2 border-b px-3 py-2 md:hidden">
           <Button
@@ -183,10 +183,11 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
             nativeButton={false}
             render={<Link to={href('/assistant')} />}
             variant="ghost"
-            size="icon"
-            aria-label="Nova conversa"
+            size="sm"
+            className="gap-1.5"
           >
-            <HugeiconsIcon icon={Add01Icon} size={18} />
+            <HugeiconsIcon icon={AiChat02Icon} size={16} />
+            Novo chat
           </Button>
         </div>
 

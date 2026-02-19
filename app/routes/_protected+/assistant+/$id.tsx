@@ -184,7 +184,7 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Escreva a sua mensagem..."
-            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none"
+            className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none"
             disabled={isLoading}
           />
           <button

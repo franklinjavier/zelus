@@ -3,7 +3,7 @@ import { useRender } from '@base-ui/react/use-render'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
 
-import { PanelLeftOpenIcon, PanelRightCloseIcon } from '@hugeicons/core-free-icons'
+import { Menu01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -244,7 +244,7 @@ function Sidebar({
 }
 
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar, state } = useSidebar()
+  const { toggleSidebar } = useSidebar()
 
   return (
     <Button
@@ -259,10 +259,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       }}
       {...props}
     >
-      <HugeiconsIcon
-        icon={state === 'expanded' ? PanelLeftOpenIcon : PanelRightCloseIcon}
-        strokeWidth={2}
-      />
+      <HugeiconsIcon icon={Menu01Icon} strokeWidth={2} />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

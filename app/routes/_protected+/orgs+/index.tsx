@@ -38,7 +38,7 @@ export default function OrgsPage({ loaderData }: Route.ComponentProps) {
   if (orgs.length === 0) {
     return (
       <EmptyState icon={Building06Icon} message="Nenhum condomínio encontrado">
-        <Button render={<Link to="/orgs/new" />} nativeButton={false}>
+        <Button render={<Link to={href('/orgs/new')} />} nativeButton={false}>
           Criar condomínio
         </Button>
       </EmptyState>
@@ -49,7 +49,7 @@ export default function OrgsPage({ loaderData }: Route.ComponentProps) {
     <div className="mx-auto max-w-lg">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Condomínios</h1>
-        <Button render={<Link to="/orgs/new" />} nativeButton={false} size="sm">
+        <Button render={<Link to={href('/orgs/new')} />} nativeButton={false} size="sm">
           Criar condomínio
         </Button>
       </div>
@@ -83,7 +83,7 @@ export default function OrgsPage({ loaderData }: Route.ComponentProps) {
                   onClick={() => {
                     fetcher.submit(
                       { organizationId: org.id },
-                      { method: 'post', action: '/api/switch-org' },
+                      { method: 'post', action: href('/api/switch-org') },
                     )
                   }}
                 >

@@ -12,6 +12,7 @@ import { orgContext } from '~/lib/auth/context'
 import { listSuppliers } from '~/lib/services/suppliers'
 import { listCategories } from '~/lib/services/categories'
 import { translateCategory } from '~/lib/category-labels'
+import { formatPhone } from '~/lib/format'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { CardLink } from '~/components/brand/card-link'
@@ -141,7 +142,7 @@ export default function SuppliersLayout({ loaderData }: Route.ComponentProps) {
                       strokeWidth={2}
                       className="shrink-0"
                     />
-                    {supplier.contactPhone || supplier.phone}
+                    {formatPhone(supplier.contactPhone || supplier.phone)}
                   </span>
                 )}
               </div>

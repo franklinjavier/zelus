@@ -57,6 +57,13 @@ export const auth = betterAuth({
   },
 
   user: {
+    additionalFields: {
+      phone: {
+        type: 'string',
+        required: false,
+        input: true,
+      },
+    },
     deleteUser: {
       enabled: true,
       // For now: require password OR a fresh session to delete.

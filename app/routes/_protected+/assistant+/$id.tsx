@@ -1,15 +1,19 @@
 import { useChat } from '@ai-sdk/react'
-import { ArrowUp02Icon } from '@hugeicons/core-free-icons'
+import { ArrowUp02Icon, PencilEdit02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { UIMessage } from 'ai'
 import { DefaultChatTransport } from 'ai'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { data, Form, href, redirect, useRevalidator } from 'react-router'
+import { data, Form, href, redirect, useFetcher, useRevalidator } from 'react-router'
 
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { userContext } from '~/lib/auth/context'
-import { deleteConversation, loadConversation } from '~/lib/services/conversations'
+import {
+  deleteConversation,
+  loadConversation,
+  updateConversationTitle,
+} from '~/lib/services/conversations'
 import type { Route } from './+types/$id'
 import { LoadingBubble, MessageBubble } from './_modules/chat-bubbles'
 
@@ -62,8 +66,18 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ params, context }: Route.ActionArgs) {
+export async function action({ params, request, context }: Route.ActionArgs) {
   const user = context.get(userContext)
+  const formData = await request.formData()
+  const intent = formData.get('intent')
+
+  if (intent === 'rename') {
+    const title = String(formData.get('title') || '').trim()
+    if (title) {
+      await updateConversationTitle(params.id, title)
+    }
+    return { ok: true }
+  }
 
   const deleted = await deleteConversation(params.id, user.id)
   if (!deleted) {
@@ -118,7 +132,11 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
     <div className="flex h-full flex-col">
       {/* Conversation header */}
       <div className="flex items-center justify-between border-b px-4 py-2">
-        <h2 className="truncate text-sm font-medium">{conversation.title || 'Conversa'}</h2>
+        <InlineTitle
+          key={conversation.id}
+          conversationId={conversation.id}
+          initialTitle={conversation.title || 'Conversa'}
+        />
         <DeleteConfirmDialog
           title="Apagar conversa?"
           description="Tem a certeza que deseja apagar esta conversa? Esta ação é irreversível."
@@ -172,5 +190,70 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
         </form>
       </div>
     </div>
+  )
+}
+
+function InlineTitle({
+  conversationId,
+  initialTitle,
+}: {
+  conversationId: string
+  initialTitle: string
+}) {
+  const fetcher = useFetcher()
+  const [editValue, setEditValue] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const editing = editValue !== null
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select()
+  }, [editing])
+
+  function startEditing() {
+    setEditValue(initialTitle)
+  }
+
+  function save() {
+    const trimmed = (editValue ?? '').trim()
+    setEditValue(null)
+    if (!trimmed || trimmed === initialTitle) return
+    fetcher.submit(
+      { intent: 'rename', title: trimmed },
+      { method: 'post', action: href('/assistant/:id', { id: conversationId }) },
+    )
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={startEditing}
+        className="hover:bg-muted group/title flex min-w-0 items-center gap-1.5 truncate rounded px-1 py-0.5 text-sm font-medium transition-colors"
+      >
+        <span className="truncate">{initialTitle}</span>
+        <HugeiconsIcon
+          icon={PencilEdit02Icon}
+          size={13}
+          strokeWidth={2}
+          className="text-muted-foreground shrink-0 opacity-0 transition-opacity group-hover/title:opacity-100"
+        />
+      </button>
+    )
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      value={editValue}
+      onChange={(e) => setEditValue(e.target.value)}
+      onBlur={save}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') save()
+        if (e.key === 'Escape') setEditValue(null)
+      }}
+      size={editValue.length || 1}
+      className="bg-muted max-w-full min-w-24 truncate rounded px-1 py-0.5 text-sm font-medium outline-none"
+    />
   )
 }

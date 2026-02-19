@@ -1,7 +1,7 @@
 import { Link, href } from 'react-router'
 
 import { priorityConfig, priorityLabels } from '~/components/tickets/priority-indicator'
-import { StatusBadge, statusLabels, type Status } from '~/components/tickets/status-badge'
+import { StatusBadge, type Status } from '~/components/tickets/status-badge'
 import { formatShortDate } from '~/lib/format'
 
 type TicketRow = {
@@ -149,16 +149,14 @@ function TicketDetailOutput({
 function StatusUpdateOutput({
   output,
 }: {
-  output: { success: boolean; ticketUrl: string; title: string; newStatus: string }
+  output: { success: boolean; ticketId: string; title: string; newStatus: string }
 }) {
-  const label = statusLabels[output.newStatus as Status] ?? output.newStatus
-
   return (
     <div className="bg-primary/5 mt-2 flex items-center gap-2 rounded-lg px-3 py-2.5">
       <span className="text-sm">
         Estado atualizado para <StatusBadge status={output.newStatus as Status} /> em{' '}
         <Link
-          to={output.ticketUrl}
+          to={href('/tickets/:id', { id: output.ticketId })}
           className="text-primary font-medium underline underline-offset-2"
         >
           {output.title}
@@ -236,7 +234,7 @@ export function renderToolOutput(toolName: string, output: unknown): React.React
           output={
             data as {
               success: boolean
-              ticketUrl: string
+              ticketId: string
               title: string
               newStatus: string
             }

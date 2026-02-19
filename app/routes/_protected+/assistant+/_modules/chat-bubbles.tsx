@@ -1,19 +1,24 @@
 import { Link } from 'react-router'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { WhatsappIcon, Mail01Icon } from '@hugeicons/core-free-icons'
 import { Streamdown } from 'streamdown'
 
 import { renderToolOutput } from './tool-renderers'
 
 const OPTION_REGEX = /\{\{(.+?)\}\}/g
 const INTERNAL_LINK_REGEX = /\[([^\]]+)\]\((\/[^)]+)\)/g
+const EXTERNAL_LINK_REGEX = /\[([^\]]+)\]\(((?:https?:\/\/|mailto:|tel:)[^)]+)\)/g
 
-type InternalLink = { label: string; href: string }
+type ActionLink = { label: string; href: string }
 
 function extractOptionsAndLinks(text: string): {
   options: string[]
-  links: InternalLink[]
+  links: ActionLink[]
+  externalLinks: ActionLink[]
 } {
   const options: string[] = []
-  const links: InternalLink[] = []
+  const links: ActionLink[] = []
+  const externalLinks: ActionLink[] = []
 
   for (const match of text.matchAll(OPTION_REGEX)) {
     options.push(match[1].trim())
@@ -21,12 +26,19 @@ function extractOptionsAndLinks(text: string): {
   for (const match of text.matchAll(INTERNAL_LINK_REGEX)) {
     links.push({ label: match[1], href: match[2] })
   }
+  for (const match of text.matchAll(EXTERNAL_LINK_REGEX)) {
+    externalLinks.push({ label: match[1], href: match[2] })
+  }
 
-  return { options, links }
+  return { options, links, externalLinks }
 }
 
 function stripOptionsAndLinks(text: string): string {
-  return text.replace(OPTION_REGEX, '').replace(INTERNAL_LINK_REGEX, '').trim()
+  return text
+    .replace(OPTION_REGEX, '')
+    .replace(INTERNAL_LINK_REGEX, '')
+    .replace(EXTERNAL_LINK_REGEX, '')
+    .trim()
 }
 
 type MessagePart = {
@@ -70,10 +82,11 @@ export function MessageBubble({
     .map((p) => p.text ?? '')
     .join('')
 
-  const { options, links } = extractOptionsAndLinks(rawText)
+  const { options, links, externalLinks } = extractOptionsAndLinks(rawText)
 
   const showOptions = !isStreaming && isLast && options.length > 0 && onOptionClick
   const showLinks = !isStreaming && links.length > 0
+  const showExternalLinks = !isStreaming && externalLinks.length > 0
 
   const hasContent = message.parts.some(
     (p) => (p.type === 'text' && p.text?.trim()) || p.type.startsWith('tool-'),
@@ -111,7 +124,7 @@ export function MessageBubble({
 
         return null
       })}
-      {showLinks && (
+      {(showLinks || showExternalLinks) && (
         <div className="mt-3 flex flex-wrap gap-2">
           {links.map((link) => (
             <Link
@@ -122,6 +135,25 @@ export function MessageBubble({
               {link.label}
             </Link>
           ))}
+          {externalLinks.map((link) => {
+            const icon = link.href.includes('wa.me')
+              ? WhatsappIcon
+              : link.href.startsWith('mailto:')
+                ? Mail01Icon
+                : null
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:bg-primary/5 ring-primary/20 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition-all"
+              >
+                {icon && <HugeiconsIcon icon={icon} size={16} strokeWidth={1.5} />}
+                {link.label}
+              </a>
+            )
+          })}
         </div>
       )}
       {showOptions && (

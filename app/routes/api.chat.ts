@@ -1,4 +1,11 @@
-import { streamText, generateText, stepCountIs } from 'ai'
+import {
+  streamText,
+  generateText,
+  stepCountIs,
+  type AssistantModelMessage,
+  type ToolModelMessage,
+  type UserModelMessage,
+} from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 
 import type { Route } from './+types/api.chat'
@@ -68,7 +75,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     getRecentMessages(convId, 20),
     listCategories(),
     db
-      .select({ name: userTable.name, email: userTable.email })
+      .select({ name: userTable.name, email: userTable.email, phone: userTable.phone })
       .from(member)
       .innerJoin(userTable, eq(userTable.id, member.userId))
       .where(
@@ -85,27 +92,35 @@ export async function action({ request, context }: Route.ActionArgs) {
       orgName: org.orgName,
       userName: user.name,
       categories: categories.map((c) => c.key),
-      admins: admins.map((a) => ({ name: a.name, email: a.email })),
+      admins: admins.map((a) => ({ name: a.name, email: a.email, phone: a.phone })),
     }),
-    messages: history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+    messages: buildCoreMessages(history),
     tools: getAssistantTools(org.orgId, user.id),
     stopWhen: stepCountIs(8),
     onFinish: async ({ text, steps }) => {
-      const toolResults = steps.flatMap((step) =>
-        step.toolResults.map((r) => ({
-          toolName: r.toolName,
-          toolCallId: r.toolCallId,
-          result: r.output,
-        })),
-      )
-
-      if (text || toolResults.length > 0) {
-        await saveMessage(
-          convId,
-          'assistant',
-          text || '',
-          toolResults.length > 0 ? toolResults : undefined,
+      try {
+        const resultMap = new Map(
+          steps.flatMap((step) => step.toolResults.map((r) => [r.toolCallId, r.output] as const)),
         )
+        const toolCalls = steps.flatMap((step) =>
+          step.toolCalls.map((tc) => ({
+            toolName: tc.toolName,
+            toolCallId: tc.toolCallId,
+            args: tc.input,
+            result: resultMap.get(tc.toolCallId) ?? null,
+          })),
+        )
+
+        if (text || toolCalls.length > 0) {
+          await saveMessage(
+            convId,
+            'assistant',
+            text || '',
+            toolCalls.length > 0 ? toolCalls : undefined,
+          )
+        }
+      } catch (error) {
+        console.error('[Chat] Failed to save assistant message:', error)
       }
     },
   })
@@ -131,6 +146,63 @@ function extractMessageText(message: {
       .join('') ??
     ''
   )
+}
+
+type StoredToolCall = {
+  toolName: string
+  toolCallId: string
+  args?: Record<string, unknown>
+  result: unknown
+}
+
+/**
+ * Reconstruct CoreMessage[] from stored history, including tool call/result
+ * messages so Claude retains context of previous tool interactions.
+ */
+function buildCoreMessages(
+  history: Array<{ role: string; content: string; toolCalls: unknown }>,
+): Array<UserModelMessage | AssistantModelMessage | ToolModelMessage> {
+  const messages: Array<UserModelMessage | AssistantModelMessage | ToolModelMessage> = []
+
+  for (const m of history) {
+    if (m.role === 'user') {
+      messages.push({ role: 'user', content: m.content })
+      continue
+    }
+
+    const stored = m.toolCalls as StoredToolCall[] | null
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      // Assistant message that invoked tools: emit tool-call + tool-result pairs
+      const assistantMsg: AssistantModelMessage = {
+        role: 'assistant',
+        content: stored.map((tc) => ({
+          type: 'tool-call' as const,
+          toolCallId: tc.toolCallId,
+          toolName: tc.toolName,
+          input: tc.args ?? {},
+        })),
+      }
+      messages.push(assistantMsg)
+
+      const toolMsg: ToolModelMessage = {
+        role: 'tool',
+        content: stored.map((tc) => ({
+          type: 'tool-result' as const,
+          toolCallId: tc.toolCallId,
+          toolName: tc.toolName,
+          output: { type: 'json' as const, value: tc.result as null },
+        })),
+      }
+      messages.push(toolMsg)
+    }
+
+    // Final text response (may follow tool results, or stand alone)
+    if (m.content) {
+      messages.push({ role: 'assistant', content: m.content })
+    }
+  }
+
+  return messages
 }
 
 async function generateConversationTitle(conversationId: string, userMessage: string) {

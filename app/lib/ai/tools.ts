@@ -128,7 +128,7 @@ export function getAssistantTools(orgId: string, userId: string) {
         if (!result) return { error: 'Erro ao atualizar.' }
         return {
           success: true,
-          ticketUrl: `/tickets/${result.id}`,
+          ticketId: result.id,
           title: result.title,
           newStatus: result.status,
         }

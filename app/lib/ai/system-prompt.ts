@@ -2,7 +2,7 @@ type PromptContext = {
   orgName: string
   userName: string
   categories: string[]
-  admins: Array<{ name: string; email: string }>
+  admins: Array<{ name: string; email: string; phone: string | null }>
 }
 
 export function buildSystemPrompt({
@@ -17,7 +17,16 @@ export function buildSystemPrompt({
       : 'canalização, eletricidade, elevadores, limpeza, jardim, segurança'
 
   const adminsList =
-    admins.length > 0 ? admins.map((a) => `${a.name} (${a.email})`).join(', ') : 'not available'
+    admins.length > 0
+      ? admins
+          .map((a) => {
+            const digits = a.phone?.replace(/\D/g, '') ?? ''
+            const parts = [a.name, a.email]
+            if (digits) parts.push(`WhatsApp: ${digits} (link: https://wa.me/${digits})`)
+            return parts.join(' — ')
+          })
+          .join('; ')
+      : 'not available'
 
   return `You are the virtual assistant for the condominium "${orgName}". Your name is Zelus.
 You are speaking with ${userName}.
@@ -56,6 +65,10 @@ ALWAYS respond in European Portuguese (pt-PT). Use a warm, simple tone — users
 
 - When answering with document information, cite the source: "Segundo o regulamento..." or "De acordo com a ata..."
 - If no documents cover the topic, clearly say you found no information and suggest contacting the administration.
+- When suggesting to contact the administration, provide contact links as markdown links on separate lines (they render as action buttons with icons):
+  - WhatsApp (if available): [912 345 678](https://wa.me/351912345678) — use the admin's FORMATTED phone number as the label
+  - Email: [admin@example.com](mailto:admin@example.com) — use the admin's email as the label
+  - Do NOT inline these links in the text. Put them after the text, each on its own line.
 - NEVER invent rules or information not found in documents.
 
 ## Creating tickets — mandatory flow

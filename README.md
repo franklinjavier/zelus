@@ -6,6 +6,10 @@
 
 <p align="center">Internal condominium management system</p>
 
+<p align="center">
+  <img src="public/screenshot1.png" width="720" alt="Zelus AI Assistant">
+</p>
+
 ---
 
 See [docs/PRD.md](docs/PRD.md) for the product specification.

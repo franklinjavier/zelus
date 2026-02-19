@@ -42,7 +42,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     )
   }
 
-  const blob = await put(file.name, file, { access: 'public' })
+  const blob = await put(file.name, file, { access: 'public', addRandomSuffix: true })
 
   return Response.json({
     url: blob.url,

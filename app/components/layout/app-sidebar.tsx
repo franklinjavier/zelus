@@ -1,8 +1,8 @@
 import { Collapsible } from '@base-ui/react/collapsible'
 import {
+  AiChat02Icon,
   ArrowDown01Icon,
   Building06Icon,
-  DashboardSquare01Icon,
   Search01Icon,
   ShieldKeyIcon,
   Ticket02Icon,
@@ -40,7 +40,7 @@ export type AppSidebarProps = {
 }
 
 const mainNav = [
-  { label: 'Painel', to: href('/dashboard'), icon: DashboardSquare01Icon },
+  { label: 'Assistente', to: href('/assistant'), icon: AiChat02Icon },
   { label: 'Pesquisa', to: href('/search'), icon: Search01Icon },
   { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
@@ -49,6 +49,8 @@ const mainNav = [
 ]
 
 const adminNav = [
+  { label: 'Painel', to: href('/admin/dashboard') },
+  { label: 'Documentos', to: href('/admin/documents') },
   { label: 'Condomínio', to: href('/admin/organization') },
   { label: 'Membros', to: href('/admin/members') },
   { label: 'Associações', to: href('/admin/associations') },
@@ -64,7 +66,7 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
     <Sidebar variant="floating">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1">
-          <Link to={href('/dashboard')} className="shrink-0">
+          <Link to={href('/assistant')} className="shrink-0">
             <ZelusLogoTile size={24} className="text-primary" />
           </Link>
           <OrgSwitcher org={org} orgs={orgs} />

@@ -8,6 +8,7 @@ import { listCategories } from '~/lib/services/categories'
 import { translateCategory } from '~/lib/category-labels'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
+import { PhoneInput } from '~/components/shared/phone-input'
 import { Field, FieldLabel } from '~/components/ui/field'
 import { Textarea } from '~/components/ui/textarea'
 import {
@@ -99,12 +100,12 @@ export default function NewSupplierDrawer({ loaderData, actionData }: Route.Comp
 
         <Field>
           <FieldLabel htmlFor="contactPhone">Telefone do responsável</FieldLabel>
-          <Input id="contactPhone" name="contactPhone" type="tel" placeholder="+351 ..." />
+          <PhoneInput id="contactPhone" name="contactPhone" placeholder="912 345 678" />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="phone">Telefone geral</FieldLabel>
-          <Input id="phone" name="phone" type="tel" placeholder="+351 ..." />
+          <PhoneInput id="phone" name="phone" placeholder="912 345 678" />
         </Field>
 
         <Field>

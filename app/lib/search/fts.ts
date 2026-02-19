@@ -41,6 +41,46 @@ async function searchScope(
   }
 }
 
+/**
+ * Search tickets by text using FTS. Returns ticket-specific fields (status, priority, category)
+ * useful for duplicate detection and the AI assistant.
+ */
+export async function searchTicketsByText(
+  orgId: string,
+  query: string,
+  userId: string,
+  limit = 10,
+) {
+  const trimmed = query.trim()
+  if (!trimmed) return []
+
+  const rows = await db
+    .select({
+      id: tickets.id,
+      title: tickets.title,
+      status: tickets.status,
+      priority: tickets.priority,
+      category: tickets.category,
+      createdAt: tickets.createdAt,
+    })
+    .from(tickets)
+    .where(
+      sql`${tickets.orgId} = ${orgId}
+        AND (${tickets.private} = false OR ${tickets.createdBy} = ${userId})
+        AND to_tsvector('portuguese', coalesce(${tickets.title}, '') || ' ' || coalesce(${tickets.description}, ''))
+            @@ websearch_to_tsquery('portuguese', ${trimmed})`,
+    )
+    .orderBy(
+      sql`ts_rank(
+        to_tsvector('portuguese', coalesce(${tickets.title}, '') || ' ' || coalesce(${tickets.description}, '')),
+        websearch_to_tsquery('portuguese', ${trimmed})
+      ) DESC`,
+    )
+    .limit(limit)
+
+  return rows
+}
+
 async function searchTickets(
   orgId: string,
   query: string,

@@ -15,6 +15,7 @@ import { translateCategory } from '~/lib/category-labels'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
 import { Input } from '~/components/ui/input'
+import { PhoneInput } from '~/components/shared/phone-input'
 import { Badge } from '~/components/ui/badge'
 import { Field, FieldLabel } from '~/components/ui/field'
 import { Textarea } from '~/components/ui/textarea'
@@ -26,7 +27,7 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
-import { formatDate } from '~/lib/format'
+import { formatDate, formatPhone } from '~/lib/format'
 import { BackButton } from '~/components/layout/back-button'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { setToast } from '~/lib/toast.server'
@@ -170,12 +171,11 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
 
                     <Field>
                       <FieldLabel htmlFor="contactPhone">Telefone do responsável</FieldLabel>
-                      <Input
+                      <PhoneInput
                         id="contactPhone"
                         name="contactPhone"
-                        type="tel"
                         defaultValue={supplier.contactPhone ?? ''}
-                        placeholder="+351 ..."
+                        placeholder="912 345 678"
                       />
                     </Field>
                   </div>
@@ -183,11 +183,11 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field>
                       <FieldLabel htmlFor="phone">Telefone geral</FieldLabel>
-                      <Input
+                      <PhoneInput
                         id="phone"
                         name="phone"
-                        type="tel"
                         defaultValue={supplier.phone ?? ''}
+                        placeholder="912 345 678"
                       />
                     </Field>
 
@@ -258,7 +258,10 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                       <dd className="text-sm">
                         {supplier.contactName}
                         {supplier.contactPhone && (
-                          <span className="text-muted-foreground"> · {supplier.contactPhone}</span>
+                          <span className="text-muted-foreground">
+                            {' '}
+                            · {formatPhone(supplier.contactPhone)}
+                          </span>
                         )}
                       </dd>
                     </div>
@@ -266,7 +269,7 @@ export default function SupplierDetailPage({ loaderData, actionData }: Route.Com
                   {supplier.phone && (
                     <div className="flex items-center justify-between">
                       <dt className="text-muted-foreground text-sm">Telefone</dt>
-                      <dd className="text-sm">{supplier.phone}</dd>
+                      <dd className="text-sm">{formatPhone(supplier.phone)}</dd>
                     </div>
                   )}
                   {supplier.email && (

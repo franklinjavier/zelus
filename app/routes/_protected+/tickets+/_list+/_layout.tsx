@@ -2,12 +2,20 @@ import { Add01Icon, LockIcon, Ticket02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { href, Link, Outlet, useMatches, useNavigate } from 'react-router'
 
-import { priorityLabels } from '~/components/tickets/priority-indicator'
+import { EmptyState } from '~/components/layout/empty-state'
+import { CategorySelect } from '~/components/shared/category-select'
+import { priorityConfig, priorityLabels } from '~/components/tickets/priority-indicator'
 import { statusLabels, type Status } from '~/components/tickets/status-badge'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Card } from '~/components/ui/card'
-import { cn } from '~/lib/utils'
+import {
+  Drawer,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerPopup,
+  DrawerTitle,
+} from '~/components/ui/drawer'
 import {
   Select,
   SelectContent,
@@ -16,20 +24,12 @@ import {
   SelectValue,
 } from '~/components/ui/select'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { listCategories } from '~/lib/services/categories'
-import { translateCategory } from '~/lib/category-labels'
-import { listTickets } from '~/lib/services/tickets'
-import type { Route } from './+types/_layout'
 import { formatShortDate } from '~/lib/format'
+import { listCategories } from '~/lib/services/categories'
+import { listTickets } from '~/lib/services/tickets'
 import { useFilterParams } from '~/lib/use-filter-params'
-import { EmptyState } from '~/components/layout/empty-state'
-import {
-  Drawer,
-  DrawerPopup,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from '~/components/ui/drawer'
+import { cn } from '~/lib/utils'
+import type { Route } from './+types/_layout'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Ocorrências — Zelus' }]
@@ -58,13 +58,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 const statusOrder: Status[] = ['open', 'in_progress', 'resolved', 'closed']
-
-const statusDotColors: Record<Status, string> = {
-  open: 'bg-primary',
-  in_progress: 'bg-amber-500',
-  resolved: 'bg-emerald-500',
-  closed: 'bg-muted-foreground',
-}
 
 const statusBadgeColors: Record<Status, string> = {
   open: 'bg-primary/15 text-primary',
@@ -97,11 +90,6 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
     ...Object.entries(priorityLabels)
       .filter(([key]) => key !== '')
       .map(([value, label]) => ({ label, value })),
-  ]
-
-  const categoryItems = [
-    { label: 'Todas as categorias', value: '_all' },
-    ...categories.map((c) => ({ label: translateCategory(c.key), value: c.key })),
   ]
 
   return (
@@ -187,31 +175,27 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {priorityItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
+            {priorityItems.map((item) => {
+              const config = priorityConfig[item.value]
+              return (
+                <SelectItem key={item.value} value={item.value} className={config?.className}>
+                  {config && <config.icon className="size-4" />}
+                  {item.label}
+                </SelectItem>
+              )
+            })}
           </SelectContent>
         </Select>
 
         {categories.length > 0 && (
-          <Select
-            value={searchParams.get('category') ?? '_all'}
-            onValueChange={(v) => setFilter('category', v)}
-            items={categoryItems}
-          >
-            <SelectTrigger size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CategorySelect
+            categories={categories}
+            defaultValue={searchParams.get('category')}
+            name="category"
+            className="w-56"
+            placeholder="Todas as categorias"
+            onValueChange={(v) => setFilter('category', v ?? '_all')}
+          />
         )}
       </div>
 
@@ -222,6 +206,17 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {statusOrder.map((status) => {
             const groupTickets = tickets.filter((t) => t.status === status)
+            const activeStatusFilter = searchParams.get('status')
+            const isFiltered = activeStatusFilter && activeStatusFilter !== '_all'
+
+            // Hide empty groups when a status filter is active
+            if (isFiltered && groupTickets.length === 0) return null
+
+            // Don't cap when viewing a single status
+            const maxVisible = isFiltered ? groupTickets.length : 5
+            const visibleTickets = groupTickets.slice(0, maxVisible)
+            const overflow = groupTickets.length - maxVisible
+
             return (
               <Card
                 key={status}
@@ -239,29 +234,40 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
                   {groupTickets.length === 0 ? (
                     <p className="text-muted-foreground px-1 text-sm">Nenhuma ocorrência</p>
                   ) : (
-                    groupTickets.map((ticket) => (
-                      <Link
-                        key={ticket.id}
-                        to={href('/tickets/:id', { id: ticket.id })}
-                        className="hover:bg-accent/50 flex items-center gap-3 rounded-xl p-2.5 transition-colors"
-                      >
-                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                          <span className="shrink-0">
-                            <PriorityIndicatorIcon priority={ticket.priority} />
+                    <>
+                      {visibleTickets.map((ticket) => (
+                        <Link
+                          key={ticket.id}
+                          to={href('/tickets/:id', { id: ticket.id })}
+                          className="hover:bg-accent/50 flex items-center gap-3 rounded-xl p-2.5 transition-colors"
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <span className="shrink-0">
+                              <PriorityIndicatorIcon priority={ticket.priority} />
+                            </span>
+                            <span className="truncate text-sm font-medium">{ticket.title}</span>
+                            {ticket.private && (
+                              <Badge variant="outline" className="shrink-0 gap-1">
+                                <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
+                                Privado
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-muted-foreground shrink-0 text-sm">
+                            {formatShortDate(ticket.createdAt)}
                           </span>
-                          <span className="truncate text-sm font-medium">{ticket.title}</span>
-                          {ticket.private && (
-                            <Badge variant="outline" className="shrink-0 gap-1">
-                              <HugeiconsIcon icon={LockIcon} size={12} strokeWidth={2} />
-                              Privado
-                            </Badge>
-                          )}
-                        </div>
-                        <span className="text-muted-foreground shrink-0 text-sm">
-                          {formatShortDate(ticket.createdAt)}
-                        </span>
-                      </Link>
-                    ))
+                        </Link>
+                      ))}
+                      {overflow > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setFilter('status', status)}
+                          className="text-muted-foreground hover:text-foreground px-2.5 py-1.5 text-left text-sm transition-colors"
+                        >
+                          e mais {overflow}...
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </Card>
@@ -290,14 +296,6 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
 
 function PriorityIndicatorIcon({ priority }: { priority: string | null }) {
   const key = priority ?? ''
-  const config: Record<string, { className: string }> = {
-    urgent: { className: 'text-red-600' },
-    high: { className: 'text-orange-500' },
-    medium: { className: 'text-amber-500' },
-    low: { className: 'text-emerald-600' },
-    '': { className: 'text-muted-foreground' },
-  }
-  const { className } = config[key] ?? config['']
-
-  return <span className={`inline-block size-2.5 rounded-full ${className} bg-current`} />
+  const { icon: Icon, className } = priorityConfig[key] ?? priorityConfig['']
+  return <Icon className={`size-4 ${className}`} />
 }

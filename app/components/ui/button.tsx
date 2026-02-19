@@ -1,3 +1,5 @@
+'use client'
+
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -33,7 +35,7 @@ const buttonVariants = cva(
     },
     defaultVariants: {
       variant: 'default',
-      size: 'lg',
+      size: 'default',
     },
   },
 )
@@ -41,7 +43,7 @@ const buttonVariants = cva(
 function Button({
   className,
   variant = 'default',
-  size = 'lg',
+  size = 'default',
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
   return (

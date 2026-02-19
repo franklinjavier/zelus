@@ -16,12 +16,14 @@ export function CategorySelect({
   defaultValue = null,
   name = 'category',
   className,
+  placeholder,
   onValueChange,
 }: {
   categories: { key: string }[]
   defaultValue?: string | null
   name?: string
   className?: string
+  placeholder?: string
   onValueChange?: (value: string | null) => void
 }) {
   const items: CategoryItem[] = categories.map((c) => ({
@@ -38,7 +40,7 @@ export function CategorySelect({
       defaultValue={defaultItem}
       onValueChange={(val) => onValueChange?.(val?.value ?? null)}
     >
-      <ComboboxInput className={cn('w-full', className)} showClear />
+      <ComboboxInput className={cn('w-full', className)} placeholder={placeholder} showClear />
       <ComboboxContent>
         <ComboboxEmpty>Nenhuma categoria encontrada</ComboboxEmpty>
         <ComboboxList>

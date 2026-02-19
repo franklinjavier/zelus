@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { organization, user } from './auth'
 
@@ -16,7 +16,10 @@ export const fractions = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at'),
   },
-  (t) => [index('fractions_org_id_idx').on(t.orgId)],
+  (t) => [
+    index('fractions_org_id_idx').on(t.orgId),
+    uniqueIndex('fractions_org_id_label_idx').on(t.orgId, t.label),
+  ],
 )
 
 export const userFractions = pgTable(

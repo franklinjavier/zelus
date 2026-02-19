@@ -78,6 +78,13 @@
       "when": 1771498721954,
       "tag": "0010_add-user-phone",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771513138344,
+      "tag": "0011_unique-fraction-label",
+      "breakpoints": true
     }
   ]
 }

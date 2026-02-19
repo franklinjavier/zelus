@@ -9,6 +9,16 @@ export async function createFraction(
   data: { label: string; description?: string | null },
   adminUserId: string,
 ) {
+  const [existing] = await db
+    .select({ id: fractions.id })
+    .from(fractions)
+    .where(and(eq(fractions.orgId, orgId), eq(fractions.label, data.label)))
+    .limit(1)
+
+  if (existing) {
+    throw new Error('Já existe uma fração com este nome.')
+  }
+
   const [fraction] = await db
     .insert(fractions)
     .values({
@@ -67,6 +77,24 @@ export async function updateFraction(
   data: { label?: string; description?: string | null },
   adminUserId: string,
 ) {
+  if (data.label) {
+    const [existing] = await db
+      .select({ id: fractions.id })
+      .from(fractions)
+      .where(
+        and(
+          eq(fractions.orgId, orgId),
+          eq(fractions.label, data.label),
+          sql`${fractions.id} != ${fractionId}`,
+        ),
+      )
+      .limit(1)
+
+    if (existing) {
+      throw new Error('Já existe uma fração com este nome.')
+    }
+  }
+
   const [updated] = await db
     .update(fractions)
     .set({ ...data, updatedAt: sql`now()` })

@@ -38,7 +38,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
     if (!label?.trim()) return { error: 'Nome obrigatório.' }
 
-    await updateFraction(orgId, params.id, { label, description: description || null }, user.id)
+    try {
+      await updateFraction(orgId, params.id, { label, description: description || null }, user.id)
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Erro ao atualizar fração.' }
+    }
     return redirect(href('/fractions/:id', { id: params.id }), {
       headers: await setToast('Alterações guardadas.'),
     })

@@ -34,7 +34,11 @@ export async function action({ request, context }: Route.ActionArgs) {
     return { error: 'Nome da fração é obrigatório.' }
   }
 
-  await createFraction(orgId, parsed.data, user.id)
+  try {
+    await createFraction(orgId, parsed.data, user.id)
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Erro ao criar fração.' }
+  }
   return redirect(href('/fractions'))
 }
 

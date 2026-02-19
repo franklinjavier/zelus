@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "fractions_org_id_label_idx" ON "fractions" USING btree ("org_id","label");

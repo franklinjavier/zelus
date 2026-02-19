@@ -107,6 +107,7 @@ export async function getRecentMessages(conversationId: string, limit = 20) {
     .select({
       role: conversationMessages.role,
       content: conversationMessages.content,
+      toolCalls: conversationMessages.toolCalls,
     })
     .from(conversationMessages)
     .where(eq(conversationMessages.conversationId, conversationId))

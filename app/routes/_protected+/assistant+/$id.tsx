@@ -1,6 +1,7 @@
 import { useChat } from '@ai-sdk/react'
-import { ArrowUp02Icon, CircleArrowUp02Icon, SentIcon } from '@hugeicons/core-free-icons'
+import { ArrowUp02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import type { UIMessage } from 'ai'
 import { DefaultChatTransport } from 'ai'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { data, Form, href, redirect, useRevalidator } from 'react-router'
@@ -27,11 +28,37 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   return {
     conversation: result.conversation,
-    initialMessages: result.messages.map((m) => ({
-      id: crypto.randomUUID(),
-      role: m.role as 'user' | 'assistant',
-      parts: [{ type: 'text' as const, text: m.content }],
-    })),
+    initialMessages: result.messages.map((m) => {
+      const parts: UIMessage['parts'] = []
+
+      // Reconstruct tool parts from stored tool results
+      const stored = m.toolCalls as Array<{
+        toolName: string
+        toolCallId: string
+        result: unknown
+      }> | null
+      if (stored && Array.isArray(stored)) {
+        for (const tc of stored) {
+          parts.push({
+            type: `tool-${tc.toolName}`,
+            toolCallId: tc.toolCallId,
+            state: 'output-available',
+            output: tc.result,
+          } as UIMessage['parts'][number])
+        }
+      }
+
+      // Add text part
+      if (m.content) {
+        parts.push({ type: 'text' as const, text: m.content })
+      }
+
+      return {
+        id: crypto.randomUUID(),
+        role: m.role as 'user' | 'assistant',
+        parts,
+      }
+    }),
   }
 }
 

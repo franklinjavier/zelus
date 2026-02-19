@@ -121,6 +121,11 @@ export default function AssistantIndexPage({ loaderData }: Route.ComponentProps)
               <MessageBubble
                 key={message.id}
                 message={message}
+                isStreaming={
+                  status === 'streaming' &&
+                  message.role === 'assistant' &&
+                  i === messages.length - 1
+                }
                 isLast={i === messages.length - 1}
                 onOptionClick={!isLoading ? (option) => sendMessage({ text: option }) : undefined}
               />

@@ -1,30 +1,39 @@
 import { Link } from 'react-router'
 import { Streamdown } from 'streamdown'
 
+import { renderToolOutput } from './tool-renderers'
+
 const OPTION_REGEX = /\{\{(.+?)\}\}/g
 const INTERNAL_LINK_REGEX = /\[([^\]]+)\]\((\/[^)]+)\)/g
 
 type InternalLink = { label: string; href: string }
 
-function parseAssistantText(text: string): {
-  cleanText: string
+function extractOptionsAndLinks(text: string): {
   options: string[]
   links: InternalLink[]
 } {
   const options: string[] = []
   const links: InternalLink[] = []
 
-  let cleaned = text.replace(OPTION_REGEX, (_, option) => {
-    options.push(option.trim())
-    return ''
-  })
+  for (const match of text.matchAll(OPTION_REGEX)) {
+    options.push(match[1].trim())
+  }
+  for (const match of text.matchAll(INTERNAL_LINK_REGEX)) {
+    links.push({ label: match[1], href: match[2] })
+  }
 
-  cleaned = cleaned.replace(INTERNAL_LINK_REGEX, (_, label, href) => {
-    links.push({ label, href })
-    return ''
-  })
+  return { options, links }
+}
 
-  return { cleanText: cleaned.trim(), options, links }
+function stripOptionsAndLinks(text: string): string {
+  return text.replace(OPTION_REGEX, '').replace(INTERNAL_LINK_REGEX, '').trim()
+}
+
+type MessagePart = {
+  type: string
+  text?: string
+  state?: string
+  output?: unknown
 }
 
 export function MessageBubble({
@@ -33,28 +42,19 @@ export function MessageBubble({
   isLast,
   onOptionClick,
 }: {
-  message: { role: string; parts: Array<{ type: string; text?: string }> }
+  message: { role: string; parts: MessagePart[] }
   isStreaming?: boolean
   isLast?: boolean
   onOptionClick?: (option: string) => void
 }) {
   const isUser = message.role === 'user'
-  const rawText = message.parts
-    .filter((p) => p.type === 'text')
-    .map((p) => p.text)
-    .join('')
-
-  if (!rawText) return null
-
-  const { cleanText, options, links } = isUser
-    ? { cleanText: rawText, options: [] as string[], links: [] as InternalLink[] }
-    : parseAssistantText(rawText)
-  const text = cleanText || rawText
-
-  const showOptions = !isUser && !isStreaming && isLast && options.length > 0 && onOptionClick
-  const showLinks = !isUser && !isStreaming && links.length > 0
 
   if (isUser) {
+    const text = message.parts
+      .filter((p) => p.type === 'text')
+      .map((p) => p.text)
+      .join('')
+    if (!text) return null
     return (
       <div className="flex justify-end">
         <div className="bg-primary/5 max-w-[80%] rounded-2xl rounded-br-sm px-4 py-2.5 text-sm whitespace-pre-wrap">
@@ -64,14 +64,53 @@ export function MessageBubble({
     )
   }
 
+  // Assistant message — parts-based rendering
+  const rawText = message.parts
+    .filter((p) => p.type === 'text')
+    .map((p) => p.text ?? '')
+    .join('')
+
+  const { options, links } = extractOptionsAndLinks(rawText)
+
+  const showOptions = !isStreaming && isLast && options.length > 0 && onOptionClick
+  const showLinks = !isStreaming && links.length > 0
+
+  const hasContent = message.parts.some(
+    (p) => (p.type === 'text' && p.text?.trim()) || p.type.startsWith('tool-'),
+  )
+  if (!hasContent) return null
+
   return (
     <div>
-      <Streamdown
-        mode={isStreaming ? 'streaming' : 'static'}
-        className="prose prose-sm prose-neutral dark:prose-invert prose-headings:text-sm prose-headings:font-semibold prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-hr:my-3 max-w-none"
-      >
-        {text}
-      </Streamdown>
+      {message.parts.map((part, i) => {
+        if (part.type === 'text') {
+          const cleaned = stripOptionsAndLinks(part.text ?? '')
+          if (!cleaned) return null
+          return (
+            <Streamdown
+              key={i}
+              mode={isStreaming ? 'streaming' : 'static'}
+              className="prose prose-sm prose-neutral dark:prose-invert prose-headings:text-sm prose-headings:font-semibold prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-hr:my-3 max-w-none"
+            >
+              {cleaned}
+            </Streamdown>
+          )
+        }
+
+        if (part.type.startsWith('tool-')) {
+          const toolName = part.type.slice(5)
+
+          if (part.state !== 'output-available') {
+            return <ToolLoading key={i} />
+          }
+
+          const customOutput = renderToolOutput(toolName, part.output)
+          if (!customOutput) return null
+          return <div key={i}>{customOutput}</div>
+        }
+
+        return null
+      })}
       {showLinks && (
         <div className="mt-3 flex flex-wrap gap-2">
           {links.map((link) => (
@@ -99,6 +138,15 @@ export function MessageBubble({
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function ToolLoading() {
+  return (
+    <div className="text-muted-foreground my-2 flex items-center gap-2 text-sm">
+      <span className="bg-primary/60 size-1.5 animate-pulse rounded-full" />
+      <span>A processar...</span>
     </div>
   )
 }

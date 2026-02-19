@@ -90,9 +90,22 @@ export async function action({ request, context }: Route.ActionArgs) {
     messages: history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     tools: getAssistantTools(org.orgId, user.id),
     stopWhen: stepCountIs(8),
-    onFinish: async ({ text }) => {
-      if (text) {
-        await saveMessage(convId, 'assistant', text)
+    onFinish: async ({ text, steps }) => {
+      const toolResults = steps.flatMap((step) =>
+        step.toolResults.map((r) => ({
+          toolName: r.toolName,
+          toolCallId: r.toolCallId,
+          result: r.output,
+        })),
+      )
+
+      if (text || toolResults.length > 0) {
+        await saveMessage(
+          convId,
+          'assistant',
+          text || '',
+          toolResults.length > 0 ? toolResults : undefined,
+        )
       }
     },
   })

@@ -128,4 +128,4 @@ Prettier: no semicolons, single quotes, trailing commas, print width 100. Pre-co
 
 ## Git
 
-- Do not include `Co-Authored-By` in commit messages
+- Do not include `Co-Authored-By` or `Generated with Claude` in commit messages

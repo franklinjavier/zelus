@@ -79,7 +79,6 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
             defaultValue={query}
             placeholder="O que procura?"
             className="pl-9"
-            autoFocus
           />
         </div>
       </Form>

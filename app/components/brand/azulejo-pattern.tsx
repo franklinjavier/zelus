@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'motion/react'
+import { LazyMotion, domAnimation, m } from 'motion/react'
 import { useEffect, useState } from 'react'
 
 const TILE_SIZE = 64
@@ -21,7 +21,7 @@ function Tile({
   const cy = y + TILE_SIZE / 2
 
   return (
-    <motion.g
+    <m.g
       initial={{ opacity: baseOpacity }}
       whileHover={{ opacity: hoverOpacity }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -76,7 +76,7 @@ function Tile({
 
       {/* Center dot */}
       <circle cx={cx} cy={cy} r={2} fill="currentColor" />
-    </motion.g>
+    </m.g>
   )
 }
 
@@ -112,17 +112,19 @@ export function AzulejoPattern({
 
   return (
     <div className="text-primary absolute inset-0 overflow-hidden">
-      <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
-        {tiles.map((tile) => (
-          <Tile
-            key={tile.key}
-            x={tile.x}
-            y={tile.y}
-            baseOpacity={baseOpacity}
-            hoverOpacity={hoverOpacity}
-          />
-        ))}
-      </svg>
+      <LazyMotion features={domAnimation}>
+        <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
+          {tiles.map((tile) => (
+            <Tile
+              key={tile.key}
+              x={tile.x}
+              y={tile.y}
+              baseOpacity={baseOpacity}
+              hoverOpacity={hoverOpacity}
+            />
+          ))}
+        </svg>
+      </LazyMotion>
     </div>
   )
 }

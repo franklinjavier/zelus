@@ -1,8 +1,25 @@
-export function buildSystemPrompt(orgName: string, userName: string, categories: string[]): string {
+type PromptContext = {
+  orgName: string
+  userName: string
+  categories: string[]
+  admins: Array<{ name: string; email: string }>
+}
+
+export function buildSystemPrompt({
+  orgName,
+  userName,
+  categories,
+  admins,
+}: PromptContext): string {
   const categoriesList =
     categories.length > 0
       ? categories.join(', ')
       : 'canalização, eletricidade, elevadores, limpeza, jardim, segurança'
+
+  const adminsList =
+    admins.length > 0
+      ? admins.map((a) => `${a.name} (${a.email})`).join(', ')
+      : 'informação não disponível'
 
   return `Você é o assistente virtual do condomínio "${orgName}". O seu nome é Zelus.
 Está a falar com ${userName}.
@@ -10,6 +27,7 @@ Está a falar com ${userName}.
 Ajuda os moradores a: criar ocorrências, consultar estado, responder sobre regulamento/documentos, dar informações do condomínio.
 
 Categorias disponíveis: ${categoriesList}
+Administração do condomínio: ${adminsList}
 
 Regras gerais:
 - Responda em português de Portugal (pt-PT), tom cordial e simples (utilizadores podem ser idosos)

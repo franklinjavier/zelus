@@ -12,7 +12,10 @@ import {
   getRecentMessages,
   updateConversationTitle,
 } from '~/lib/services/conversations'
+import { eq, or, and } from 'drizzle-orm'
 import { listCategories } from '~/lib/services/categories'
+import { db } from '~/lib/db'
+import { member, user as userTable } from '~/lib/db/schema'
 import { getAssistantTools } from '~/lib/ai/tools'
 import { buildSystemPrompt } from '~/lib/ai/system-prompt'
 
@@ -60,16 +63,30 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
-  // Load conversation history and categories
-  const [history, categories] = await Promise.all([getRecentMessages(convId, 20), listCategories()])
+  // Load conversation history, categories, and admins in parallel
+  const [history, categories, admins] = await Promise.all([
+    getRecentMessages(convId, 20),
+    listCategories(),
+    db
+      .select({ name: userTable.name, email: userTable.email })
+      .from(member)
+      .innerJoin(userTable, eq(userTable.id, member.userId))
+      .where(
+        and(
+          eq(member.organizationId, org.orgId),
+          or(eq(member.role, 'owner'), eq(member.role, 'admin')),
+        ),
+      ),
+  ])
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
-    system: buildSystemPrompt(
-      org.orgName,
-      user.name,
-      categories.map((c) => c.key),
-    ),
+    system: buildSystemPrompt({
+      orgName: org.orgName,
+      userName: user.name,
+      categories: categories.map((c) => c.key),
+      admins: admins.map((a) => ({ name: a.name, email: a.email })),
+    }),
     messages: history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     tools: getAssistantTools(org.orgId, user.id),
     stopWhen: stepCountIs(5),

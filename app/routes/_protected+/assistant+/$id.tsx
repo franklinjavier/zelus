@@ -1,17 +1,16 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
-import { AiChat02Icon, SentIcon } from '@hugeicons/core-free-icons'
+import { ArrowUp02Icon, CircleArrowUp02Icon, SentIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { DefaultChatTransport } from 'ai'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { data, Form, href, redirect, useRevalidator } from 'react-router'
 
-import type { Route } from './+types/$id'
-import { userContext } from '~/lib/auth/context'
-import { loadConversation, deleteConversation } from '~/lib/services/conversations'
-import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
-import { cn } from '~/lib/utils'
-import { MessageBubble, LoadingBubble } from './_modules/chat-bubbles'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
+import { userContext } from '~/lib/auth/context'
+import { deleteConversation, loadConversation } from '~/lib/services/conversations'
+import type { Route } from './+types/$id'
+import { LoadingBubble, MessageBubble } from './_modules/chat-bubbles'
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   const title = loaderData?.conversation?.title || 'Conversa'
@@ -107,7 +106,7 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
 
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl space-y-4 pt-4 pb-4">
+        <div className="mx-auto max-w-2xl space-y-6 px-4 pt-6 pb-6">
           {messages.map((message, i) => (
             <MessageBubble
               key={message.id}
@@ -139,9 +138,9 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="bg-foreground text-background flex size-9 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-30"
+            className="bg-primary text-background flex size-9 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-10"
           >
-            <HugeiconsIcon icon={SentIcon} size={16} />
+            <HugeiconsIcon icon={ArrowUp02Icon} size={16} strokeWidth={3} />
           </button>
         </form>
       </div>

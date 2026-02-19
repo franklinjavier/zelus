@@ -116,7 +116,7 @@ export default function AssistantIndexPage({ loaderData }: Route.ComponentProps)
         {isEmpty ? (
           <EmptyState userName={userName} onSuggestion={handleSuggestion} />
         ) : (
-          <div className="mx-auto max-w-2xl space-y-4 pb-4">
+          <div className="mx-auto max-w-2xl space-y-6 px-4 pt-6 pb-6">
             {messages.map((message, i) => (
               <MessageBubble
                 key={message.id}

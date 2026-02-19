@@ -89,7 +89,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     }),
     messages: history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     tools: getAssistantTools(org.orgId, user.id),
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(8),
     onFinish: async ({ text }) => {
       if (text) {
         await saveMessage(convId, 'assistant', text)
@@ -122,14 +122,15 @@ function extractMessageText(message: {
 
 async function generateConversationTitle(conversationId: string, userMessage: string) {
   try {
+    const truncated = userMessage.slice(0, 200)
     const { text: title } = await generateText({
       model: anthropic('claude-haiku-4-5-20251001'),
       system:
-        'Gera um título curto (máximo 6 palavras) em português para esta conversa. Responde apenas com o título, sem aspas nem pontuação final.',
-      messages: [{ role: 'user', content: userMessage }],
+        'A tua ÚNICA tarefa é gerar um título curto (máximo 6 palavras) que resuma o TEMA da mensagem do utilizador. NÃO respondas à pergunta. NÃO incluas explicações. Responde APENAS com o título, sem aspas nem pontuação final. Exemplos: "Luz da garagem avariada", "Barulho no 3º andar", "Horário de obras".',
+      messages: [{ role: 'user', content: truncated }],
     })
     if (title) {
-      await updateConversationTitle(conversationId, title.trim())
+      await updateConversationTitle(conversationId, title.trim().slice(0, 100))
     }
   } catch (error) {
     console.error('[Chat] Failed to generate title:', error)

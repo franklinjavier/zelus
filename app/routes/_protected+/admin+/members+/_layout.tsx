@@ -46,23 +46,33 @@ export default function MembersLayout({ loaderData }: Route.ComponentProps) {
         {members.length === 0 ? (
           <EmptyState icon={UserMultiple02Icon} message="Nenhum membro no condomínio" />
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="@container flex flex-col gap-2">
             {members.map((m) => (
               <Link
                 key={m.userId}
                 to={href('/admin/members/:userId', { userId: m.userId })}
                 className="block"
               >
-                <div className="ring-foreground/5 hover:bg-muted/50 flex items-center gap-3 rounded-2xl p-3 ring-1 transition-colors">
+                <div className="ring-foreground/5 hover:bg-muted/50 flex items-start gap-3 rounded-2xl p-3 ring-1 transition-colors @sm:items-center">
                   <Avatar className="size-9">
                     {m.userImage && <AvatarImage src={m.userImage} alt={m.userName} />}
                     <AvatarFallback className="text-sm">{getInitials(m.userName)}</AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{m.userName}</p>
-                    <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
+                    <p className="text-muted-foreground text-sm [overflow-wrap:anywhere] @sm:truncate">
+                      {m.userEmail}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 @sm:hidden">
+                      {(m.orgRole === 'owner' || m.orgRole === 'admin') && (
+                        <Badge variant="secondary">{roleLabel('org_admin')}</Badge>
+                      )}
+                      <span className="text-muted-foreground text-sm">
+                        {m.fractionCount} {m.fractionCount === 1 ? 'fração' : 'frações'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="hidden shrink-0 items-center gap-2 @sm:flex">
                     {(m.orgRole === 'owner' || m.orgRole === 'admin') && (
                       <Badge variant="secondary">{roleLabel('org_admin')}</Badge>
                     )}

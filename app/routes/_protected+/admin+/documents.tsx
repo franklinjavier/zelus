@@ -5,8 +5,8 @@ import {
   File02Icon,
   Upload04Icon,
   Clock01Icon,
-  Tick02Icon,
   Alert02Icon,
+  Delete02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
@@ -20,7 +20,7 @@ import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { EmptyState } from '~/components/layout/empty-state'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 import { ErrorBanner } from '~/components/layout/feedback'
-import { formatDate } from '~/lib/format'
+import { formatShortDate } from '~/lib/format'
 import { cn } from '~/lib/utils'
 
 export function meta(_args: Route.MetaArgs) {
@@ -72,7 +72,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 const statusConfig = {
   processing: { icon: Clock01Icon, label: 'A processar', className: 'text-amber-600' },
-  ready: { icon: Tick02Icon, label: 'Pronto', className: 'text-emerald-600' },
+  ready: null,
   error: { icon: Alert02Icon, label: 'Erro', className: 'text-destructive' },
 } as const
 
@@ -173,7 +173,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
         <ErrorBanner className="mt-4">{actionData.error}</ErrorBanner>
       )}
 
-      <div className="mt-5 flex flex-col gap-2">
+      <div className="@container mt-5 flex flex-col gap-2">
         {documents.length === 0 ? (
           <EmptyState icon={File02Icon} message="Nenhum documento carregado." />
         ) : (
@@ -182,31 +182,53 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
             return (
               <div
                 key={doc.id}
-                className="ring-foreground/5 flex items-center gap-3 rounded-2xl p-3 ring-1"
+                className="ring-foreground/5 flex items-start gap-3 rounded-2xl p-3 ring-1 @sm:items-center"
               >
-                <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
+                <a
+                  href={doc.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl"
+                >
                   <HugeiconsIcon icon={File02Icon} size={18} className="text-primary" />
-                </div>
+                </a>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{doc.fileName}</p>
+                  <a
+                    href={doc.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium [overflow-wrap:anywhere] hover:underline @sm:truncate"
+                  >
+                    {doc.fileName}
+                  </a>
                   <p className="text-muted-foreground text-sm">
-                    {formatFileSize(doc.fileSize)} &middot; {formatDate(doc.createdAt)}
+                    {formatFileSize(doc.fileSize)} &middot; {formatShortDate(doc.createdAt)}
                   </p>
                 </div>
-                <div className={cn('flex items-center gap-1 text-sm', status.className)}>
-                  <HugeiconsIcon icon={status.icon} size={14} />
-                  <span>{status.label}</span>
+                <div className="flex shrink-0 items-center gap-2">
+                  {status && (
+                    <div className={cn('flex items-center gap-1 text-sm', status.className)}>
+                      <HugeiconsIcon icon={status.icon} size={14} />
+                      <span>{status.label}</span>
+                    </div>
+                  )}
+                  <DeleteConfirmDialog
+                    title="Apagar documento?"
+                    description={`Tem a certeza que quer apagar "${doc.fileName}"? Os dados do RAG associados também serão removidos.`}
+                  >
+                    <Form method="post">
+                      <input type="hidden" name="intent" value="delete" />
+                      <input type="hidden" name="documentId" value={doc.id} />
+                      <AlertDialogAction type="submit" className="sm:hidden" size="icon">
+                        <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />
+                        <span className="sr-only">Apagar</span>
+                      </AlertDialogAction>
+                      <AlertDialogAction type="submit" className="max-sm:hidden">
+                        Apagar
+                      </AlertDialogAction>
+                    </Form>
+                  </DeleteConfirmDialog>
                 </div>
-                <DeleteConfirmDialog
-                  title="Apagar documento?"
-                  description={`Tem a certeza que quer apagar "${doc.fileName}"? Os dados do RAG associados também serão removidos.`}
-                >
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="delete" />
-                    <input type="hidden" name="documentId" value={doc.id} />
-                    <AlertDialogAction type="submit">Apagar</AlertDialogAction>
-                  </Form>
-                </DeleteConfirmDialog>
               </div>
             )
           })

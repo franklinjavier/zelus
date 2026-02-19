@@ -317,11 +317,11 @@ function MembersCard({
           <p className="text-muted-foreground text-sm">Nenhum membro associado</p>
         </div>
       ) : (
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="@container mt-3 flex flex-col gap-2">
           {members.map((m) => (
             <div
               key={m.id}
-              className="ring-foreground/5 flex items-center gap-3 rounded-2xl p-3 ring-1"
+              className="ring-foreground/5 flex items-start gap-3 rounded-2xl p-3 ring-1 @sm:items-center"
             >
               <MemberAvatar name={m.userName} image={m.userImage} />
               <div className="min-w-0 flex-1">
@@ -329,15 +329,12 @@ function MembersCard({
                 {showEmail && (
                   <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
                 )}
+                <div className="mt-1.5 flex items-center gap-2 @sm:hidden">
+                  <MemberActions m={m} canChangeRole={canChangeRole} canRemove={canRemove} />
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {canChangeRole && m.status === 'approved' ? (
-                  <MemberRoleSelect associationId={m.id} currentRole={m.role} />
-                ) : (
-                  <RoleBadge role={m.role} />
-                )}
-                <StatusBadge status={m.status} />
-                {canRemove && <RemoveMemberButton associationId={m.id} />}
+              <div className="hidden shrink-0 items-center gap-2 @sm:flex">
+                <MemberActions m={m} canChangeRole={canChangeRole} canRemove={canRemove} />
               </div>
             </div>
           ))}
@@ -353,6 +350,28 @@ function MemberAvatar({ name, image }: { name: string; image?: string | null }) 
       {image && <AvatarImage src={image} alt={name} />}
       <AvatarFallback className="text-sm">{getInitials(name)}</AvatarFallback>
     </Avatar>
+  )
+}
+
+function MemberActions({
+  m,
+  canChangeRole,
+  canRemove,
+}: {
+  m: { id: string; role: string; status: string }
+  canChangeRole: boolean
+  canRemove: boolean
+}) {
+  return (
+    <>
+      {canChangeRole && m.status === 'approved' ? (
+        <MemberRoleSelect associationId={m.id} currentRole={m.role} />
+      ) : (
+        <RoleBadge role={m.role} />
+      )}
+      <StatusBadge status={m.status} />
+      {canRemove && <RemoveMemberButton associationId={m.id} />}
+    </>
   )
 }
 

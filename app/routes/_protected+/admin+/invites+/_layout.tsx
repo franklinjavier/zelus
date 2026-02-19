@@ -53,14 +53,12 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 const statusStyles: Record<string, string> = {
-  pending: 'bg-amber-500/5 ring-amber-500/10 hover:bg-amber-500/10',
-  accepted: 'bg-emerald-500/5 ring-emerald-500/10 hover:bg-emerald-500/10',
-  default: 'bg-muted/50 ring-foreground/5 hover:bg-muted',
+  pending: 'bg-amber-500/5 ring-amber-500/10',
+  default: 'ring-foreground/5',
 }
 
 const statusIconStyles: Record<string, string> = {
   pending: 'bg-amber-500/10 text-amber-600',
-  accepted: 'bg-emerald-500/10 text-emerald-600',
   default: 'bg-muted text-muted-foreground',
 }
 
@@ -87,34 +85,49 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
         {invites.length === 0 ? (
           <EmptyState icon={MailSend02Icon} message="Nenhum convite enviado" />
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="@container flex flex-col gap-2">
             {invites.map((invite) => (
               <div
                 key={invite.id}
                 className={cn(
-                  'flex items-center justify-between gap-4 rounded-2xl p-5 ring-1 transition-colors',
+                  'flex items-start gap-3 rounded-2xl p-3 ring-1 transition-colors @sm:items-center',
                   statusStyles[invite.status] ?? statusStyles.default,
                 )}
               >
-                <div className="flex min-w-0 items-center gap-4">
-                  <div
-                    className={cn(
-                      'flex size-9 shrink-0 items-center justify-center rounded-xl',
-                      statusIconStyles[invite.status] ?? statusIconStyles.default,
+                <div
+                  className={cn(
+                    'flex size-9 shrink-0 items-center justify-center rounded-xl',
+                    statusIconStyles[invite.status] ?? statusIconStyles.default,
+                  )}
+                >
+                  <HugeiconsIcon icon={MailSend02Icon} size={18} strokeWidth={1.5} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium [overflow-wrap:anywhere] @sm:truncate">
+                    {invite.email}
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    {invite.type === 'org' ? 'Condomínio' : (invite.fractionLabel ?? 'Fração')}
+                    {' · '}
+                    {roleLabel(invite.role)}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2 @sm:hidden">
+                    {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
+                    {invite.status === 'pending' && (
+                      <>
+                        <CopyLinkButton token={invite.token} />
+                        <Form method="post">
+                          <input type="hidden" name="intent" value="revoke-invite" />
+                          <input type="hidden" name="inviteId" value={invite.id} />
+                          <Button type="submit" variant="destructive">
+                            Revogar
+                          </Button>
+                        </Form>
+                      </>
                     )}
-                  >
-                    <HugeiconsIcon icon={MailSend02Icon} size={18} strokeWidth={1.5} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{invite.email}</p>
-                    <p className="text-muted-foreground mt-0.5 text-sm">
-                      {invite.type === 'org' ? 'Condomínio' : (invite.fractionLabel ?? 'Fração')}
-                      {' · '}
-                      {roleLabel(invite.role)}
-                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="hidden shrink-0 items-center gap-2 @sm:flex">
                   {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
                   {invite.status === 'pending' && (
                     <>

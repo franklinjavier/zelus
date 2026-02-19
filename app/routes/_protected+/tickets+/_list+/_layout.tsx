@@ -154,7 +154,7 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
           onValueChange={(v) => setFilter('status', v)}
           items={statusItems}
         >
-          <SelectTrigger size="sm">
+          <SelectTrigger size="sm" className="w-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -171,7 +171,7 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
           onValueChange={(v) => setFilter('priority', v)}
           items={priorityItems}
         >
-          <SelectTrigger size="sm">
+          <SelectTrigger size="sm" className="w-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

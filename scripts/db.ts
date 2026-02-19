@@ -19,6 +19,7 @@ import postgres from 'postgres'
 
 const MIGRATIONS_DIR = resolve(import.meta.dirname ?? '.', '../app/lib/db/migrations')
 const JOURNAL_PATH = resolve(MIGRATIONS_DIR, 'meta/_journal.json')
+const REVIEWED_PATH = resolve(MIGRATIONS_DIR, 'meta/_reviewed.json')
 
 // ---------------------------------------------------------------------------
 // Destructive pattern detection
@@ -95,6 +96,30 @@ interface Journal {
 
 function readJournal(): Journal {
   return JSON.parse(readFileSync(JOURNAL_PATH, 'utf-8'))
+}
+
+/** Map of filename → set of reviewed line numbers */
+type ReviewedOps = Record<string, Record<string, string>>
+
+function readReviewed(): ReviewedOps {
+  try {
+    return JSON.parse(readFileSync(REVIEWED_PATH, 'utf-8'))
+  } catch {
+    return {}
+  }
+}
+
+/** Downgrade reviewed error-level matches to warnings. */
+function applyReviewed(file: string, matches: DestructiveMatch[]): DestructiveMatch[] {
+  const reviewed = readReviewed()
+  const fileReviewed = reviewed[file]
+  if (!fileReviewed) return matches
+  return matches.map((m) => {
+    if (m.severity === 'error' && String(m.line) in fileReviewed) {
+      return { ...m, severity: 'warn' as Severity }
+    }
+    return m
+  })
 }
 
 function readMigrationSql(tag: string): string {
@@ -202,15 +227,16 @@ async function cmdMigrate(yes: boolean) {
 
     let hasErrors = false
     for (const entry of pending) {
+      const file = `${entry.tag}.sql`
       const content = readMigrationSql(entry.tag)
-      const matches = scanSql(content)
+      const matches = applyReviewed(file, scanSql(content))
       const errors = matches.filter((m) => m.severity === 'error')
       if (errors.length) hasErrors = true
 
-      console.log(`── ${entry.tag}.sql ──`)
+      console.log(`── ${file} ──`)
       console.log(content)
       if (matches.length) {
-        printMatches(`${entry.tag}.sql`, matches)
+        printMatches(file, matches)
         console.log()
       }
     }
@@ -270,10 +296,11 @@ async function cmdCheck(all: boolean) {
   let hasErrors = false
   let hasWarnings = false
   for (const entry of entries) {
+    const file = `${entry.tag}.sql`
     const content = readMigrationSql(entry.tag)
-    const matches = scanSql(content)
+    const matches = applyReviewed(file, scanSql(content))
     if (matches.length) {
-      printMatches(`${entry.tag}.sql`, matches)
+      printMatches(file, matches)
       if (matches.some((m) => m.severity === 'error')) hasErrors = true
       if (matches.some((m) => m.severity === 'warn')) hasWarnings = true
     }

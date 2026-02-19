@@ -1,0 +1,5 @@
+{
+  "0003_quiet_penance.sql": {
+    "2": "DROP TABLE ticket_categories — table renamed to categories (from supplier_categories)"
+  }
+}

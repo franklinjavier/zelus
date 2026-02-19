@@ -37,6 +37,7 @@ The wrapper enforces:
 - **Destructive op scanning**: `DROP TABLE`, `DROP COLUMN`, `ALTER COLUMN TYPE`, `TRUNCATE`, `DELETE FROM` are errors that block migration; `DROP INDEX`, `RENAME TABLE/COLUMN`, `DROP CONSTRAINT` are warnings
 - **Preview before apply**: pending SQL is printed with highlighted issues before confirmation
 - **CI check gate**: `db:check` exits with code 1 if destructive operations are found
+- **Reviewed ops allowlist**: Add reviewed destructive operations to `app/lib/db/migrations/meta/_reviewed.json` to downgrade them from errors to warnings (keyed by filename and line number)
 
 For staging/production deployments, use `db:migrate:staging` or `db:migrate:prod` (these pass `--yes`).
 

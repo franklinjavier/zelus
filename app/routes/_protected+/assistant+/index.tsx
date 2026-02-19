@@ -130,7 +130,14 @@ export default function AssistantIndexPage({ loaderData }: Route.ComponentProps)
                 onOptionClick={!isLoading ? (option) => sendMessage({ text: option }) : undefined}
               />
             ))}
-            {isLoading && messages[messages.length - 1]?.role === 'user' && <LoadingBubble />}
+            {isLoading &&
+              (() => {
+                const last = messages[messages.length - 1]
+                if (!last || last.role === 'user') return true
+                return !last.parts.some(
+                  (p) => (p.type === 'text' && p.text?.trim()) || p.type.startsWith('tool-'),
+                )
+              })() && <LoadingBubble />}
           </div>
         )}
       </div>

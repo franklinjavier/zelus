@@ -174,16 +174,7 @@ export function MessageBubble({
   )
 }
 
-function ToolLoading() {
-  return (
-    <div className="text-muted-foreground my-2 flex items-center gap-2 text-sm">
-      <span className="bg-primary/60 size-1.5 animate-pulse rounded-full" />
-      <span>A processar...</span>
-    </div>
-  )
-}
-
-export function LoadingBubble() {
+function ThinkingDots() {
   return (
     <div className="flex items-center gap-1.5 py-2">
       <span
@@ -201,3 +192,9 @@ export function LoadingBubble() {
     </div>
   )
 }
+
+function ToolLoading() {
+  return <ThinkingDots />
+}
+
+export { ThinkingDots as LoadingBubble }

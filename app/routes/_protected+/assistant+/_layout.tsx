@@ -112,7 +112,7 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
             render={<Link to={href('/assistant')} onClick={() => setMobileOpen(false)} />}
             variant="outline"
             size="icon"
-            className="shrink-0 md:group-data-[expanded]/sidebar:hidden"
+            className="shrink-0 max-md:hidden md:group-data-[expanded]/sidebar:hidden"
           >
             <HugeiconsIcon icon={Add01Icon} size={16} />
           </Button>
@@ -120,7 +120,7 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
             nativeButton={false}
             render={<Link to={href('/assistant')} onClick={() => setMobileOpen(false)} />}
             variant="outline"
-            className="hidden flex-1 gap-2 md:group-data-[expanded]/sidebar:flex"
+            className="flex flex-1 gap-2 md:hidden md:group-data-[expanded]/sidebar:flex"
           >
             <HugeiconsIcon icon={AiChat02Icon} size={16} />
             Nova conversa
@@ -130,13 +130,13 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
         {/* Conversation list */}
         <nav className="flex-1 overflow-y-auto p-2">
           {groups.length === 0 ? (
-            <p className="text-muted-foreground hidden px-3 py-6 text-center text-sm md:group-data-[expanded]/sidebar:block">
+            <p className="text-muted-foreground px-3 py-6 text-center text-sm md:hidden md:group-data-[expanded]/sidebar:block">
               Nenhuma conversa ainda
             </p>
           ) : (
             groups.map((group) => (
               <div key={group.label} className="mb-3">
-                <p className="text-muted-foreground hidden px-3 py-1 text-sm font-medium md:group-data-[expanded]/sidebar:block">
+                <p className="text-muted-foreground px-3 py-1 text-sm font-medium md:hidden md:group-data-[expanded]/sidebar:block">
                   {group.label}
                 </p>
                 {group.items.map((conv) =>
@@ -178,7 +178,16 @@ export default function AssistantLayout({ loaderData }: Route.ComponentProps) {
           >
             <HugeiconsIcon icon={Menu01Icon} size={18} />
           </Button>
-          <span className="text-sm font-medium">Assistente</span>
+          <span className="flex-1 text-sm font-medium">Assistente</span>
+          <Button
+            nativeButton={false}
+            render={<Link to={href('/assistant')} />}
+            variant="ghost"
+            size="icon"
+            aria-label="Nova conversa"
+          >
+            <HugeiconsIcon icon={Add01Icon} size={18} />
+          </Button>
         </div>
 
         <Outlet />
@@ -217,12 +226,12 @@ function SidebarConversationItem({
         className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-sm"
       >
         <HugeiconsIcon icon={AiChat02Icon} size={14} className="shrink-0 opacity-50" />
-        <span className="hidden flex-1 truncate md:group-data-[expanded]/sidebar:inline">
+        <span className="flex-1 truncate md:hidden md:group-data-[expanded]/sidebar:inline">
           {conversation.title || conversation.lastMessage || 'Nova conversa'}
         </span>
       </NavLink>
 
-      <div className="hidden pr-1 opacity-0 transition-opacity group-hover/item:opacity-100 md:group-data-[expanded]/sidebar:block">
+      <div className="pr-1 opacity-0 transition-opacity group-hover/item:opacity-100 max-md:opacity-100 md:hidden md:group-data-[expanded]/sidebar:block">
         <DropdownMenu onOpenChange={onMenuOpenChange}>
           <DropdownMenuTrigger
             className="hover:bg-accent flex size-7 items-center justify-center rounded-md"

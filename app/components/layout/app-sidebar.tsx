@@ -26,6 +26,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '~/components/ui/sidebar'
 import { NavUser } from './nav-user'
 import { OrgSwitcher } from './org-switcher'
@@ -61,12 +62,13 @@ const adminNav = [
 export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
+  const { setOpenMobile } = useSidebar()
 
   return (
     <Sidebar variant="floating">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1">
-          <Link to={href('/assistant')} className="shrink-0">
+          <Link to={href('/assistant')} className="shrink-0" onClick={() => setOpenMobile(false)}>
             <ZelusLogoTile size={24} className="text-primary" />
           </Link>
           <OrgSwitcher org={org} orgs={orgs} />
@@ -79,7 +81,7 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
             <SidebarMenu>
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <NavLink to={item.to}>
+                  <NavLink to={item.to} onClick={() => setOpenMobile(false)}>
                     {({ isActive }) => (
                       <SidebarMenuButton isActive={isActive} tooltip={item.label}>
                         <HugeiconsIcon icon={item.icon} size={16} strokeWidth={2} />
@@ -111,7 +113,7 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
                       <SidebarMenuSub>
                         {adminNav.map((item) => (
                           <SidebarMenuSubItem key={item.to}>
-                            <NavLink to={item.to}>
+                            <NavLink to={item.to} onClick={() => setOpenMobile(false)}>
                               {({ isActive }) => (
                                 <SidebarMenuSubButton isActive={isActive} render={<span />}>
                                   <span>{item.label}</span>

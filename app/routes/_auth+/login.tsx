@@ -132,7 +132,10 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
           </Form>
 
           <div className="mt-4 grid gap-2 text-center text-sm">
-            <Link to={href('/forgot-password')} className="text-primary hover:underline">
+            <Link
+              to={`${href('/forgot-password')}${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+              className="text-primary hover:underline"
+            >
               Esqueceu a palavra-passe?
             </Link>
             <p className="text-muted-foreground">

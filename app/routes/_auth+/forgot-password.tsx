@@ -89,7 +89,10 @@ export default function ForgotPasswordPage({ actionData }: Route.ComponentProps)
           )}
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            <Link to={href('/login')} className="text-primary hover:underline">
+            <Link
+              to={`${href('/login')}${searchParams.get('redirect') ? `?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : ''}`}
+              className="text-primary hover:underline"
+            >
               Voltar ao login
             </Link>
           </p>

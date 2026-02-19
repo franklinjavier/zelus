@@ -35,6 +35,15 @@ function loadScript(): Promise<void> {
 }
 
 export function Turnstile() {
+  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+
+  // Skip rendering if no site key is configured (non-production environments)
+  if (!siteKey) return null
+
+  return <TurnstileWidget siteKey={siteKey} />
+}
+
+function TurnstileWidget({ siteKey }: { siteKey: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
   const [token, setToken] = useState('')
@@ -54,7 +63,7 @@ export function Turnstile() {
       if (cancelled || !containerRef.current || !window.turnstile) return
 
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY,
+        sitekey: siteKey,
         callback: onVerify,
         'expired-callback': onExpire,
       })

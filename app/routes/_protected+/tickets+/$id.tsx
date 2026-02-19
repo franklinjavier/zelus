@@ -7,6 +7,7 @@ import {
   Delete02Icon,
   Edit02Icon,
   File01Icon,
+  Loading03Icon,
   LockIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -55,6 +56,7 @@ import {
   deleteAttachment,
   listTicketAttachments,
 } from '~/lib/services/ticket-attachments'
+import { listFractions } from '~/lib/services/fractions'
 import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments'
 import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets'
 import { setToast } from '~/lib/toast.server'
@@ -79,10 +81,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     }
   }
 
-  const [timeline, categories, attachments] = await Promise.all([
+  const [timeline, categories, attachments, orgFractions] = await Promise.all([
     getTicketTimeline(orgId, params.id),
     listCategories(),
     listTicketAttachments(orgId, params.id),
+    listFractions(orgId),
   ])
 
   // canManage: org_admin OR fraction_owner_admin for the ticket's fraction
@@ -100,6 +103,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     timeline,
     categories,
     attachments,
+    orgFractions,
     canManage,
     isAdmin,
     isCreator,
@@ -163,6 +167,11 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
     }
 
+    if (field === 'fractionId') {
+      await updateTicket(orgId, params.id, { fractionId: value || null }, user.id)
+      return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
+    }
+
     return { error: 'Campo desconhecido.' }
   }
 
@@ -178,6 +187,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const description = formData.get('description') as string
     const category = formData.get('category') as string
     const priority = formData.get('priority') as string
+    const fractionId = formData.get('fractionId') as string
     const isPrivate = formData.get('private') === 'on'
 
     if (!title?.trim()) return { error: 'Título obrigatório.' }
@@ -190,6 +200,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
         description: description || undefined,
         category: category || null,
         priority: (priority as 'urgent' | 'high' | 'medium' | 'low') || null,
+        fractionId: fractionId || null,
         private: isPrivate,
       },
       user.id,
@@ -232,11 +243,21 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function TicketDetailPage({ loaderData, actionData }: Route.ComponentProps) {
-  const { ticket, timeline, categories, attachments, canManage, isAdmin, isCreator, userId } =
-    loaderData
+  const {
+    ticket,
+    timeline,
+    categories,
+    attachments,
+    orgFractions,
+    canManage,
+    isAdmin,
+    isCreator,
+    userId,
+  } = loaderData
   const statusFetcher = useFetcher()
   const priorityFetcher = useFetcher()
   const categoryFetcher = useFetcher()
+  const fractionFetcher = useFetcher()
   const attachFetcher = useFetcher()
   const evidenceFetcher = useFetcher()
   const canEdit = isAdmin || isCreator
@@ -276,11 +297,13 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
           <DetailsCard
             ticket={ticket}
             categories={categories}
+            orgFractions={orgFractions}
             canManage={canManage}
             canEdit={canEdit}
             statusFetcher={statusFetcher}
             priorityFetcher={priorityFetcher}
             categoryFetcher={categoryFetcher}
+            fractionFetcher={fractionFetcher}
           />
         </div>
       </div>
@@ -289,6 +312,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
         <EditTicketDrawer
           ticket={ticket}
           categories={categories}
+          orgFractions={orgFractions}
           open={editOpen}
           onOpenChange={setEditOpen}
         />
@@ -388,12 +412,13 @@ function EvidenceGallery({
             onClick={() => evidenceFileInputRef.current?.click()}
           >
             <HugeiconsIcon
-              icon={Camera01Icon}
+              icon={isEvidenceUploading ? Loading03Icon : Camera01Icon}
               data-icon="inline-start"
               size={16}
               strokeWidth={1.5}
+              className={isEvidenceUploading ? 'animate-spin' : undefined}
             />
-            Adicionar evidência
+            {isEvidenceUploading ? 'A carregar...' : 'Adicionar evidência'}
           </Button>
         </>
       )}
@@ -402,6 +427,16 @@ function EvidenceGallery({
           <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
           <span className="text-sm">Evidências</span>
         </span>
+      )}
+      {(isEvidenceUploading || evidenceFetcher.state !== 'idle') && (
+        <div className="border-border bg-muted/50 flex size-16 items-center justify-center rounded-xl border">
+          <HugeiconsIcon
+            icon={Loading03Icon}
+            size={18}
+            strokeWidth={1.5}
+            className="text-muted-foreground animate-spin"
+          />
+        </div>
       )}
       {attachments.map((att) => {
         const isImage = att.mimeType.startsWith('image/')
@@ -531,7 +566,12 @@ function ActivityCard({
               disabled={isUploading || attachFetcher.state !== 'idle'}
               onClick={() => fileInputRef.current?.click()}
             >
-              <HugeiconsIcon icon={Attachment01Icon} size={16} strokeWidth={2} />
+              <HugeiconsIcon
+                icon={isUploading ? Loading03Icon : Attachment01Icon}
+                size={16}
+                strokeWidth={2}
+                className={isUploading ? 'animate-spin' : undefined}
+              />
             </Button>
             <Button type="submit" size="icon" variant="default" className="size-8 rounded-lg">
               <HugeiconsIcon icon={ArrowUp01Icon} size={16} strokeWidth={2} />
@@ -546,26 +586,31 @@ function ActivityCard({
 function DetailsCard({
   ticket,
   categories,
+  orgFractions,
   canManage,
   canEdit,
   statusFetcher,
   priorityFetcher,
   categoryFetcher,
+  fractionFetcher,
 }: {
   ticket: {
     status: string
     priority: 'urgent' | 'high' | 'medium' | 'low' | null
     category: string | null
+    fractionId: string | null
     fractionLabel: string | null
     creatorName: string
     createdAt: Date | string
   }
   categories: { key: string }[]
+  orgFractions: { id: string; label: string }[]
   canManage: boolean
   canEdit: boolean
   statusFetcher: ReturnType<typeof useFetcher>
   priorityFetcher: ReturnType<typeof useFetcher>
   categoryFetcher: ReturnType<typeof useFetcher>
+  fractionFetcher: ReturnType<typeof useFetcher>
 }) {
   const priorityCurrent =
     (priorityFetcher.formData?.get('value') as string) ?? ticket.priority ?? ''
@@ -660,7 +705,15 @@ function DetailsCard({
           <div className="flex items-center justify-between">
             <dt className="text-muted-foreground text-sm">Fração</dt>
             <dd className="text-sm">
-              {ticket.fractionLabel || <span className="text-muted-foreground">&mdash;</span>}
+              {canEdit && orgFractions.length > 0 ? (
+                <InlineFractionSelect
+                  fractions={orgFractions}
+                  defaultValue={ticket.fractionId}
+                  fetcher={fractionFetcher}
+                />
+              ) : (
+                ticket.fractionLabel || <span className="text-muted-foreground">&mdash;</span>
+              )}
             </dd>
           </div>
 
@@ -682,6 +735,7 @@ function DetailsCard({
 function EditTicketDrawer({
   ticket,
   categories,
+  orgFractions,
   open,
   onOpenChange,
 }: {
@@ -690,9 +744,11 @@ function EditTicketDrawer({
     description: string | null
     category: string | null
     priority: 'urgent' | 'high' | 'medium' | 'low' | null
+    fractionId: string | null
     private: boolean
   }
   categories: { key: string }[]
+  orgFractions: { id: string; label: string }[]
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -731,6 +787,29 @@ function EditTicketDrawer({
               <FieldLabel>Prioridade</FieldLabel>
               <PrioritySelector name="priority" defaultValue={ticket.priority ?? ''} />
             </Field>
+
+            {orgFractions.length > 0 && (
+              <Field>
+                <FieldLabel>Fração</FieldLabel>
+                <Select
+                  name="fractionId"
+                  defaultValue={ticket.fractionId ?? ''}
+                  items={orgFractions.map((f) => ({ label: f.label, value: f.id }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sem fração" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sem fração</SelectItem>
+                    {orgFractions.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
 
             <label htmlFor="edit-private" className="flex items-center gap-2">
               <Checkbox id="edit-private" name="private" defaultChecked={ticket.private} />
@@ -771,5 +850,45 @@ function InlineCategorySelect({
         fetcher.submit(formData, { method: 'post' })
       }}
     />
+  )
+}
+
+function InlineFractionSelect({
+  fractions: fractionsList,
+  defaultValue,
+  fetcher,
+}: {
+  fractions: { id: string; label: string }[]
+  defaultValue: string | null
+  fetcher: ReturnType<typeof useFetcher>
+}) {
+  const current = defaultValue ?? ''
+  const items = fractionsList.map((f) => ({ label: f.label, value: f.id }))
+
+  return (
+    <Select
+      defaultValue={current}
+      onValueChange={(value) => {
+        if (value === current) return
+        const formData = new FormData()
+        formData.set('intent', 'update-field')
+        formData.set('field', 'fractionId')
+        formData.set('value', value ?? '')
+        fetcher.submit(formData, { method: 'post' })
+      }}
+      items={items}
+    >
+      <SelectTrigger className="h-10 w-auto min-w-32">
+        <SelectValue placeholder="Sem fração" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="">Sem fração</SelectItem>
+        {fractionsList.map((f) => (
+          <SelectItem key={f.id} value={f.id}>
+            {f.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

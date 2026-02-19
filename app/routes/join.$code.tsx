@@ -170,7 +170,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
                 nativeButton={false}
                 render={
                   <Link
-                    to={`${href('/login')}?redirect=${href('/join/:code', { code: loaderData.code })}`}
+                    to={`${href('/login')}?redirect=${encodeURIComponent(href('/join/:code', { code: loaderData.code }))}`}
                   />
                 }
               >
@@ -181,7 +181,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
                 nativeButton={false}
                 render={
                   <Link
-                    to={`${href('/register')}?redirect=${href('/join/:code', { code: loaderData.code })}`}
+                    to={`${href('/register')}?redirect=${encodeURIComponent(href('/join/:code', { code: loaderData.code }))}`}
                   />
                 }
                 variant="outline"

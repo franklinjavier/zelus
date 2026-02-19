@@ -76,10 +76,14 @@ export const auth = betterAuth({
       defaultRole: 'user',
       adminRoles: ['admin'],
     }),
-    captcha({
-      provider: 'cloudflare-turnstile',
-      secretKey: process.env.TURNSTILE_SECRET_KEY!,
-    }),
+    ...(process.env.VERCEL_ENV === 'production'
+      ? [
+          captcha({
+            provider: 'cloudflare-turnstile' as const,
+            secretKey: process.env.TURNSTILE_SECRET_KEY!,
+          }),
+        ]
+      : []),
     oneTap(),
     organization({
       allowUserToCreateOrganization: true,

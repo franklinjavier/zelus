@@ -2,11 +2,12 @@ import { href, Outlet, redirect } from 'react-router'
 
 import type { Route } from './+types/_layout'
 import { sessionContext } from '~/lib/auth/context'
+import { getSafeRedirect } from '~/lib/misc/safe-redirect'
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const session = context.get(sessionContext)
   if (session) {
-    throw redirect(href('/dashboard'))
+    throw redirect(getSafeRedirect(request, href('/dashboard')))
   }
   return null
 }

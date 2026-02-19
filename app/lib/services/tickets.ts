@@ -161,6 +161,7 @@ export async function updateTicket(
     description?: string
     category?: string | null
     priority?: 'urgent' | 'high' | 'medium' | 'low' | null
+    fractionId?: string | null
     private?: boolean
   },
   userId: string,

@@ -29,9 +29,28 @@ export function getAssistantTools(orgId: string, userId: string) {
           .describe('ID da fração/unidade do utilizador (obtido via get_my_fractions)'),
       }),
       execute: async ({ title, description, category, priority, fractionId }) => {
+        // Auto-associate fraction if user has exactly one and none was specified
+        let resolvedFractionId = fractionId
+        if (!resolvedFractionId) {
+          const userFractionRows = await db
+            .select({ fractionId: fractions.id })
+            .from(userFractions)
+            .innerJoin(fractions, eq(userFractions.fractionId, fractions.id))
+            .where(
+              and(
+                eq(userFractions.orgId, orgId),
+                eq(userFractions.userId, userId),
+                eq(userFractions.status, 'approved'),
+              ),
+            )
+          if (userFractionRows.length === 1) {
+            resolvedFractionId = userFractionRows[0].fractionId
+          }
+        }
+
         const ticket = await createTicket(
           orgId,
-          { title, description, category, priority, fractionId },
+          { title, description, category, priority, fractionId: resolvedFractionId },
           userId,
         )
         return {

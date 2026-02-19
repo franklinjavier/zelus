@@ -1,7 +1,7 @@
 import { eq, and, count, sql } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { fractions, userFractions } from '~/lib/db/schema'
+import { fractions, userFractions, tickets, invites } from '~/lib/db/schema'
 import { logAuditEvent } from './audit'
 
 export async function createFraction(
@@ -116,26 +116,22 @@ export async function updateFraction(
 }
 
 export async function deleteFraction(orgId: string, fractionId: string, adminUserId: string) {
-  // Block if associations exist
-  const [assocCount] = await db
-    .select({ count: count() })
-    .from(userFractions)
-    .where(
-      and(
-        eq(userFractions.fractionId, fractionId),
-        eq(userFractions.orgId, orgId),
-        eq(userFractions.status, 'approved'),
-      ),
-    )
-
-  if (assocCount && assocCount.count > 0) {
-    throw new Error('Não é possível apagar fração com membros associados.')
-  }
-
-  // Delete any pending associations first
+  // Remove all user-fraction associations
   await db
     .delete(userFractions)
     .where(and(eq(userFractions.fractionId, fractionId), eq(userFractions.orgId, orgId)))
+
+  // Unlink tickets referencing this fraction
+  await db
+    .update(tickets)
+    .set({ fractionId: null })
+    .where(and(eq(tickets.fractionId, fractionId), eq(tickets.orgId, orgId)))
+
+  // Unlink invites referencing this fraction
+  await db
+    .update(invites)
+    .set({ fractionId: null })
+    .where(and(eq(invites.fractionId, fractionId), eq(invites.orgId, orgId)))
 
   const [deleted] = await db
     .delete(fractions)

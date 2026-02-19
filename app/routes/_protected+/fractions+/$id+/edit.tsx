@@ -92,7 +92,7 @@ export default function EditFractionPage({ loaderData, actionData }: Route.Compo
           <div className="flex items-center justify-between pt-2">
             <DeleteConfirmDialog
               title="Apagar fração?"
-              description="Esta ação não pode ser revertida. Todos os dados da fração serão apagados."
+              description="Esta ação não pode ser revertida. Membros serão desassociados e ocorrências perderão a ligação a esta fração."
             >
               <fetcher.Form method="post">
                 <input type="hidden" name="intent" value="delete" />

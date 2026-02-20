@@ -1,8 +1,12 @@
+import { getAppUrl } from '~/lib/misc/app-url'
+
 export function orgInviteEmail(params: {
   orgName: string
   inviterName: string
   inviteUrl: string
 }) {
+  const logoUrl = `${getAppUrl()}/logo.png`
+
   return {
     subject: `Convite para ${params.orgName} — Zelus`,
     html: `
@@ -10,6 +14,9 @@ export function orgInviteEmail(params: {
 <html lang="pt">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <img src="${logoUrl}" alt="Zelus" width="48" height="48" style="border: 0;" />
+  </div>
   <h2 style="margin: 0 0 16px;">Convite para ${params.orgName}</h2>
   <p>${params.inviterName} convidou-o para juntar-se a <strong>${params.orgName}</strong> no Zelus.</p>
   <p style="margin: 24px 0;">

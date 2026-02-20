@@ -23,7 +23,7 @@ async function main() {
   const [demoUser] = await db
     .select()
     .from(schema.user)
-    .where(eq(schema.user.email, 'admin@zelus.dev'))
+    .where(eq(schema.user.email, 'admin@zelus.sh'))
     .limit(1)
 
   if (!demoUser) {

@@ -1,8 +1,12 @@
+import { getAppUrl } from '~/lib/misc/app-url'
+
 export function associationRejectedEmail(params: {
   userName: string
   fractionLabel: string
   orgName: string
 }) {
+  const logoUrl = `${getAppUrl()}/logo.png`
+
   return {
     subject: `Associação rejeitada — ${params.fractionLabel}`,
     html: `
@@ -10,6 +14,9 @@ export function associationRejectedEmail(params: {
 <html lang="pt">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <img src="${logoUrl}" alt="Zelus" width="48" height="48" style="border: 0;" />
+  </div>
   <h2 style="margin: 0 0 16px;">Associação rejeitada</h2>
   <p>Olá ${params.userName},</p>
   <p>A sua associação à fração <strong>${params.fractionLabel}</strong> em ${params.orgName} foi rejeitada.</p>

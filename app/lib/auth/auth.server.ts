@@ -5,6 +5,9 @@ import { eq } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import * as schema from '~/lib/db/schema'
+import { sendEmail } from '~/lib/email/client'
+import { emailVerificationEmail } from '~/lib/email/templates/email-verification'
+import { passwordResetEmail } from '~/lib/email/templates/password-reset'
 import { getAppUrl, getTrustedOrigins } from '~/lib/misc/app-url'
 
 export const auth = betterAuth({
@@ -17,15 +20,25 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: getTrustedOrigins(),
 
+  rateLimit: {
+    enabled: true,
+    storage: 'memory',
+    window: 60,
+    max: 10,
+    customRules: {
+      '/api/auth/sign-in/email': { window: 60, max: 5 },
+      '/api/auth/sign-up/email': { window: 300, max: 3 },
+      '/api/auth/forget-password': { window: 300, max: 3 },
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
 
-    // TODO: integrate Resend to send password reset emails in production.
     sendResetPassword: async ({ user, url }) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[auth] Password reset for ${user.email}: ${url}`)
-      }
+      const email = passwordResetEmail(user.name, url)
+      await sendEmail({ to: user.email, ...email })
     },
 
     // Security: revoke sessions on password reset.
@@ -35,10 +48,8 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
-      // TODO: integrate Resend to send verification emails
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[auth] Verification email for ${user.email}: ${url}`)
-      }
+      const email = emailVerificationEmail(user.name, url)
+      await sendEmail({ to: user.email, ...email })
     },
   },
 
@@ -76,7 +87,7 @@ export const auth = betterAuth({
       defaultRole: 'user',
       adminRoles: ['admin'],
     }),
-    ...(process.env.VERCEL_ENV === 'production'
+    ...(process.env.NODE_ENV !== 'development'
       ? [
           captcha({
             provider: 'cloudflare-turnstile' as const,

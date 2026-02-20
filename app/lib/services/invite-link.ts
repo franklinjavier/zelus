@@ -6,7 +6,7 @@ import { organization } from '~/lib/db/schema'
 function generateCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let code = ''
-  const bytes = crypto.getRandomValues(new Uint8Array(8))
+  const bytes = crypto.getRandomValues(new Uint8Array(12))
   for (const byte of bytes) {
     code += chars[byte % chars.length]
   }

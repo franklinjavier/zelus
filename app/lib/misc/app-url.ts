@@ -24,10 +24,11 @@ export function getAppUrl() {
 export function getTrustedOrigins() {
   const origins = new Set<string>()
 
-  // Always allow localhost for dev environments (SSR/API calls).
-  origins.add('http://localhost:5173')
-  origins.add('http://localhost:5174')
-  origins.add('http://192.168.1.101:5173')
+  // Allow localhost for dev environments (SSR/API calls).
+  if (process.env.NODE_ENV === 'development') {
+    origins.add('http://localhost:5173')
+    origins.add('http://localhost:5174')
+  }
 
   // Base URL (handles Vercel preview + BETTER_AUTH_URL priority)
   origins.add(getAppUrl())

@@ -27,7 +27,7 @@ async function seed() {
   await db.insert(schema.user).values({
     id: userId,
     name: 'Admin Demo',
-    email: 'admin@zelus.dev',
+    email: 'admin@zelus.sh',
     emailVerified: true,
     createdAt: now,
     updatedAt: now,
@@ -124,7 +124,7 @@ async function seed() {
   }
 
   console.log(`Seeded ${categoryKeys.length} categories`)
-  console.log(`Created user: admin@zelus.dev (id: ${userId})`)
+  console.log(`Created user: admin@zelus.sh (id: ${userId})`)
   console.log(`Created org: Condomínio Azulejo (id: ${orgId})`)
   console.log(`Created ${fractionLabels.length} fractions`)
   console.log('Seed complete.')

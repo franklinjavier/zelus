@@ -1,15 +1,10 @@
 import { getAppUrl } from '~/lib/misc/app-url'
 
-export function fractionInviteEmail(params: {
-  orgName: string
-  fractionLabel: string
-  inviterName: string
-  inviteUrl: string
-}) {
+export function passwordResetEmail(name: string, url: string) {
   const logoUrl = `${getAppUrl()}/logo.png`
 
   return {
-    subject: `Convite para fração ${params.fractionLabel} — Zelus`,
+    subject: 'Repor palavra-passe — Zelus',
     html: `
 <!DOCTYPE html>
 <html lang="pt">
@@ -18,15 +13,15 @@ export function fractionInviteEmail(params: {
   <div style="text-align: center; margin-bottom: 24px;">
     <img src="${logoUrl}" alt="Zelus" width="48" height="48" style="border: 0;" />
   </div>
-  <h2 style="margin: 0 0 16px;">Convite para fração</h2>
-  <p>${params.inviterName} convidou-o para a fração <strong>${params.fractionLabel}</strong> em ${params.orgName} no Zelus.</p>
+  <h2 style="margin: 0 0 16px;">Repor palavra-passe</h2>
+  <p>Olá${name ? ` ${name}` : ''}, recebemos um pedido para repor a sua palavra-passe no Zelus.</p>
   <p style="margin: 24px 0;">
-    <a href="${params.inviteUrl}"
+    <a href="${url}"
        style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 32px; text-decoration: none; font-weight: 500;">
-      Aceitar convite
+      Repor palavra-passe
     </a>
   </p>
-  <p style="color: #666; font-size: 14px;">Se não esperava este convite, pode ignorar este email.</p>
+  <p style="color: #666; font-size: 14px;">Se não solicitou esta alteração, pode ignorar este email.</p>
 </body>
 </html>`.trim(),
   }

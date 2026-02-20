@@ -1,3 +1,5 @@
+import { getAppUrl } from '~/lib/misc/app-url'
+
 const statusLabels: Record<string, string> = {
   open: 'Aberto',
   in_progress: 'Em progresso',
@@ -11,6 +13,7 @@ export function ticketUpdateEmail(params: {
   ticketUrl: string
 }) {
   const statusLabel = statusLabels[params.newStatus] ?? params.newStatus
+  const logoUrl = `${getAppUrl()}/logo.png`
 
   return {
     subject: `Ocorrência atualizada — ${params.ticketTitle}`,
@@ -19,6 +22,9 @@ export function ticketUpdateEmail(params: {
 <html lang="pt">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1a1a1a;">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <img src="${logoUrl}" alt="Zelus" width="48" height="48" style="border: 0;" />
+  </div>
   <h2 style="margin: 0 0 16px;">Ocorrência atualizada</h2>
   <p>A ocorrência <strong>${params.ticketTitle}</strong> foi atualizada para o estado <strong>${statusLabel}</strong>.</p>
   <p style="margin: 24px 0;">

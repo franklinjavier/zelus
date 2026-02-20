@@ -4,7 +4,7 @@ const apiKey = process.env.RESEND_API_KEY
 
 const resend = apiKey ? new Resend(apiKey) : null
 
-const FROM_ADDRESS = process.env.EMAIL_FROM ?? 'Zelus <noreply@zelus.pt>'
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? 'Zelus <hi@auth.zelus.sh>'
 
 export async function sendEmail(params: { to: string; subject: string; html: string }) {
   if (!resend) {

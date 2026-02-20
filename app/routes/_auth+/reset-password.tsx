@@ -1,4 +1,5 @@
-import { data, Form, href, Link, redirect, useNavigation, useSearchParams } from 'react-router'
+import { data, Form, href, Link, redirect, useNavigation } from 'react-router'
+import { and, eq, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
 import type { Route } from './+types/reset-password'
@@ -9,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { Field, FieldError, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { auth } from '~/lib/auth/auth.server'
+import { db } from '~/lib/db'
+import { verification } from '~/lib/db/schema'
 import { validateForm } from '~/lib/forms'
 
 const schema = z.object({
@@ -18,6 +21,32 @@ const schema = z.object({
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Redefinir palavra-passe — Zelus' }]
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url)
+  const token = url.searchParams.get('token')
+
+  if (!token) {
+    throw redirect(href('/login'))
+  }
+
+  const [row] = await db
+    .select({ id: verification.id })
+    .from(verification)
+    .where(
+      and(
+        eq(verification.identifier, `reset-password:${token}`),
+        gt(verification.expiresAt, new Date()),
+      ),
+    )
+    .limit(1)
+
+  if (!row) {
+    throw redirect(`${href('/login')}?error=invalid-token`)
+  }
+
+  return { token }
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -48,12 +77,10 @@ export async function action({ request }: Route.ActionArgs) {
   return redirect(`${href('/login')}?reset=1`, { headers })
 }
 
-export default function ResetPasswordPage({ actionData }: Route.ComponentProps) {
+export default function ResetPasswordPage({ loaderData, actionData }: Route.ComponentProps) {
   const navigation = useNavigation()
-  const [searchParams] = useSearchParams()
   const isSubmitting = navigation.state === 'submitting'
 
-  const tokenFromUrl = searchParams.get('token') || ''
   const errors = actionData && 'errors' in actionData ? actionData.errors : null
   const error = actionData && 'error' in actionData ? actionData.error : null
 
@@ -70,24 +97,13 @@ export default function ResetPasswordPage({ actionData }: Route.ComponentProps) 
         </CardHeader>
         <CardContent>
           <Form method="post" className="grid gap-4">
+            <input type="hidden" name="token" value={loaderData.token} />
+
             {error && (
               <div className="bg-destructive/10 text-destructive rounded-xl px-3 py-2 text-sm">
                 {error}
               </div>
             )}
-
-            <Field>
-              <FieldLabel htmlFor="token">Token</FieldLabel>
-              <Input
-                id="token"
-                name="token"
-                defaultValue={tokenFromUrl}
-                placeholder="Cole o token recebido por e-mail"
-                autoComplete="one-time-code"
-                required
-              />
-              {errors?.token && <FieldError>{errors.token}</FieldError>}
-            </Field>
 
             <Field>
               <FieldLabel htmlFor="newPassword">Nova palavra-passe</FieldLabel>

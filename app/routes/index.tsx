@@ -1,4 +1,5 @@
 import { data, Form, href } from 'react-router'
+import { count } from 'drizzle-orm'
 import { z } from 'zod'
 
 import type { Route } from './+types'
@@ -9,7 +10,11 @@ import { Input } from '~/components/ui/input'
 import { Field, FieldError } from '~/components/ui/field'
 import { db } from '~/lib/db'
 import { waitlistLeads } from '~/lib/db/schema'
+import { sendEmail } from '~/lib/email/client'
+import { waitlistConfirmEmail } from '~/lib/email/templates/waitlist-confirm'
+import { waitlistSignupEmail } from '~/lib/email/templates/waitlist-signup'
 import { validateForm } from '~/lib/forms'
+import { waitUntilContext } from '~/lib/vercel/context'
 
 const waitlistSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório'),
@@ -17,17 +22,32 @@ const waitlistSchema = z.object({
 })
 
 export function meta(_args: Route.MetaArgs) {
+  const title = 'Zelus | Gestão de condomínios, simplificada.'
+  const description =
+    'Centralize ocorrências, intervenções e prestadores do condomínio num único lugar. Sem ruído, sem complicações.'
+
   return [
-    { title: 'Zelus | Todos merecem saber o que acontece no seu prédio' },
-    {
-      name: 'description',
-      content:
-        'O Zelus centraliza ocorrências, manutenções e documentos do condomínio num único lugar. Visível para todos.',
-    },
+    { title },
+    { name: 'description', content: description },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: description },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:image', content: 'https://zelus.sh/og.png' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: title },
+    { name: 'twitter:description', content: description },
+    { name: 'twitter:image', content: 'https://zelus.sh/og.png' },
   ]
 }
 
-export async function action({ request }: Route.ActionArgs) {
+const NOTIFY_EMAIL = process.env.WAITLIST_NOTIFY_EMAIL
+
+export async function loader() {
+  const [result] = await db.select({ value: count() }).from(waitlistLeads)
+  return data({ waitlistCount: result.value })
+}
+
+export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData()
   const result = validateForm(formData, waitlistSchema)
   if ('errors' in result) return data({ errors: result.errors }, { status: 400 })
@@ -37,16 +57,40 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     await db.insert(waitlistLeads).values({ name, email })
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('unique')) {
+    // Drizzle wraps pg errors — check cause for unique constraint violation (code 23505)
+    const cause = error instanceof Error && 'cause' in error ? error.cause : null
+    const isUniqueViolation =
+      (cause && typeof cause === 'object' && 'code' in cause && cause.code === '23505') ||
+      (error instanceof Error && error.message.includes('unique'))
+    if (isUniqueViolation) {
       return data({ success: true }) // silently accept duplicates
     }
     throw error
   }
 
+  // Send emails in background via Vercel waitUntil
+  const backgroundProcess = context.get(waitUntilContext)
+  backgroundProcess(
+    Promise.all([
+      // Notify founder of new signup
+      NOTIFY_EMAIL
+        ? sendEmail({ to: NOTIFY_EMAIL, ...waitlistSignupEmail({ name, email }) })
+        : Promise.resolve(),
+      // Confirm to the person who signed up
+      sendEmail({ to: email, ...waitlistConfirmEmail({ name }) }),
+    ]),
+  )
+
   return data({ success: true })
 }
 
-function WaitlistForm({ actionData }: { actionData: Route.ComponentProps['actionData'] }) {
+function WaitlistForm({
+  actionData,
+  waitlistCount,
+}: {
+  actionData: Route.ComponentProps['actionData']
+  waitlistCount?: number
+}) {
   const isSuccess = actionData && 'success' in actionData && actionData.success
   const errors = actionData && 'errors' in actionData ? actionData.errors : null
 
@@ -62,23 +106,34 @@ function WaitlistForm({ actionData }: { actionData: Route.ComponentProps['action
   }
 
   return (
-    <Form method="post" className="flex flex-col gap-3 sm:flex-row sm:items-start">
-      <Field className="flex-1">
-        <Input name="name" placeholder="O seu nome" required />
-        {errors?.name && <FieldError>{errors.name}</FieldError>}
-      </Field>
-      <Field className="flex-1">
-        <Input name="email" type="email" placeholder="O seu e-mail" required />
-        {errors?.email && <FieldError>{errors.email}</FieldError>}
-      </Field>
-      <Button type="submit" size="lg">
-        Quero acesso antecipado
-      </Button>
-    </Form>
+    <div className="flex flex-col gap-2">
+      <Form method="post" className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <Field className="flex-1">
+          <Input name="name" placeholder="Nome" required />
+          {errors?.name && <FieldError>{errors.name}</FieldError>}
+        </Field>
+        <Field className="flex-1">
+          <Input name="email" type="email" placeholder="E-mail" required />
+          {errors?.email && <FieldError>{errors.email}</FieldError>}
+        </Field>
+        <Button type="submit" size="lg">
+          Quero acesso antecipado
+        </Button>
+      </Form>
+      <p className="text-muted-foreground text-center text-sm">
+        Gratuito. Sem spam.
+        {waitlistCount != null && waitlistCount > 0 && (
+          <span>
+            {' '}
+            &middot; {waitlistCount} pessoa{waitlistCount !== 1 ? 's' : ''} já na lista.
+          </span>
+        )}
+      </p>
+    </div>
   )
 }
 
-export default function LandingPage({ actionData }: Route.ComponentProps) {
+export default function LandingPage({ actionData, loaderData }: Route.ComponentProps) {
   return (
     <div className="scroll-smooth">
       {/* Top bar */}
@@ -102,13 +157,12 @@ export default function LandingPage({ actionData }: Route.ComponentProps) {
           </div>
 
           <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Todos os moradores merecem saber o que acontece no seu prédio.
+            Gestão de condomínios, simplificada.
           </h1>
 
           <p className="text-muted-foreground text-base">
-            O Zelus centraliza ocorrências, manutenções e documentos do condomínio num único lugar.
-            Visível para todos. Sem depender de grupos de WhatsApp, e-mails perdidos ou planilhas
-            que ninguém encontra.
+            Centralize ocorrências, intervenções e prestadores num único lugar. <br /> Sem ruído,
+            sem complicações.
           </p>
 
           <div className="bg-muted/50 ring-foreground/10 flex aspect-video w-full max-w-2xl items-center justify-center rounded-2xl ring-1">
@@ -116,20 +170,41 @@ export default function LandingPage({ actionData }: Route.ComponentProps) {
           </div>
 
           <div className="w-full max-w-2xl">
-            <WaitlistForm actionData={actionData} />
+            <WaitlistForm actionData={actionData} waitlistCount={loaderData.waitlistCount} />
           </div>
 
           <p className="text-muted-foreground text-sm italic">
             Do latim zelus: o cuidado vigilante pelo que é de todos.
           </p>
+
+          <a
+            href="#problems"
+            className="text-muted-foreground hover:text-foreground mt-2 transition-colors"
+            aria-label="Ver mais"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="animate-bounce"
+            >
+              <path d="m7 13 5 5 5-5" />
+              <path d="m7 6 5 5 5-5" />
+            </svg>
+          </a>
         </div>
       </section>
 
       {/* Section 2: Problems */}
-      <section className="px-6 py-16 md:py-24">
+      <section id="problems" className="scroll-mt-8 px-6 py-16 md:py-24">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-8 text-center text-xl font-semibold tracking-tight md:text-2xl">
-            Gerir um condomínio não devia ser assim.
+            Gerir um condomínio não devia ser assim 👇
           </h2>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -220,7 +295,7 @@ export default function LandingPage({ actionData }: Route.ComponentProps) {
             experimentar.
           </p>
           <div className="w-full max-w-2xl">
-            <WaitlistForm actionData={actionData} />
+            <WaitlistForm actionData={actionData} waitlistCount={loaderData.waitlistCount} />
           </div>
         </div>
       </section>

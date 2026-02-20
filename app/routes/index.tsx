@@ -26,19 +26,28 @@ export function meta(_args: Route.MetaArgs) {
   const description =
     'Centralize ocorrências, intervenções e prestadores do condomínio num único lugar. Sem ruído, sem complicações.'
 
+  const url = 'https://zelus.sh'
+  const image = `${url}/og.jpg`
+
   return [
     { title },
     { name: 'description', content: description },
+    // Open Graph
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'website' },
-    { property: 'og:image', content: 'https://zelus.sh/og.jpg' },
+    { property: 'og:url', content: url },
+    { property: 'og:site_name', content: 'Zelus' },
+    { property: 'og:locale', content: 'pt_PT' },
+    { property: 'og:image', content: image },
     { property: 'og:image:width', content: '1200' },
     { property: 'og:image:height', content: '630' },
+    { property: 'og:image:type', content: 'image/jpeg' },
+    // Twitter
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: 'https://zelus.sh/og.jpg' },
+    { name: 'twitter:image', content: image },
   ]
 }
 

@@ -14,6 +14,7 @@ import { getToast } from '~/lib/toast.server'
 import { ErrorPage } from '~/components/brand/error-page'
 import { Toaster } from '~/components/ui/sonner'
 import { GlobalToast } from '~/components/layout/global-toast'
+import { Analytics } from '@vercel/analytics/react'
 import './app.css'
 
 export const middleware: Route.MiddlewareFunction[] = [sessionMiddleware]
@@ -52,6 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ScrollRestoration />
         <Scripts />
         <Toaster richColors position="top-center" />
+        <Analytics />
       </body>
     </html>
   )

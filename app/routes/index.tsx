@@ -3,7 +3,11 @@ import { count } from 'drizzle-orm'
 import { z } from 'zod'
 
 import type { Route } from './+types'
-import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
+import { lazy, Suspense, useId } from 'react'
+
+const AzulejoPattern = lazy(() =>
+  import('~/components/brand/azulejo-pattern').then((m) => ({ default: m.AzulejoPattern })),
+)
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -48,6 +52,7 @@ export function meta(_args: Route.MetaArgs) {
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
     { name: 'twitter:image', content: image },
+    { name: 'theme-color', content: '#ffffff' },
   ]
 }
 
@@ -105,6 +110,8 @@ function WaitlistForm({
   const isSuccess = actionData && 'success' in actionData && actionData.success
   const errors = actionData && 'errors' in actionData ? actionData.errors : null
 
+  const id = useId()
+
   if (isSuccess) {
     return (
       <div className="bg-primary/5 ring-primary/20 rounded-2xl p-5 text-center ring-1">
@@ -120,11 +127,17 @@ function WaitlistForm({
     <div className="flex flex-col gap-2">
       <Form method="post" className="flex flex-col gap-3 sm:flex-row sm:items-start">
         <Field className="flex-1">
-          <Input name="name" placeholder="Nome" required />
+          <label htmlFor={`${id}-name`} className="sr-only">
+            Nome
+          </label>
+          <Input id={`${id}-name`} name="name" placeholder="Nome" required />
           {errors?.name && <FieldError>{errors.name}</FieldError>}
         </Field>
         <Field className="flex-1">
-          <Input name="email" type="email" placeholder="E-mail" required />
+          <label htmlFor={`${id}-email`} className="sr-only">
+            E-mail
+          </label>
+          <Input id={`${id}-email`} name="email" type="email" placeholder="E-mail" required />
           {errors?.email && <FieldError>{errors.email}</FieldError>}
         </Field>
         <Button type="submit" size="lg">
@@ -159,7 +172,9 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
 
       {/* Section 1: Hero */}
       <section className="relative flex min-h-svh items-center justify-center px-6 py-16 md:py-24">
-        <AzulejoPattern />
+        <Suspense>
+          <AzulejoPattern />
+        </Suspense>
 
         <div className="relative z-10 flex max-w-3xl flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-3">

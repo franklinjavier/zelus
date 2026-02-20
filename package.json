@@ -21,6 +21,7 @@
     "db:check": "bun run scripts/db.ts check",
     "db:status": "bun run scripts/db.ts status",
     "db:seed": "dotenv -e .env.local -- bun run scripts/seed.ts",
+    "db:seed-demo": "dotenv -e .env.local -- bun run scripts/seed-demo.ts",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.3.0",
     "@vercel/functions": "^3.4.2",
+    "@vercel/react-router": "^1.2.5",
     "ai": "^6.0.93",
     "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",

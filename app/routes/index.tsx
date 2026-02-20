@@ -18,7 +18,7 @@ const waitlistSchema = z.object({
 
 export function meta(_args: Route.MetaArgs) {
   return [
-    { title: 'Zelus — Todos merecem saber o que acontece no seu prédio' },
+    { title: 'Zelus | Todos merecem saber o que acontece no seu prédio' },
     {
       name: 'description',
       content:

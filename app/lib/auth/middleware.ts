@@ -18,6 +18,11 @@ type AnyMiddlewareFunction = (...args: any[]) => any
  * Applied in root.tsx so all routes can access session data.
  */
 export const sessionMiddleware: Route.MiddlewareFunction = async ({ request, context }, next) => {
+  const { pathname } = new URL(request.url)
+  if (pathname === '/' || pathname.startsWith('/api/auth')) {
+    return next()
+  }
+
   const session = await auth.api.getSession({ headers: request.headers })
   context.set(sessionContext, session)
   return next()

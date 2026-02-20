@@ -81,6 +81,16 @@ function WaitlistForm({ actionData }: { actionData: Route.ComponentProps['action
 export default function LandingPage({ actionData }: Route.ComponentProps) {
   return (
     <div className="scroll-smooth">
+      {/* Top bar */}
+      <div className="relative z-20 flex justify-end px-6 py-4">
+        <a
+          href={href('/login')}
+          className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+        >
+          Já tem conta? Entrar
+        </a>
+      </div>
+
       {/* Section 1: Hero */}
       <section className="relative flex min-h-svh items-center justify-center px-6 py-16 md:py-24">
         <AzulejoPattern />

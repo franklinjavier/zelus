@@ -253,92 +253,61 @@ async function main() {
   console.log('  ✓ Fractions viewed')
 
   // =========================================================================
-  // SCENE 6: Assistant — start a new conversation with mocked AI response
+  // SCENE 6: Assistant — open existing seeded conversation
   // =========================================================================
   console.log('Scene 6: Assistant...')
   await clickSidebar('Assistente', '**/assistant**')
   await page.waitForTimeout(PAUSE_SHORT)
 
-  // Mock the /api/chat endpoint to return a realistic streamed response
-  // without hitting the real AI API. Uses the Vercel AI SDK SSE protocol.
-  const mockResponse = [
-    'Encontrei **3 ocorrências abertas** no condomínio:\n\n',
-    '1. **Elevador B fora de serviço** — Bloco B, reportada há 2 dias. ',
-    'O técnico da ServiElev já foi contactado e tem visita agendada para amanhã.\n\n',
-    '2. **Infiltração na garagem -1** — Zona das arrecadações. ',
-    'Aguarda avaliação do prestador de impermeabilizações.\n\n',
-    '3. **Iluminação exterior avariada** — Entrada principal. ',
-    'Lâmpadas LED encomendadas, previsão de instalação esta semana.\n\n',
-    'Deseja que eu forneça mais detalhes sobre alguma destas ocorrências?',
-  ]
-
-  await page.route('**/api/chat', async (route) => {
-    const textId = 'mock-text-001'
-    const lines: string[] = []
-
-    // Build SSE body following the Vercel AI SDK UIMessageStream protocol
-    lines.push(`data: ${JSON.stringify({ type: 'start-step', request: {}, warnings: [] })}`)
-    lines.push(`data: ${JSON.stringify({ type: 'text-start', id: textId })}`)
-
-    for (const part of mockResponse) {
-      lines.push(`data: ${JSON.stringify({ type: 'text-delta', id: textId, text: part })}`)
-    }
-
-    lines.push(`data: ${JSON.stringify({ type: 'text-end', id: textId })}`)
-    lines.push(
-      `data: ${JSON.stringify({ type: 'finish-step', finishReason: 'stop', usage: { promptTokens: 100, completionTokens: 200 }, isContinued: false })}`,
+  // The assistant layout has a hover sidebar (collapsed at 56px, expands on hover).
+  // Find the sidebar <aside> and move the cursor into it to trigger expansion.
+  const sidebar = page.locator('aside').first()
+  const sidebarBox = await sidebar.boundingBox()
+  if (sidebarBox) {
+    await page.mouse.move(
+      sidebarBox.x + sidebarBox.width / 2,
+      sidebarBox.y + sidebarBox.height / 2,
+      { steps: 15 },
     )
-    lines.push('data: [DONE]')
-
-    // Each SSE event is separated by double newlines
-    const body = lines.join('\n\n') + '\n\n'
-
-    // Omit X-Conversation-Id so the app stays on the new-chat page
-    // (with the response visible) instead of redirecting to /assistant/:id
-    await route.fulfill({
-      status: 200,
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
-      body,
-    })
-  })
-
-  // Type a question about open tickets into the chat input
-  const chatInput = page.locator('input[placeholder*="mensagem"]').first()
-  if (await chatInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-    const box = await chatInput.boundingBox()
-    if (box) {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 15 })
-      await page.waitForTimeout(200)
-    }
-    await chatInput.click()
-    await page.waitForTimeout(300)
-    // Type a question naturally
-    await chatInput.type('Quais são as ocorrências abertas no condomínio?', { delay: 35 })
-    await page.waitForTimeout(PAUSE_SHORT)
-
-    // Click send button
-    const sendBtn = page.locator('button[type="submit"]').last()
-    if (await sendBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await sendBtn.click()
-      console.log('  ✓ Sent message to assistant')
-
-      // Wait for the mocked AI response to render
-      await page.waitForTimeout(PAUSE_SCENE)
-
-      // Scroll down slowly to reveal the full response
-      await scrollDown(400, 6)
-      await page.waitForTimeout(PAUSE_LOOK)
-    }
-  } else {
-    console.log('  ⚠ Chat input not found')
+    await page.waitForTimeout(1000) // wait for expansion animation + re-render
   }
 
-  // Remove the route mock before continuing
-  await page.unroute('**/api/chat')
+  // Click on the seeded "Ocorrências abertas" conversation (visible after sidebar expands)
+  const convLink = page.locator('aside a[href*="/assistant/"]').first()
+  if (await convLink.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const box = await convLink.boundingBox()
+    if (box) {
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 15 })
+      await page.waitForTimeout(300)
+    }
+    await convLink.click()
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(PAUSE_SHORT)
+
+    // Move cursor to center of content area so sidebar collapses
+    await page.mouse.move(640, 400, { steps: 15 })
+    await page.waitForTimeout(PAUSE_READ) // read the conversation messages
+
+    // Scroll down to reveal more messages
+    await scrollDown(300, 5)
+    await page.waitForTimeout(PAUSE_LOOK)
+    console.log('  ✓ Opened seeded conversation')
+  } else {
+    // Fallback: navigate directly via the link href from DOM
+    const convHref = await page.locator('aside a[href*="/assistant/"]').first().getAttribute('href')
+    if (convHref) {
+      await page.goto(`${BASE_URL}${convHref}`)
+      await page.waitForLoadState('networkidle')
+      await injectCursor()
+      await page.waitForTimeout(PAUSE_READ)
+      await scrollDown(300, 5)
+      await page.waitForTimeout(PAUSE_LOOK)
+      console.log('  ✓ Opened conversation via direct navigation')
+    } else {
+      console.log('  ⚠ No conversation found')
+    }
+  }
+
   console.log('  ✓ Assistant conversation viewed')
 
   // =========================================================================

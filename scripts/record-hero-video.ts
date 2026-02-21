@@ -253,11 +253,69 @@ async function main() {
   console.log('  ✓ Fractions viewed')
 
   // =========================================================================
-  // SCENE 6: Assistant — start a new conversation (8s)
+  // SCENE 6: Assistant — start a new conversation with mocked AI response
   // =========================================================================
   console.log('Scene 6: Assistant...')
   await clickSidebar('Assistente', '**/assistant**')
   await page.waitForTimeout(PAUSE_SHORT)
+
+  // Mock the /api/chat endpoint to return a realistic streamed response
+  // without hitting the real AI API. Uses the Vercel AI SDK SSE protocol.
+  const mockResponse = [
+    'Encontrei **3 ocorrências abertas** no condomínio:\n\n',
+    '1. **Elevador B fora de serviço** — Bloco B, reportada há 2 dias. ',
+    'O técnico da ServiElev já foi contactado e tem visita agendada para amanhã.\n\n',
+    '2. **Infiltração na garagem -1** — Zona das arrecadações. ',
+    'Aguarda avaliação do prestador de impermeabilizações.\n\n',
+    '3. **Iluminação exterior avariada** — Entrada principal. ',
+    'Lâmpadas LED encomendadas, previsão de instalação esta semana.\n\n',
+    'Deseja que eu forneça mais detalhes sobre alguma destas ocorrências?',
+  ]
+
+  await page.route('**/api/chat', async (route) => {
+    const textId = 'mock-text-001'
+    const chunks: string[] = []
+
+    // Build SSE chunks following the Vercel AI SDK UIMessageStream protocol
+    chunks.push(`data: ${JSON.stringify({ type: 'start-step', request: {}, warnings: [] })}\n\n`)
+    chunks.push(`data: ${JSON.stringify({ type: 'text-start', id: textId })}\n\n`)
+
+    for (const part of mockResponse) {
+      chunks.push(`data: ${JSON.stringify({ type: 'text-delta', id: textId, text: part })}\n\n`)
+    }
+
+    chunks.push(`data: ${JSON.stringify({ type: 'text-end', id: textId })}\n\n`)
+    chunks.push(
+      `data: ${JSON.stringify({ type: 'finish-step', finishReason: 'stop', usage: { promptTokens: 100, completionTokens: 200 }, isContinued: false })}\n\n`,
+    )
+    chunks.push('data: [DONE]\n\n')
+
+    // Stream chunks with small delays to simulate real typing
+    const body = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder()
+        for (const chunk of chunks) {
+          controller.enqueue(encoder.encode(chunk))
+          // Small delay between text-delta chunks for realistic streaming
+          if (chunk.includes('text-delta')) {
+            await new Promise((r) => setTimeout(r, 80))
+          }
+        }
+        controller.close()
+      },
+    })
+
+    await route.fulfill({
+      status: 200,
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'X-Conversation-Id': 'mock-conv-video',
+      },
+      body,
+    })
+  })
 
   // Type a question about open tickets into the chat input
   const chatInput = page.locator('input[placeholder*="mensagem"]').first()
@@ -279,16 +337,19 @@ async function main() {
       await sendBtn.click()
       console.log('  ✓ Sent message to assistant')
 
-      // Wait for the AI response to start appearing
-      await page.waitForTimeout(PAUSE_LOOK)
+      // Wait for the mocked AI response to fully stream in
+      await page.waitForTimeout(PAUSE_READ)
 
-      // Scroll down to see more of the response as it streams
-      await scrollDown(200)
+      // Scroll down to see the full response
+      await scrollDown(300)
       await page.waitForTimeout(PAUSE_LOOK)
     }
   } else {
     console.log('  ⚠ Chat input not found')
   }
+
+  // Remove the route mock before continuing
+  await page.unroute('**/api/chat')
   console.log('  ✓ Assistant conversation viewed')
 
   // =========================================================================

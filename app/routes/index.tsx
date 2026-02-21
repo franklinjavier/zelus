@@ -1,4 +1,4 @@
-import { data, Form, href } from 'react-router'
+import { data, Form, href, Await } from 'react-router'
 import { count } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -12,8 +12,6 @@ import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Field, FieldError } from '~/components/ui/field'
-import { db } from '~/lib/db'
-import { waitlistLeads } from '~/lib/db/schema'
 import { sendEmail } from '~/lib/email/client'
 import { waitlistConfirmEmail } from '~/lib/email/templates/waitlist-confirm'
 import { waitlistSignupEmail } from '~/lib/email/templates/waitlist-signup'
@@ -59,11 +57,23 @@ export function meta(_args: Route.MetaArgs) {
 const NOTIFY_EMAIL = process.env.WAITLIST_NOTIFY_EMAIL
 
 export async function loader() {
-  const [result] = await db.select({ value: count() }).from(waitlistLeads)
-  return data({ waitlistCount: result.value })
+  const [{ db }, { waitlistLeads }] = await Promise.all([
+    import('~/lib/db'),
+    import('~/lib/db/schema'),
+  ])
+  return {
+    waitlistCount: db
+      .select({ value: count() })
+      .from(waitlistLeads)
+      .then((r) => r[0].value),
+  }
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
+  const [{ db }, { waitlistLeads }] = await Promise.all([
+    import('~/lib/db'),
+    import('~/lib/db/schema'),
+  ])
   const formData = await request.formData()
   const result = validateForm(formData, waitlistSchema)
   if ('errors' in result) return data({ errors: result.errors }, { status: 400 })
@@ -105,7 +115,7 @@ function WaitlistForm({
   waitlistCount,
 }: {
   actionData: Route.ComponentProps['actionData']
-  waitlistCount?: number
+  waitlistCount?: Promise<number>
 }) {
   const isSuccess = actionData && 'success' in actionData && actionData.success
   const errors = actionData && 'errors' in actionData ? actionData.errors : null
@@ -146,12 +156,19 @@ function WaitlistForm({
       </Form>
       <p className="text-muted-foreground text-center text-sm">
         Gratuito. Sem spam.
-        {waitlistCount != null && waitlistCount > 0 && (
-          <span>
-            {' '}
-            &middot; {waitlistCount} pessoa{waitlistCount !== 1 ? 's' : ''} já na lista.
-          </span>
-        )}
+        <Suspense>
+          <Await resolve={waitlistCount}>
+            {(resolved: number | undefined) =>
+              resolved != null &&
+              resolved > 0 && (
+                <span>
+                  {' '}
+                  &middot; {resolved} pessoa{resolved !== 1 ? 's' : ''} já na lista.
+                </span>
+              )
+            }
+          </Await>
+        </Suspense>
       </p>
     </div>
   )

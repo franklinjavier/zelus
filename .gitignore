@@ -9,3 +9,9 @@
 /build/
 .vercel
 .env*.local
+
+# Video build artifacts
+video/recordings/
+video/screenshots/
+video/node_modules/
+video/bun.lock

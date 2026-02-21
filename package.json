@@ -23,7 +23,10 @@
     "db:seed": "dotenv -e .env.local -- bun run scripts/seed.ts",
     "db:seed-demo": "dotenv -e .env.local -- bun run scripts/seed-demo.ts",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
-    "video:capture": "dotenv -e .env.local -- bun run scripts/capture-screenshots.ts"
+    "video:capture": "dotenv -e .env.local -- bun run scripts/capture-screenshots.ts",
+    "video:record": "dotenv -e .env.local -- bun run scripts/record-hero-video.ts",
+    "video:render": "cd video && bun run render.ts",
+    "video:studio": "cd video && bunx remotion studio"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.45",

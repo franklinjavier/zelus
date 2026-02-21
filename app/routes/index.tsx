@@ -191,8 +191,11 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
             sem complicações.
           </p>
 
-          <div className="bg-muted/50 ring-foreground/10 flex aspect-video w-full max-w-2xl items-center justify-center rounded-2xl ring-1">
-            <span className="text-muted-foreground text-base">Em breve</span>
+          <div className="ring-foreground/10 w-full max-w-2xl overflow-hidden rounded-2xl shadow-xl ring-1">
+            <video autoPlay muted loop playsInline className="aspect-video w-full">
+              <source src="/hero.webm" type="video/webm" />
+              <source src="/hero.mp4" type="video/mp4" />
+            </video>
           </div>
 
           <div className="w-full max-w-2xl">

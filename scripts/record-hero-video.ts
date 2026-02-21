@@ -280,8 +280,10 @@ async function main() {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 15 })
       await page.waitForTimeout(300)
     }
-    await convLink.click()
-    await page.waitForLoadState('networkidle')
+    await chatInput.click()
+    await page.waitForTimeout(300)
+    // Type a question naturally
+    await chatInput.type('Quais são as ocorrências abertas no condomínio?', { delay: 35 })
     await page.waitForTimeout(PAUSE_SHORT)
 
     // Move cursor to center of content area so sidebar collapses

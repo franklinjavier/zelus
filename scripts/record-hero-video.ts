@@ -253,31 +253,42 @@ async function main() {
   console.log('  ✓ Fractions viewed')
 
   // =========================================================================
-  // SCENE 6: Assistant conversation (6s)
+  // SCENE 6: Assistant — start a new conversation (8s)
   // =========================================================================
   console.log('Scene 6: Assistant...')
   await clickSidebar('Assistente', '**/assistant**')
   await page.waitForTimeout(PAUSE_SHORT)
 
-  // Click into the existing conversation (if any)
-  const convLink = page.locator('a[href*="/assistant/"]').first()
-  if (await convLink.isVisible({ timeout: 3000 }).catch(() => false)) {
-    const box = await convLink.boundingBox()
+  // Type a question about open tickets into the chat input
+  const chatInput = page.locator('input[placeholder*="mensagem"]').first()
+  if (await chatInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const box = await chatInput.boundingBox()
     if (box) {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 15 })
       await page.waitForTimeout(200)
     }
-    await convLink.click()
-    await page.waitForLoadState('networkidle')
+    await chatInput.click()
+    await page.waitForTimeout(300)
+    // Type a question naturally
+    await chatInput.type('Quais são as ocorrências abertas no condomínio?', { delay: 35 })
     await page.waitForTimeout(PAUSE_SHORT)
-    console.log('  ✓ Opened existing conversation')
-  } else {
-    console.log('  ⚠ No existing conversation found, staying on assistant list')
-  }
 
-  // Scroll through conversation to show messages
-  await scrollDown(200)
-  await page.waitForTimeout(PAUSE_LOOK)
+    // Click send button
+    const sendBtn = page.locator('button[type="submit"]').last()
+    if (await sendBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await sendBtn.click()
+      console.log('  ✓ Sent message to assistant')
+
+      // Wait for the AI response to start appearing
+      await page.waitForTimeout(PAUSE_LOOK)
+
+      // Scroll down to see more of the response as it streams
+      await scrollDown(200)
+      await page.waitForTimeout(PAUSE_LOOK)
+    }
+  } else {
+    console.log('  ⚠ Chat input not found')
+  }
   console.log('  ✓ Assistant conversation viewed')
 
   // =========================================================================

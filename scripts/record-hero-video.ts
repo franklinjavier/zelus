@@ -293,13 +293,14 @@ async function main() {
     // Each SSE event is separated by double newlines
     const body = lines.join('\n\n') + '\n\n'
 
+    // Omit X-Conversation-Id so the app stays on the new-chat page
+    // (with the response visible) instead of redirecting to /assistant/:id
     await route.fulfill({
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
-        'X-Conversation-Id': 'mock-conv-video',
       },
       body,
     })
@@ -325,11 +326,11 @@ async function main() {
       await sendBtn.click()
       console.log('  ✓ Sent message to assistant')
 
-      // Wait for the mocked AI response to fully stream in
-      await page.waitForTimeout(PAUSE_READ)
+      // Wait for the mocked AI response to render
+      await page.waitForTimeout(PAUSE_SCENE)
 
-      // Scroll down to see the full response
-      await scrollDown(300)
+      // Scroll down slowly to reveal the full response
+      await scrollDown(400, 6)
       await page.waitForTimeout(PAUSE_LOOK)
     }
   } else {

@@ -192,9 +192,18 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
           </p>
 
           <div className="ring-foreground/10 w-full overflow-hidden rounded-2xl shadow-xl ring-1">
-            <video autoPlay muted loop playsInline className="aspect-video w-full">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              poster="/hero-poster.jpg"
+              className="aspect-video w-full"
+            >
               <source src="/hero.webm" type="video/webm" />
               <source src="/hero.mp4" type="video/mp4" />
+              Vídeo demonstrativo do Zelus — gestão de condomínios simplificada.
             </video>
           </div>
 

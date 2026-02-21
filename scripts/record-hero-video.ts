@@ -274,36 +274,24 @@ async function main() {
 
   await page.route('**/api/chat', async (route) => {
     const textId = 'mock-text-001'
-    const chunks: string[] = []
+    const lines: string[] = []
 
-    // Build SSE chunks following the Vercel AI SDK UIMessageStream protocol
-    chunks.push(`data: ${JSON.stringify({ type: 'start-step', request: {}, warnings: [] })}\n\n`)
-    chunks.push(`data: ${JSON.stringify({ type: 'text-start', id: textId })}\n\n`)
+    // Build SSE body following the Vercel AI SDK UIMessageStream protocol
+    lines.push(`data: ${JSON.stringify({ type: 'start-step', request: {}, warnings: [] })}`)
+    lines.push(`data: ${JSON.stringify({ type: 'text-start', id: textId })}`)
 
     for (const part of mockResponse) {
-      chunks.push(`data: ${JSON.stringify({ type: 'text-delta', id: textId, text: part })}\n\n`)
+      lines.push(`data: ${JSON.stringify({ type: 'text-delta', id: textId, text: part })}`)
     }
 
-    chunks.push(`data: ${JSON.stringify({ type: 'text-end', id: textId })}\n\n`)
-    chunks.push(
-      `data: ${JSON.stringify({ type: 'finish-step', finishReason: 'stop', usage: { promptTokens: 100, completionTokens: 200 }, isContinued: false })}\n\n`,
+    lines.push(`data: ${JSON.stringify({ type: 'text-end', id: textId })}`)
+    lines.push(
+      `data: ${JSON.stringify({ type: 'finish-step', finishReason: 'stop', usage: { promptTokens: 100, completionTokens: 200 }, isContinued: false })}`,
     )
-    chunks.push('data: [DONE]\n\n')
+    lines.push('data: [DONE]')
 
-    // Stream chunks with small delays to simulate real typing
-    const body = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder()
-        for (const chunk of chunks) {
-          controller.enqueue(encoder.encode(chunk))
-          // Small delay between text-delta chunks for realistic streaming
-          if (chunk.includes('text-delta')) {
-            await new Promise((r) => setTimeout(r, 80))
-          }
-        }
-        controller.close()
-      },
-    })
+    // Each SSE event is separated by double newlines
+    const body = lines.join('\n\n') + '\n\n'
 
     await route.fulfill({
       status: 200,

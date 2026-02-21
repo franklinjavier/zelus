@@ -40,7 +40,8 @@ async function seed() {
     accountId: userId,
     providerId: 'credential',
     userId,
-    password: '$2b$10$placeholder_hash_for_seed_only',
+    password:
+      '7b88cfe451278866064befa67491a685:771d43f1f39ddfd1d0b7ad6a984b3a90e6fd79806259ba665612f3b913cfb97e54ec9c33c6bc957252440b0fd96eca0528a2e0326a14d82e027120e7b7e6b165',
     createdAt: now,
     updatedAt: now,
   })

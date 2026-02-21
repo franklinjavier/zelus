@@ -22,7 +22,8 @@
     "db:status": "bun run scripts/db.ts status",
     "db:seed": "dotenv -e .env.local -- bun run scripts/seed.ts",
     "db:seed-demo": "dotenv -e .env.local -- bun run scripts/seed-demo.ts",
-    "db:studio": "dotenv -e .env.local -- drizzle-kit studio"
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
+    "video:capture": "dotenv -e .env.local -- bun run scripts/capture-screenshots.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.45",
@@ -84,6 +85,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "happy-dom": "^20.6.3",
     "jsdom": "^28.1.0",
+    "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "pretty-quick": "^4.2.2",

@@ -40,6 +40,7 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.3.0",
     "@vercel/functions": "^3.4.2",
+    "@vercel/react-router": "^1.2.5",
     "ai": "^6.0.93",
     "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",

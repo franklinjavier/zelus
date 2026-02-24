@@ -176,7 +176,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
           <AzulejoPattern />
         </Suspense>
 
-        <div className="relative z-10 flex max-w-3xl flex-col items-center gap-6 text-center">
+        <div className="relative z-10 flex max-w-5xl flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-3">
             <ZelusLogoTile size={64} className="text-primary" />
             <span className="text-3xl font-semibold tracking-tight">zelus</span>
@@ -191,11 +191,14 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
             sem complicações.
           </p>
 
-          <div className="bg-muted/50 ring-foreground/10 flex aspect-video w-full max-w-2xl items-center justify-center rounded-2xl ring-1">
-            <span className="text-muted-foreground text-base">Em breve</span>
+          <div className="ring-foreground/10 w-full overflow-hidden rounded-2xl shadow-xl ring-1">
+            <video autoPlay muted loop playsInline className="aspect-video w-full">
+              <source src="/hero.webm" type="video/webm" />
+              <source src="/hero.mp4" type="video/mp4" />
+            </video>
           </div>
 
-          <div className="w-full max-w-2xl">
+          <div className="mt-6 w-full max-w-2xl">
             <WaitlistForm actionData={actionData} waitlistCount={loaderData.waitlistCount} />
           </div>
 

@@ -195,6 +195,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
             <video autoPlay muted loop playsInline className="h-full w-full object-cover">
               <source src="/hero.webm" type="video/webm" />
               <source src="/hero.mp4" type="video/mp4" />
+              Vídeo demonstrativo do Zelus — gestão de condomínios simplificada.
             </video>
           </div>
 

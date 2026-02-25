@@ -26,13 +26,19 @@ export async function action({ request }: Route.ActionArgs) {
   if ('errors' in result) return data({ errors: result.errors }, { status: 400 })
 
   const { email } = result.data
+  const url = new URL(request.url)
+  const redirectParam = url.searchParams.get('redirect')
+
+  const resetUrl = redirectParam
+    ? `${href('/reset-password')}?redirect=${encodeURIComponent(redirectParam)}`
+    : href('/reset-password')
 
   try {
     // Never reveal whether an email exists.
     await auth.api.requestPasswordReset({
       body: {
         email,
-        redirectTo: href('/reset-password'),
+        redirectTo: resetUrl,
       },
       headers: withCaptchaToken(formData, request),
     })
@@ -40,7 +46,8 @@ export async function action({ request }: Route.ActionArgs) {
     // Swallow — never reveal whether the email exists.
   }
 
-  return redirect(`${href('/forgot-password')}?sent=1`)
+  const sentUrl = `${href('/forgot-password')}?sent=1${redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ''}`
+  return redirect(sentUrl)
 }
 
 export default function ForgotPasswordPage({ actionData }: Route.ComponentProps) {

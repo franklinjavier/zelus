@@ -1,4 +1,4 @@
-import { data, Form, href, Link, redirect, useNavigation } from 'react-router'
+import { data, Form, href, Link, redirect, useNavigation, useSearchParams } from 'react-router'
 import { and, eq, gt } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -27,8 +27,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
   const token = url.searchParams.get('token')
 
+  const redirectParam = url.searchParams.get('redirect')
+  const loginUrl = (extra?: string) =>
+    `${href('/login')}?${new URLSearchParams({ ...(extra ? { error: extra } : {}), ...(redirectParam ? { redirect: redirectParam } : {}) }).toString()}`
+
   if (!token) {
-    throw redirect(href('/login'))
+    throw redirect(loginUrl())
   }
 
   const [row] = await db
@@ -43,7 +47,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     .limit(1)
 
   if (!row) {
-    throw redirect(`${href('/login')}?error=invalid-token`)
+    throw redirect(loginUrl('invalid-token'))
   }
 
   return { token }
@@ -74,12 +78,17 @@ export async function action({ request }: Route.ActionArgs) {
     headers.append('set-cookie', cookie)
   }
 
-  return redirect(`${href('/login')}?reset=1`, { headers })
+  const url = new URL(request.url)
+  const redirectParam = url.searchParams.get('redirect')
+  const loginUrl = `${href('/login')}?reset=1${redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ''}`
+  return redirect(loginUrl, { headers })
 }
 
 export default function ResetPasswordPage({ loaderData, actionData }: Route.ComponentProps) {
   const navigation = useNavigation()
+  const [searchParams] = useSearchParams()
   const isSubmitting = navigation.state === 'submitting'
+  const redirectParam = searchParams.get('redirect')
 
   const errors = actionData && 'errors' in actionData ? actionData.errors : null
   const error = actionData && 'error' in actionData ? actionData.error : null
@@ -123,7 +132,10 @@ export default function ResetPasswordPage({ loaderData, actionData }: Route.Comp
           </Form>
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            <Link to={href('/login')} className="text-primary hover:underline">
+            <Link
+              to={`${href('/login')}${redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''}`}
+              className="text-primary hover:underline"
+            >
               Voltar ao login
             </Link>
           </p>

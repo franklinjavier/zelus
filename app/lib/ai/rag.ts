@@ -120,14 +120,14 @@ export async function searchDocumentChunks(
 
   const embeddingStr = `[${queryEmbedding.join(',')}]`
 
-  // Diagnostic: count chunks for this org
-  const countResult = await db.execute<{ total: string; with_embedding: string }>(sql`
+  // Diagnostic: inspect raw result structure from Neon pool
+  const countResult = await db.execute(sql`
     SELECT COUNT(*) as total, COUNT(embedding) as with_embedding
     FROM document_chunks
     WHERE org_id = ${orgId}
   `)
-  const countRow = Array.from(countResult as Iterable<{ total: string; with_embedding: string }>)[0]
-  console.log(`[RAG] chunks total=${countRow?.total} with_embedding=${countRow?.with_embedding}`)
+  console.log('[RAG] countResult isArray:', Array.isArray(countResult))
+  console.log('[RAG] countResult raw:', JSON.stringify(countResult).slice(0, 500))
 
   const results = await db.execute<{ content: string; similarity: number }>(sql`
     SELECT content, 1 - (embedding <=> ${embeddingStr}::vector) as similarity
@@ -138,9 +138,10 @@ export async function searchDocumentChunks(
     LIMIT ${limit}
   `)
 
+  console.log('[RAG] results isArray:', Array.isArray(results))
+  console.log('[RAG] results raw:', JSON.stringify(results).slice(0, 300))
+
   const rows = Array.from(results as Iterable<{ content: string; similarity: number }>)
-  console.log(
-    `[RAG] search returned ${rows.length} results, top similarity=${rows[0]?.similarity ?? 'n/a'}`,
-  )
+  console.log(`[RAG] search returned ${rows.length} results`)
   return rows
 }

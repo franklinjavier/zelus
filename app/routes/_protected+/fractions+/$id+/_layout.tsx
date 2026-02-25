@@ -39,6 +39,7 @@ import {
   removeAssociation,
   updateMemberRole,
 } from '~/lib/services/associations'
+import { listFractionContacts } from '~/lib/services/fraction-contacts'
 import { getFraction } from '~/lib/services/fractions'
 import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/_layout'
@@ -62,8 +63,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const members = await listFractionMembers(orgId, params.id)
   const canInvite = isAdmin || fractionRole === 'fraction_owner_admin'
   const orgMembers = isAdmin ? await listOrgMembers(orgId) : []
+  const contacts = isAdmin || isMember ? await listFractionContacts(orgId, params.id) : []
 
-  return { fraction, members, isAdmin, isMember, canInvite, orgMembers }
+  return { fraction, members, isAdmin, isMember, canInvite, orgMembers, contacts }
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -135,14 +137,17 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function FractionDetailLayout({ loaderData, actionData }: Route.ComponentProps) {
-  const { fraction, members, isAdmin, isMember, canInvite, orgMembers } = loaderData
+  const { fraction, members, isAdmin, isMember, canInvite, orgMembers, contacts } = loaderData
   const fetcher = useFetcher()
   const bulkFetcher = useFetcher()
   const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false)
   const navigate = useNavigate()
   const matches = useMatches()
   const isDrawerOpen = matches.some(
-    (m) => m.pathname.endsWith('/edit') || m.pathname.endsWith('/invite'),
+    (m) =>
+      m.pathname.endsWith('/edit') ||
+      m.pathname.endsWith('/invite') ||
+      m.pathname.includes('/contacts/'),
   )
 
   const prevBulkStateRef = useRef(bulkFetcher.state)
@@ -160,39 +165,15 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
     <div>
       <div className="flex items-center justify-between">
         <BackButton to={href('/fractions')} />
-        {(isAdmin || canInvite) && (
-          <div className="flex gap-2">
-            {isAdmin && (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link to={href('/fractions/:id/edit', { id: fraction.id })} />}
-              >
-                <HugeiconsIcon
-                  icon={Edit02Icon}
-                  data-icon="inline-start"
-                  size={16}
-                  strokeWidth={2}
-                />
-                Editar
-              </Button>
-            )}
-            {canInvite && (
-              <Button
-                variant="outline"
-                nativeButton={false}
-                render={<Link to={href('/fractions/:id/invite', { id: fraction.id })} />}
-              >
-                <HugeiconsIcon
-                  icon={UserAdd01Icon}
-                  data-icon="inline-start"
-                  size={16}
-                  strokeWidth={2}
-                />
-                Convidar
-              </Button>
-            )}
-          </div>
+        {isAdmin && (
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link to={href('/fractions/:id/edit', { id: fraction.id })} />}
+          >
+            <HugeiconsIcon icon={Edit02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
+            Editar
+          </Button>
         )}
       </div>
 
@@ -225,15 +206,22 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
         </div>
       )}
 
-      <div className="mt-6">
-        <MembersCard
-          members={members}
-          showEmail={isAdmin || isMember}
-          canChangeRole={isAdmin}
-          canRemove={isAdmin}
-          onBulkAssign={isAdmin ? () => setBulkDrawerOpen(true) : undefined}
-        />
-      </div>
+      {(isAdmin || isMember) && (
+        <div className="mt-6">
+          <MoradoresCard
+            fractionId={fraction.id}
+            contacts={contacts}
+            members={members}
+            isAdmin={isAdmin}
+            canChangeRole={isAdmin}
+            canRemove={isAdmin}
+            onBulkAssign={isAdmin ? () => setBulkDrawerOpen(true) : undefined}
+            inviteTo={
+              canInvite && !isAdmin ? href('/fractions/:id/invite', { id: fraction.id }) : undefined
+            }
+          />
+        </div>
+      )}
 
       {isAdmin && (
         <BulkAssignMembersDrawer
@@ -248,6 +236,7 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
             )
           }
           fetcher={bulkFetcher}
+          inviteTo={href('/fractions/:id/invite', { id: fraction.id })}
         />
       )}
 
@@ -265,48 +254,178 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
   )
 }
 
-function MembersCard({
+type MoradoresRow =
+  | {
+      kind: 'linked'
+      id: string
+      contactId: string
+      memberId: string
+      name: string
+      info: string | null
+      userImage: string | null
+      role: string
+      status: string
+    }
+  | {
+      kind: 'member'
+      id: string
+      contactId: null
+      memberId: string
+      name: string
+      info: string
+      userImage: string | null
+      role: string
+      status: string
+    }
+  | {
+      kind: 'contact'
+      id: string
+      contactId: string
+      memberId: null
+      name: string
+      info: string | null
+      userImage: null
+      role: null
+      status: null
+    }
+
+function MoradoresCard({
+  fractionId,
+  contacts,
   members,
-  showEmail = false,
-  canChangeRole = false,
-  canRemove = false,
+  isAdmin,
+  canChangeRole,
+  canRemove,
   onBulkAssign,
+  inviteTo,
 }: {
+  fractionId: string
+  contacts: {
+    id: string
+    name: string
+    email: string | null
+    mobile: string | null
+    phone: string | null
+    userId: string | null
+  }[]
   members: {
     id: string
+    userId: string
     userName: string
     userEmail: string
     userImage: string | null
     role: string
     status: string
   }[]
-  showEmail?: boolean
-  canChangeRole?: boolean
-  canRemove?: boolean
+  isAdmin: boolean
+  canChangeRole: boolean
+  canRemove: boolean
   onBulkAssign?: () => void
+  inviteTo?: string
 }) {
+  const membersByUserId = new Map(members.map((m) => [m.userId, m]))
+
+  const rows: MoradoresRow[] = [
+    ...contacts
+      .filter((c) => c.userId !== null && membersByUserId.has(c.userId))
+      .map((c) => {
+        const m = membersByUserId.get(c.userId!)!
+        return {
+          kind: 'linked' as const,
+          id: `c-${c.id}`,
+          contactId: c.id,
+          memberId: m.id,
+          name: c.name,
+          info: c.mobile ?? c.phone ?? c.email,
+          userImage: m.userImage,
+          role: m.role,
+          status: m.status,
+        }
+      }),
+    ...members
+      .filter((m) => !contacts.some((c) => c.userId === m.userId))
+      .map((m) => ({
+        kind: 'member' as const,
+        id: `m-${m.id}`,
+        contactId: null,
+        memberId: m.id,
+        name: m.userName,
+        info: m.userEmail,
+        userImage: m.userImage,
+        role: m.role,
+        status: m.status,
+      })),
+    ...contacts
+      .filter((c) => c.userId === null || !membersByUserId.has(c.userId))
+      .map((c) => ({
+        kind: 'contact' as const,
+        id: `c-${c.id}`,
+        contactId: c.id,
+        memberId: null,
+        name: c.name,
+        info: c.mobile ?? c.phone ?? c.email,
+        userImage: null,
+        role: null,
+        status: null,
+      })),
+  ].sort((a, b) => a.name.localeCompare(b.name, 'pt'))
+
   return (
     <div>
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium">
-          Membros
-          <span className="text-muted-foreground ml-1.5 font-normal">{members.length}</span>
+          Moradores
+          <span className="text-muted-foreground ml-1.5 font-normal">{rows.length}</span>
         </h2>
-        {onBulkAssign && (
-          <Button variant="outline" size="sm" onClick={onBulkAssign}>
-            <HugeiconsIcon
-              icon={UserAdd01Icon}
-              data-icon="inline-start"
-              size={16}
-              strokeWidth={2}
-            />
-            Associar membros
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link to={href('/fractions/:id/contacts/new', { id: fractionId })} />}
+            >
+              <HugeiconsIcon
+                icon={UserAdd01Icon}
+                data-icon="inline-start"
+                size={16}
+                strokeWidth={2}
+              />
+              Adicionar
+            </Button>
+          )}
+          {onBulkAssign && (
+            <Button variant="outline" size="sm" onClick={onBulkAssign}>
+              <HugeiconsIcon
+                icon={UserAdd01Icon}
+                data-icon="inline-start"
+                size={16}
+                strokeWidth={2}
+              />
+              Convidar
+            </Button>
+          )}
+          {inviteTo && (
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link to={inviteTo} />}
+            >
+              <HugeiconsIcon
+                icon={UserAdd01Icon}
+                data-icon="inline-start"
+                size={16}
+                strokeWidth={2}
+              />
+              Convidar
+            </Button>
+          )}
+        </div>
       </div>
-      {members.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-dashed py-10">
-          <div className="bg-muted flex size-12 items-center justify-center rounded-2xl">
+          <div className="bg-muted flex size-12 items-center justify-center rounded-xl">
             <HugeiconsIcon
               icon={UserMultiple02Icon}
               size={20}
@@ -314,27 +433,37 @@ function MembersCard({
               className="text-muted-foreground"
             />
           </div>
-          <p className="text-muted-foreground text-sm">Nenhum membro associado</p>
+          <p className="text-muted-foreground text-sm">Nenhum morador registado</p>
         </div>
       ) : (
         <div className="@container mt-3 flex flex-col gap-2">
-          {members.map((m) => (
+          {rows.map((row) => (
             <div
-              key={m.id}
+              key={row.id}
               className="ring-foreground/5 flex items-start gap-3 rounded-2xl p-3 ring-1 @sm:items-center"
             >
-              <MemberAvatar name={m.userName} image={m.userImage} />
+              <MemberAvatar name={row.name} image={row.userImage} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{m.userName}</p>
-                {showEmail && (
-                  <p className="text-muted-foreground truncate text-sm">{m.userEmail}</p>
-                )}
-                <div className="mt-1.5 flex items-center gap-2 @sm:hidden">
-                  <MemberActions m={m} canChangeRole={canChangeRole} canRemove={canRemove} />
+                <p className="text-sm font-medium">{row.name}</p>
+                {row.info && <p className="text-muted-foreground truncate text-sm">{row.info}</p>}
+                <div className="mt-1.5 flex flex-wrap items-center gap-2 @sm:hidden">
+                  <MoradoresRowActions
+                    row={row}
+                    fractionId={fractionId}
+                    canChangeRole={canChangeRole}
+                    canRemove={canRemove}
+                    isAdmin={isAdmin}
+                  />
                 </div>
               </div>
               <div className="hidden shrink-0 items-center gap-2 @sm:flex">
-                <MemberActions m={m} canChangeRole={canChangeRole} canRemove={canRemove} />
+                <MoradoresRowActions
+                  row={row}
+                  fractionId={fractionId}
+                  canChangeRole={canChangeRole}
+                  canRemove={canRemove}
+                  isAdmin={isAdmin}
+                />
               </div>
             </div>
           ))}
@@ -344,34 +473,65 @@ function MembersCard({
   )
 }
 
+function MoradoresRowActions({
+  row,
+  fractionId,
+  canChangeRole,
+  canRemove,
+  isAdmin,
+}: {
+  row: MoradoresRow
+  fractionId: string
+  canChangeRole: boolean
+  canRemove: boolean
+  isAdmin: boolean
+}) {
+  return (
+    <>
+      {row.kind !== 'contact' && (
+        <>
+          {canChangeRole && row.status === 'approved' ? (
+            <MemberRoleSelect associationId={row.memberId} currentRole={row.role} />
+          ) : (
+            <RoleBadge role={row.role} />
+          )}
+          <StatusBadge status={row.status} />
+        </>
+      )}
+      {row.kind === 'contact' && (
+        <Badge variant="secondary" className="text-muted-foreground font-normal">
+          Sem conta
+        </Badge>
+      )}
+      {isAdmin && row.contactId && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          nativeButton={false}
+          render={
+            <Link
+              to={href('/fractions/:id/contacts/:contactId/edit', {
+                id: fractionId,
+                contactId: row.contactId,
+              })}
+            />
+          }
+        >
+          <HugeiconsIcon icon={Edit02Icon} size={16} strokeWidth={2} />
+          <span className="sr-only">Editar</span>
+        </Button>
+      )}
+      {canRemove && row.memberId && <RemoveMemberButton associationId={row.memberId} />}
+    </>
+  )
+}
+
 function MemberAvatar({ name, image }: { name: string; image?: string | null }) {
   return (
     <Avatar className="size-9">
       {image && <AvatarImage src={image} alt={name} />}
       <AvatarFallback className="text-sm">{getInitials(name)}</AvatarFallback>
     </Avatar>
-  )
-}
-
-function MemberActions({
-  m,
-  canChangeRole,
-  canRemove,
-}: {
-  m: { id: string; role: string; status: string }
-  canChangeRole: boolean
-  canRemove: boolean
-}) {
-  return (
-    <>
-      {canChangeRole && m.status === 'approved' ? (
-        <MemberRoleSelect associationId={m.id} currentRole={m.role} />
-      ) : (
-        <RoleBadge role={m.role} />
-      )}
-      <StatusBadge status={m.status} />
-      {canRemove && <RemoveMemberButton associationId={m.id} />}
-    </>
   )
 }
 
@@ -442,14 +602,17 @@ function BulkAssignMembersDrawer({
   orgMembers,
   assignedUserIds,
   fetcher,
+  inviteTo,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   orgMembers: { userId: string; userName: string; userEmail: string }[]
   assignedUserIds: Set<string>
   fetcher: ReturnType<typeof useFetcher>
+  inviteTo: string
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const navigate = useNavigate()
 
   const prevOpenRef = useRef(open)
   if (open && !prevOpenRef.current) {
@@ -472,7 +635,7 @@ function BulkAssignMembersDrawer({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerPopup>
         <DrawerHeader>
-          <DrawerTitle>Associar membros</DrawerTitle>
+          <DrawerTitle>Convidar</DrawerTitle>
           <DrawerDescription>
             Selecione membros do condomínio para associar a esta fração.
           </DrawerDescription>
@@ -511,6 +674,27 @@ function BulkAssignMembersDrawer({
               </Button>
             </fetcher.Form>
           )}
+          <div className="mt-4 border-t pt-4">
+            <p className="text-muted-foreground mb-2 text-sm">
+              Pessoa ainda não registada no condomínio?
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                onOpenChange(false)
+                navigate(inviteTo)
+              }}
+            >
+              <HugeiconsIcon
+                icon={UserAdd01Icon}
+                data-icon="inline-start"
+                size={16}
+                strokeWidth={2}
+              />
+              Convidar por email
+            </Button>
+          </div>
         </div>
       </DrawerPopup>
     </Drawer>

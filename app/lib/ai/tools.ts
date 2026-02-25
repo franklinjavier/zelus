@@ -231,7 +231,13 @@ export function getAssistantTools(orgId: string, userId: string) {
       }),
       execute: async ({ query }) => {
         const { searchDocumentChunks } = await import('~/lib/ai/rag')
-        const results = await searchDocumentChunks(orgId, query)
+        let results
+        try {
+          results = await searchDocumentChunks(orgId, query)
+        } catch (err) {
+          console.error('[search_documents] Search failed:', err)
+          return { found: false, message: 'Erro ao pesquisar documentos.', error: true }
+        }
         if (results.length === 0) {
           return { found: false, message: 'Nenhum documento relevante encontrado.' }
         }

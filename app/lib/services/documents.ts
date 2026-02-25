@@ -84,6 +84,21 @@ export async function updateDocumentStatus(
   await db.update(documents).set({ status }).where(eq(documents.id, documentId))
 }
 
+export async function resetDocumentForReprocessing(orgId: string, documentId: string) {
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.orgId, orgId)))
+    .limit(1)
+
+  if (!doc) throw new Error('Documento não encontrado.')
+
+  await db.delete(documentChunks).where(eq(documentChunks.documentId, documentId))
+  await db.update(documents).set({ status: 'processing' }).where(eq(documents.id, documentId))
+
+  return doc
+}
+
 export async function getDocument(orgId: string, documentId: string) {
   const [doc] = await db
     .select()

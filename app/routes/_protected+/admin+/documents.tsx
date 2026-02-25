@@ -8,13 +8,19 @@ import {
   Alert02Icon,
   Delete02Icon,
   EyeIcon,
+  Refresh01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { Route } from './+types/documents'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { waitUntilContext } from '~/lib/vercel/context'
-import { createDocument, listDocuments, deleteDocument } from '~/lib/services/documents'
+import {
+  createDocument,
+  listDocuments,
+  deleteDocument,
+  resetDocumentForReprocessing,
+} from '~/lib/services/documents'
 import { processDocument } from '~/lib/ai/rag'
 import { Button } from '~/components/ui/button'
 import { Drawer, DrawerPopup } from '~/components/ui/drawer'
@@ -56,6 +62,18 @@ export async function action({ request, context }: Route.ActionArgs) {
     const backgroundProcess = context.get(waitUntilContext)
     backgroundProcess(processDocument(doc.id, orgId, fileUrl, mimeType))
 
+    return { success: true }
+  }
+
+  if (intent === 'reprocess') {
+    const documentId = formData.get('documentId') as string
+    try {
+      const doc = await resetDocumentForReprocessing(orgId, documentId)
+      const backgroundProcess = context.get(waitUntilContext)
+      backgroundProcess(processDocument(documentId, orgId, doc.fileUrl, doc.mimeType))
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Erro ao reprocessar documento.' }
+    }
     return { success: true }
   }
 
@@ -226,6 +244,20 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                   >
                     <HugeiconsIcon icon={EyeIcon} size={16} />
                   </Button>
+                  {doc.status !== 'processing' && (
+                    <Form method="post">
+                      <input type="hidden" name="intent" value="reprocess" />
+                      <input type="hidden" name="documentId" value={doc.id} />
+                      <Button
+                        type="submit"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Reprocessar documento"
+                      >
+                        <HugeiconsIcon icon={Refresh01Icon} size={16} />
+                      </Button>
+                    </Form>
+                  )}
                   <DeleteConfirmDialog
                     title="Apagar documento?"
                     description={`Tem a certeza que quer apagar "${doc.fileName}"? Os dados do RAG associados também serão removidos.`}

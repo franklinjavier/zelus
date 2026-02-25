@@ -176,7 +176,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
           <AzulejoPattern />
         </Suspense>
 
-        <div className="relative z-10 flex max-w-5xl flex-col items-center gap-6 text-center">
+        <div className="relative z-10 flex w-full max-w-5xl flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-3">
             <ZelusLogoTile size={64} className="text-primary" />
             <span className="text-3xl font-semibold tracking-tight">zelus</span>
@@ -191,8 +191,8 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
             sem complicações.
           </p>
 
-          <div className="ring-foreground/10 w-full overflow-hidden rounded-2xl shadow-xl ring-1">
-            <video autoPlay muted loop playsInline className="aspect-video w-full">
+          <div className="ring-foreground/10 aspect-video w-full overflow-hidden rounded-2xl shadow-xl ring-1">
+            <video autoPlay muted loop playsInline className="h-full w-full object-cover">
               <source src="/hero.webm" type="video/webm" />
               <source src="/hero.mp4" type="video/mp4" />
             </video>

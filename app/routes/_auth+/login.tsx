@@ -10,6 +10,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { Field, FieldError, FieldLabel } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
+import { PasswordInput } from '~/components/ui/password-input'
 import { Separator } from '~/components/ui/separator'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { authClient, signIn } from '~/lib/auth/auth.client'
@@ -116,10 +117,9 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Palavra-passe</FieldLabel>
-              <Input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 autoComplete="current-password"
                 required
               />

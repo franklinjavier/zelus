@@ -8,7 +8,7 @@ import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { Field, FieldError, FieldLabel } from '~/components/ui/field'
-import { Input } from '~/components/ui/input'
+import { PasswordInput } from '~/components/ui/password-input'
 import { auth } from '~/lib/auth/auth.server'
 import { db } from '~/lib/db'
 import { verification } from '~/lib/db/schema'
@@ -116,10 +116,9 @@ export default function ResetPasswordPage({ loaderData, actionData }: Route.Comp
 
             <Field>
               <FieldLabel htmlFor="newPassword">Nova palavra-passe</FieldLabel>
-              <Input
+              <PasswordInput
                 id="newPassword"
                 name="newPassword"
-                type="password"
                 autoComplete="new-password"
                 required
               />

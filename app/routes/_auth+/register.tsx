@@ -12,6 +12,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
+import { PasswordInput } from '~/components/ui/password-input'
 import { Separator } from '~/components/ui/separator'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { redirectWithCookies, validateForm, withCaptchaToken } from '~/lib/forms'
@@ -71,6 +72,22 @@ export default function RegisterPage({ actionData }: Route.ComponentProps) {
           <CardDescription>Comece a gerir o seu condomínio</CardDescription>
         </CardHeader>
         <CardContent>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => signIn.social({ provider: 'google', callbackURL })}
+          >
+            <GoogleIcon />
+            Registar com Google
+          </Button>
+
+          <div className="my-4 flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-muted-foreground text-xs">ou</span>
+            <Separator className="flex-1" />
+          </div>
+
           <Form method="post" className="grid gap-4">
             {error && <ErrorBanner>{error}</ErrorBanner>}
             <Field>
@@ -93,13 +110,7 @@ export default function RegisterPage({ actionData }: Route.ComponentProps) {
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Palavra-passe</FieldLabel>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-              />
+              <PasswordInput id="password" name="password" autoComplete="new-password" required />
               <FieldDescription>Mínimo 8 caracteres</FieldDescription>
               {errors?.password && <FieldError>{errors.password}</FieldError>}
             </Field>
@@ -108,22 +119,6 @@ export default function RegisterPage({ actionData }: Route.ComponentProps) {
               {isSubmitting ? 'A criar…' : 'Criar conta'}
             </Button>
           </Form>
-
-          <div className="my-4 flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-muted-foreground text-xs">ou</span>
-            <Separator className="flex-1" />
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => signIn.social({ provider: 'google', callbackURL })}
-          >
-            <GoogleIcon />
-            Registar com Google
-          </Button>
 
           <p className="text-muted-foreground mt-4 text-center text-sm">
             Já tem conta?{' '}

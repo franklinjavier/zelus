@@ -1,15 +1,27 @@
-import { Notification03Icon, Search01Icon } from '@hugeicons/core-free-icons'
+'use client'
+
+import { Notification03Icon, Search01Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link, href } from 'react-router'
 
 import { Button } from '~/components/ui/button'
 import { SidebarTrigger } from '~/components/ui/sidebar'
+import {
+  PopoverRoot,
+  PopoverTrigger,
+  PopoverPortal,
+  PopoverPositioner,
+  PopoverPopup,
+} from '~/components/ui/popover'
+import { InviteLinkCard } from '~/components/shared/invite-link-card'
 
 export function Header({
   unreadCount,
+  inviteUrl,
   onSearchOpen,
 }: {
   unreadCount?: number
+  inviteUrl?: string | null
   onSearchOpen: () => void
 }) {
   return (
@@ -28,6 +40,30 @@ export function Header({
             <span>K</span>
           </kbd>
         </button>
+
+        <PopoverRoot>
+          <PopoverTrigger
+            render={
+              <Button variant="ghost" size="icon" title="Convidar">
+                <HugeiconsIcon icon={UserAdd01Icon} size={18} strokeWidth={2} />
+              </Button>
+            }
+          />
+          <PopoverPortal>
+            <PopoverPositioner side="bottom" align="end" sideOffset={8}>
+              <PopoverPopup className="w-96">
+                {inviteUrl ? (
+                  <InviteLinkCard url={inviteUrl} card={false} />
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    O link de convite não está ativo. Fale com a administração para o ativar.
+                  </p>
+                )}
+              </PopoverPopup>
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+
         <Button
           variant="ghost"
           size="icon"

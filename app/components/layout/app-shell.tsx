@@ -18,10 +18,19 @@ type AppShellProps = {
   orgs: Org[]
   isOrgAdmin: boolean
   unreadCount?: number
+  inviteUrl?: string | null
   children: React.ReactNode
 }
 
-export function AppShell({ user, org, orgs, isOrgAdmin, unreadCount, children }: AppShellProps) {
+export function AppShell({
+  user,
+  org,
+  orgs,
+  isOrgAdmin,
+  unreadCount,
+  inviteUrl,
+  children,
+}: AppShellProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const openSearch = useCallback(() => setSearchOpen(true), [])
 
@@ -29,7 +38,7 @@ export function AppShell({ user, org, orgs, isOrgAdmin, unreadCount, children }:
     <SidebarProvider>
       <AppSidebar user={user} org={org} orgs={orgs} isOrgAdmin={isOrgAdmin} />
       <SidebarInset className="relative flex h-svh flex-col overflow-hidden">
-        <Header unreadCount={unreadCount} onSearchOpen={openSearch} />
+        <Header unreadCount={unreadCount} inviteUrl={inviteUrl} onSearchOpen={openSearch} />
         <div className="relative min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">{children}</div>
       </SidebarInset>
       <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} isOrgAdmin={isOrgAdmin} />

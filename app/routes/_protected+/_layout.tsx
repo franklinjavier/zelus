@@ -9,20 +9,22 @@ import { ErrorContent } from '~/components/brand/error-page'
 import { db } from '~/lib/db'
 import { member, organization } from '~/lib/db/schema'
 import { getUnreadCount } from '~/lib/services/notifications'
+import { getInviteLink } from '~/lib/services/invite-link'
 
 export const middleware: Route.MiddlewareFunction[] = [orgMemberMiddleware]
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const org = context.get(orgContext)
   const user = context.get(userContext)
 
-  const [unreadCount, userOrgs] = await Promise.all([
+  const [unreadCount, userOrgs, inviteLink] = await Promise.all([
     getUnreadCount(org.orgId, user.id),
     db
       .select({ id: organization.id, name: organization.name })
       .from(member)
       .innerJoin(organization, eq(member.organizationId, organization.id))
       .where(eq(member.userId, user.id)),
+    getInviteLink(org.orgId),
   ])
 
   return {
@@ -36,6 +38,10 @@ export async function loader({ context }: Route.LoaderArgs) {
     orgs: userOrgs,
     isOrgAdmin: org.effectiveRole === 'org_admin',
     unreadCount,
+    inviteUrl:
+      inviteLink?.inviteEnabled && inviteLink.inviteCode
+        ? `${new URL(request.url).origin}/join/${inviteLink.inviteCode}`
+        : null,
   }
 }
 
@@ -47,6 +53,7 @@ export default function ProtectedLayout({ loaderData }: Route.ComponentProps) {
       orgs={loaderData.orgs}
       isOrgAdmin={loaderData.isOrgAdmin}
       unreadCount={loaderData.unreadCount}
+      inviteUrl={loaderData.inviteUrl}
     >
       <Outlet />
     </AppShell>
@@ -79,6 +86,7 @@ export function ErrorBoundary({ error, loaderData }: Route.ErrorBoundaryProps) {
         orgs={loaderData.orgs}
         isOrgAdmin={loaderData.isOrgAdmin}
         unreadCount={loaderData.unreadCount}
+        inviteUrl={loaderData.inviteUrl}
       >
         {errorContent}
       </AppShell>

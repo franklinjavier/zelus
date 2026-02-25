@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Building06Icon,
-  Copy01Icon,
-  Link01Icon,
-  Tick02Icon,
   Ticket02Icon,
   TruckDeliveryIcon,
   WrenchIcon,
@@ -13,9 +10,8 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { href } from 'react-router'
 
 import { and, count, eq } from 'drizzle-orm'
-import { AzulejoOverlay } from '~/components/brand/azulejo-overlay'
 import { CardLink } from '~/components/brand/card-link'
-import { Button } from '~/components/ui/button'
+import { InviteLinkCard } from '~/components/shared/invite-link-card'
 import { orgContext } from '~/lib/auth/context'
 import { db } from '~/lib/db'
 import { fractions, maintenanceRecords, suppliers, tickets } from '~/lib/db/schema'
@@ -148,47 +144,4 @@ function useCountUp(target: number, duration = 400) {
   }, [target, duration])
 
   return current
-}
-
-function InviteLinkCard({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function copy() {
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div className="group bg-card ring-foreground/10 hover:ring-primary/20 relative mt-6 overflow-hidden rounded-2xl p-5 ring-1 transition-all duration-300">
-      <AzulejoOverlay />
-      <div className="relative">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-primary/10 flex size-9 items-center justify-center rounded-xl">
-            <HugeiconsIcon icon={Link01Icon} size={18} strokeWidth={2} className="text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold">Convidar para o condomínio</p>
-            <p className="text-muted-foreground text-sm">
-              Partilhe este link para novos membros se juntarem.
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 flex items-center gap-2">
-          <div className="bg-muted flex-1 truncate rounded-xl px-3 py-2 font-mono text-sm">
-            {url}
-          </div>
-          <Button variant="outline" size="sm" onClick={copy}>
-            <HugeiconsIcon
-              icon={copied ? Tick02Icon : Copy01Icon}
-              data-icon="inline-start"
-              size={16}
-              strokeWidth={2}
-            />
-            {copied ? 'Copiado' : 'Copiar'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
 }

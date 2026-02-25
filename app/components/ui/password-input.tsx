@@ -10,7 +10,11 @@ function PasswordInput({ className, ...props }: Omit<React.ComponentProps<'input
 
   return (
     <div className="relative">
-      <Input type={visible ? 'text' : 'password'} className={cn('pr-10', className)} {...props} />
+      <Input
+        type={visible ? 'text' : 'password'}
+        className={cn('pr-10', !visible && 'text-xl tracking-widest', className)}
+        {...props}
+      />
       <button
         type="button"
         tabIndex={-1}

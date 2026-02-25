@@ -16,7 +16,7 @@ import { validateForm } from '~/lib/forms'
 
 const schema = z.object({
   token: z.string().min(1, 'Token inválido'),
-  newPassword: z.string().min(8, 'Mínimo 8 caracteres'),
+  newPassword: z.string().min(1, 'Palavra-passe obrigatória'),
 })
 
 export function meta(_args: Route.MetaArgs) {

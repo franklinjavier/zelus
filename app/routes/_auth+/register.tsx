@@ -21,7 +21,7 @@ import { getSafeRedirect } from '~/lib/misc/safe-redirect'
 const registerSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório'),
   email: z.string().email('E-mail inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string().min(1, 'Palavra-passe obrigatória'),
 })
 
 export function meta(_args: Route.MetaArgs) {
@@ -111,7 +111,6 @@ export default function RegisterPage({ actionData }: Route.ComponentProps) {
             <Field>
               <FieldLabel htmlFor="password">Palavra-passe</FieldLabel>
               <PasswordInput id="password" name="password" autoComplete="new-password" required />
-              <FieldDescription>Mínimo 8 caracteres</FieldDescription>
               {errors?.password && <FieldError>{errors.password}</FieldError>}
             </Field>
             <Turnstile />

@@ -280,6 +280,7 @@ async function main() {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 15 })
       await page.waitForTimeout(300)
     }
+    const chatInput = page.locator('textarea').first()
     await chatInput.click()
     await page.waitForTimeout(300)
     // Type a question naturally

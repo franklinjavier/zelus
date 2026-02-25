@@ -1,20 +1,33 @@
+import { useState } from 'react'
 import { href, redirect, Form, useFetcher } from 'react-router'
 
 import type { Route } from './+types/edit'
 import { orgContext, userContext } from '~/lib/auth/context'
 import {
-  listFractionContacts,
-  updateContact,
   deleteContact,
+  linkContactToUser,
+  listFractionContacts,
+  listLinkableOrgMembers,
+  unlinkContact,
+  updateContact,
 } from '~/lib/services/fraction-contacts'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Textarea } from '~/components/ui/textarea'
-import { Field, FieldLabel } from '~/components/ui/field'
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
-import { DrawerHeader, DrawerTitle, DrawerDescription } from '~/components/ui/drawer'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Button } from '~/components/ui/button'
+import { DrawerDescription, DrawerHeader, DrawerTitle } from '~/components/ui/drawer'
+import { Field, FieldLabel } from '~/components/ui/field'
+import { Input } from '~/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
+import { Textarea } from '~/components/ui/textarea'
 import { ErrorBanner } from '~/components/layout/feedback'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
+import { getInitials } from '~/lib/format'
 import { setToast } from '~/lib/toast.server'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -25,7 +38,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const contact = contacts.find((c) => c.id === params.contactId)
   if (!contact) throw new Response('Not Found', { status: 404 })
 
-  return { contact }
+  const linkableMembers =
+    contact.userId === null ? await listLinkableOrgMembers(orgId, params.id) : []
+
+  return { contact, linkableMembers }
 }
 
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -73,11 +89,36 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     })
   }
 
+  if (intent === 'link') {
+    const userId = formData.get('userId') as string
+    if (!userId) return { error: 'Membro não especificado.' }
+
+    try {
+      await linkContactToUser(orgId, params.contactId, userId, user.id)
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Erro ao ligar conta.' }
+    }
+    return redirect(href('/fractions/:id', { id: params.id }), {
+      headers: await setToast('Conta ligada.'),
+    })
+  }
+
+  if (intent === 'unlink') {
+    try {
+      await unlinkContact(orgId, params.contactId, user.id)
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Erro ao desligar conta.' }
+    }
+    return redirect(href('/fractions/:id', { id: params.id }), {
+      headers: await setToast('Conta desligada.'),
+    })
+  }
+
   return { error: 'Ação desconhecida.' }
 }
 
 export default function EditContactPage({ loaderData, actionData }: Route.ComponentProps) {
-  const { contact } = loaderData
+  const { contact, linkableMembers } = loaderData
   const fetcher = useFetcher()
 
   return (
@@ -139,7 +180,88 @@ export default function EditContactPage({ loaderData, actionData }: Route.Compon
             <Button type="submit">Guardar</Button>
           </div>
         </Form>
+
+        <div className="mt-6 border-t pt-6">
+          <p className="mb-3 text-sm font-medium">Conta na plataforma</p>
+          {contact.userId ? (
+            <LinkedAccountRow
+              name={contact.linkedUserName ?? ''}
+              email={contact.linkedUserEmail ?? ''}
+              image={contact.linkedUserImage}
+            />
+          ) : linkableMembers.length > 0 ? (
+            <LinkAccountForm linkableMembers={linkableMembers} />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Nenhum membro do condomínio disponível para ligar.
+            </p>
+          )}
+        </div>
       </div>
     </>
+  )
+}
+
+function LinkedAccountRow({
+  name,
+  email,
+  image,
+}: {
+  name: string
+  email: string
+  image: string | null
+}) {
+  return (
+    <div className="ring-foreground/5 flex items-center gap-3 rounded-2xl p-3 ring-1">
+      <Avatar className="size-8">
+        {image && <AvatarImage src={image} alt={name} />}
+        <AvatarFallback className="text-xs">{getInitials(name)}</AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{name}</p>
+        <p className="text-muted-foreground truncate text-sm">{email}</p>
+      </div>
+      <Form method="post">
+        <input type="hidden" name="intent" value="unlink" />
+        <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground shrink-0">
+          Desligar
+        </Button>
+      </Form>
+    </div>
+  )
+}
+
+function LinkAccountForm({
+  linkableMembers,
+}: {
+  linkableMembers: { userId: string; userName: string; userEmail: string }[]
+}) {
+  const [selectedUserId, setSelectedUserId] = useState('')
+
+  return (
+    <Form method="post" className="flex flex-col gap-3">
+      <input type="hidden" name="intent" value="link" />
+      <input type="hidden" name="userId" value={selectedUserId} />
+      <Select
+        value={selectedUserId}
+        items={linkableMembers.map((m) => ({ value: m.userId, label: m.userName }))}
+        onValueChange={(v) => setSelectedUserId(v ?? '')}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Escolha um membro..." />
+        </SelectTrigger>
+        <SelectContent>
+          {linkableMembers.map((m) => (
+            <SelectItem key={m.userId} value={m.userId}>
+              <span>{m.userName}</span>
+              <span className="text-muted-foreground ml-2 text-sm">{m.userEmail}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button type="submit" variant="outline" disabled={!selectedUserId}>
+        Ligar conta
+      </Button>
+    </Form>
   )
 }

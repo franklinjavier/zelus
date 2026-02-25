@@ -11,7 +11,7 @@ import { validateForm } from '~/lib/forms'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Obrigatório'),
-  newPassword: z.string().min(8, 'Mínimo 8 caracteres'),
+  newPassword: z.string().min(1, 'Obrigatório'),
 })
 
 const deleteAccountSchema = z.object({

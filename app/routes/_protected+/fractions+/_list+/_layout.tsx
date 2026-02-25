@@ -1,4 +1,13 @@
-import { data, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
+import {
+  data,
+  href,
+  Link,
+  Outlet,
+  useFetcher,
+  useLocation,
+  useMatches,
+  useNavigate,
+} from 'react-router'
 import { z } from 'zod'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -16,13 +25,8 @@ import { Button } from '~/components/ui/button'
 import { CardLink } from '~/components/brand/card-link'
 import { EmptyState } from '~/components/layout/empty-state'
 import { setToast } from '~/lib/toast.server'
-import {
-  Drawer,
-  DrawerPopup,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from '~/components/ui/drawer'
+import { Drawer, DrawerPopup, DrawerHeader, DrawerTitle } from '~/components/ui/drawer'
+import { Tabs, TabsList, TabsTrigger } from '~/components/ui/tabs'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Frações — Zelus' }]
@@ -73,7 +77,11 @@ export default function FractionsLayout({ loaderData }: Route.ComponentProps) {
   const isAdmin = effectiveRole === 'org_admin'
   const navigate = useNavigate()
   const matches = useMatches()
-  const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
+  const isDrawerOpen = matches.some(
+    (m) => m.pathname.endsWith('/new') || m.pathname.endsWith('/bulk'),
+  )
+  const { pathname } = useLocation()
+  const isNewTab = pathname.endsWith('/new')
 
   return (
     <div>
@@ -123,10 +131,33 @@ export default function FractionsLayout({ loaderData }: Route.ComponentProps) {
           if (!open) navigate(href('/fractions'))
         }}
       >
-        <DrawerPopup>
+        <DrawerPopup className="sm:max-w-lg">
           <DrawerHeader>
             <DrawerTitle>Nova fração</DrawerTitle>
-            <DrawerDescription>Preencha os dados para criar uma nova fração.</DrawerDescription>
+            <Tabs
+              value={isNewTab ? 'new' : 'bulk'}
+              onValueChange={(v) =>
+                navigate(v === 'new' ? href('/fractions/new') : href('/fractions/bulk'), {
+                  replace: true,
+                })
+              }
+              className="mt-3"
+            >
+              <TabsList className="bg-background w-full gap-1 border p-1">
+                <TabsTrigger
+                  value="new"
+                  className="data-active:bg-primary data-active:text-primary-foreground flex-1"
+                >
+                  Individual
+                </TabsTrigger>
+                <TabsTrigger
+                  value="bulk"
+                  className="data-active:bg-primary data-active:text-primary-foreground flex-1"
+                >
+                  Por padrão
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </DrawerHeader>
           <Outlet />
         </DrawerPopup>

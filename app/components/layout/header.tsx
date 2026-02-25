@@ -46,7 +46,7 @@ export function Header({
             render={
               <Button
                 variant="ghost"
-                size="sm"
+                size="lg"
                 className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
               >
                 <HugeiconsIcon

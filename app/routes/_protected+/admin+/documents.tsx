@@ -1,4 +1,4 @@
-import { Form, useRevalidator } from 'react-router'
+import { Form, useRevalidator, useLocation, useNavigate, Outlet, href, Link } from 'react-router'
 import { upload } from '@vercel/blob/client'
 import { useState, useEffect } from 'react'
 import {
@@ -7,6 +7,7 @@ import {
   Clock01Icon,
   Alert02Icon,
   Delete02Icon,
+  EyeIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
@@ -16,6 +17,7 @@ import { waitUntilContext } from '~/lib/vercel/context'
 import { createDocument, listDocuments, deleteDocument } from '~/lib/services/documents'
 import { processDocument } from '~/lib/ai/rag'
 import { Button } from '~/components/ui/button'
+import { Drawer, DrawerPopup } from '~/components/ui/drawer'
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { EmptyState } from '~/components/layout/empty-state'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
@@ -87,6 +89,9 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
   const revalidator = useRevalidator()
   const hasProcessing = documents.some((d) => d.status === 'processing')
   const [uploading, setUploading] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isDrawerOpen = /\/admin\/documents\/[^/]+$/.test(location.pathname)
 
   useEffect(() => {
     if (!hasProcessing) return
@@ -212,6 +217,15 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                       <span>{status.label}</span>
                     </div>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    nativeButton={false}
+                    render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
+                    aria-label="Ver conteúdo extraído"
+                  >
+                    <HugeiconsIcon icon={EyeIcon} size={16} />
+                  </Button>
                   <DeleteConfirmDialog
                     title="Apagar documento?"
                     description={`Tem a certeza que quer apagar "${doc.fileName}"? Os dados do RAG associados também serão removidos.`}
@@ -234,6 +248,17 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
           })
         )}
       </div>
+
+      <Drawer
+        open={isDrawerOpen}
+        onOpenChange={(open) => {
+          if (!open) navigate(href('/admin/documents'))
+        }}
+      >
+        <DrawerPopup className="sm:max-w-2xl">
+          <Outlet />
+        </DrawerPopup>
+      </Drawer>
     </div>
   )
 }

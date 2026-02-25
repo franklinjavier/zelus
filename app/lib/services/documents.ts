@@ -83,3 +83,20 @@ export async function updateDocumentStatus(
 ) {
   await db.update(documents).set({ status }).where(eq(documents.id, documentId))
 }
+
+export async function getDocument(orgId: string, documentId: string) {
+  const [doc] = await db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.id, documentId), eq(documents.orgId, orgId)))
+    .limit(1)
+  return doc ?? null
+}
+
+export async function getDocumentChunks(documentId: string) {
+  return db
+    .select({ content: documentChunks.content, chunkIndex: documentChunks.chunkIndex })
+    .from(documentChunks)
+    .where(eq(documentChunks.documentId, documentId))
+    .orderBy(documentChunks.chunkIndex)
+}

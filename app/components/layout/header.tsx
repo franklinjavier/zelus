@@ -44,8 +44,18 @@ export function Header({
         <PopoverRoot>
           <PopoverTrigger
             render={
-              <Button variant="ghost" size="icon" title="Convidar">
-                <HugeiconsIcon icon={UserAdd01Icon} size={18} strokeWidth={2} />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary"
+              >
+                <HugeiconsIcon
+                  icon={UserAdd01Icon}
+                  size={16}
+                  strokeWidth={2}
+                  data-icon="inline-start"
+                />
+                Convidar
               </Button>
             }
           />

@@ -1,4 +1,5 @@
 import {
+  ContactBookIcon,
   Delete02Icon,
   Edit02Icon,
   UserAdd01Icon,
@@ -141,6 +142,7 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
   const fetcher = useFetcher()
   const bulkFetcher = useFetcher()
   const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false)
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false)
   const navigate = useNavigate()
   const matches = useMatches()
   const isDrawerOpen = matches.some(
@@ -215,12 +217,24 @@ export default function FractionDetailLayout({ loaderData, actionData }: Route.C
             isAdmin={isAdmin}
             canChangeRole={isAdmin}
             canRemove={isAdmin}
-            onBulkAssign={isAdmin ? () => setBulkDrawerOpen(true) : undefined}
+            onAdd={isAdmin ? () => setAddDrawerOpen(true) : undefined}
             inviteTo={
               canInvite && !isAdmin ? href('/fractions/:id/invite', { id: fraction.id }) : undefined
             }
           />
         </div>
+      )}
+
+      {isAdmin && (
+        <AddMoradorDrawer
+          open={addDrawerOpen}
+          onOpenChange={setAddDrawerOpen}
+          fractionId={fraction.id}
+          onAssign={() => {
+            setAddDrawerOpen(false)
+            setBulkDrawerOpen(true)
+          }}
+        />
       )}
 
       {isAdmin && (
@@ -296,7 +310,7 @@ function MoradoresCard({
   isAdmin,
   canChangeRole,
   canRemove,
-  onBulkAssign,
+  onAdd,
   inviteTo,
 }: {
   fractionId: string
@@ -320,7 +334,7 @@ function MoradoresCard({
   isAdmin: boolean
   canChangeRole: boolean
   canRemove: boolean
-  onBulkAssign?: () => void
+  onAdd?: () => void
   inviteTo?: string
 }) {
   const membersByUserId = new Map(members.map((m) => [m.userId, m]))
@@ -377,51 +391,28 @@ function MoradoresCard({
           Moradores
           <span className="text-muted-foreground ml-1.5 font-normal">{rows.length}</span>
         </h2>
-        <div className="flex gap-2">
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              nativeButton={false}
-              render={<Link to={href('/fractions/:id/contacts/new', { id: fractionId })} />}
-            >
-              <HugeiconsIcon
-                icon={UserAdd01Icon}
-                data-icon="inline-start"
-                size={16}
-                strokeWidth={2}
-              />
-              Adicionar
-            </Button>
-          )}
-          {onBulkAssign && (
-            <Button variant="outline" size="sm" onClick={onBulkAssign}>
-              <HugeiconsIcon
-                icon={UserAdd01Icon}
-                data-icon="inline-start"
-                size={16}
-                strokeWidth={2}
-              />
-              Convidar
-            </Button>
-          )}
-          {inviteTo && (
-            <Button
-              variant="outline"
-              size="sm"
-              nativeButton={false}
-              render={<Link to={inviteTo} />}
-            >
-              <HugeiconsIcon
-                icon={UserAdd01Icon}
-                data-icon="inline-start"
-                size={16}
-                strokeWidth={2}
-              />
-              Convidar
-            </Button>
-          )}
-        </div>
+        {onAdd && (
+          <Button variant="outline" size="sm" onClick={onAdd}>
+            <HugeiconsIcon
+              icon={UserAdd01Icon}
+              data-icon="inline-start"
+              size={16}
+              strokeWidth={2}
+            />
+            Adicionar
+          </Button>
+        )}
+        {inviteTo && (
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link to={inviteTo} />}>
+            <HugeiconsIcon
+              icon={UserAdd01Icon}
+              data-icon="inline-start"
+              size={16}
+              strokeWidth={2}
+            />
+            Convidar
+          </Button>
+        )}
       </div>
       {rows.length === 0 ? (
         <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-dashed py-10">
@@ -595,6 +586,69 @@ const fractionRoleItems = [
   { label: 'Membro', value: 'fraction_member' },
   { label: 'Admin da fração', value: 'fraction_owner_admin' },
 ]
+
+function AddMoradorDrawer({
+  open,
+  onOpenChange,
+  fractionId,
+  onAssign,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  fractionId: string
+  onAssign: () => void
+}) {
+  const navigate = useNavigate()
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerPopup>
+        <DrawerHeader>
+          <DrawerTitle>Adicionar morador</DrawerTitle>
+        </DrawerHeader>
+        <div className="flex flex-col gap-3 px-6 pb-6">
+          <button
+            onClick={onAssign}
+            className="ring-foreground/5 hover:bg-muted/50 flex items-center gap-4 rounded-2xl p-4 text-left ring-1 transition-colors"
+          >
+            <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
+              <HugeiconsIcon
+                icon={UserAdd01Icon}
+                size={20}
+                strokeWidth={1.5}
+                className="text-foreground"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Associar utilizador</p>
+              <p className="text-muted-foreground text-sm">Membro já registado na plataforma</p>
+            </div>
+          </button>
+          <button
+            onClick={() => {
+              onOpenChange(false)
+              navigate(href('/fractions/:id/contacts/new', { id: fractionId }))
+            }}
+            className="ring-foreground/5 hover:bg-muted/50 flex items-center gap-4 rounded-2xl p-4 text-left ring-1 transition-colors"
+          >
+            <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
+              <HugeiconsIcon
+                icon={ContactBookIcon}
+                size={20}
+                strokeWidth={1.5}
+                className="text-foreground"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Nova ficha de contacto</p>
+              <p className="text-muted-foreground text-sm">Residente sem conta na plataforma</p>
+            </div>
+          </button>
+        </div>
+      </DrawerPopup>
+    </Drawer>
+  )
+}
 
 function BulkAssignMembersDrawer({
   open,

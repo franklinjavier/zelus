@@ -116,18 +116,7 @@ export async function searchDocumentChunks(
   limit = 5,
 ): Promise<Array<{ content: string; similarity: number }>> {
   const queryEmbedding = await generateEmbedding(query)
-  console.log(`[RAG] query embedding dims=${queryEmbedding.length} orgId=${orgId}`)
-
   const embeddingStr = `[${queryEmbedding.join(',')}]`
-
-  // Diagnostic: inspect raw result structure from Neon pool
-  const countResult = await db.execute(sql`
-    SELECT COUNT(*) as total, COUNT(embedding) as with_embedding
-    FROM document_chunks
-    WHERE org_id = ${orgId}
-  `)
-  console.log('[RAG] countResult isArray:', Array.isArray(countResult))
-  console.log('[RAG] countResult raw:', JSON.stringify(countResult).slice(0, 500))
 
   const results = await db.execute<{ content: string; similarity: number }>(sql`
     SELECT content, 1 - (embedding <=> ${embeddingStr}::vector) as similarity
@@ -138,10 +127,10 @@ export async function searchDocumentChunks(
     LIMIT ${limit}
   `)
 
-  console.log('[RAG] results isArray:', Array.isArray(results))
-  console.log('[RAG] results raw:', JSON.stringify(results).slice(0, 300))
+  // Neon serverless pool returns { rows: [...] }, postgres-js returns an array directly.
+  const rows: Array<{ content: string; similarity: number }> = Array.isArray(results)
+    ? results
+    : ((results as unknown as { rows: Array<{ content: string; similarity: number }> }).rows ?? [])
 
-  const rows = Array.from(results as Iterable<{ content: string; similarity: number }>)
-  console.log(`[RAG] search returned ${rows.length} results`)
   return rows
 }

@@ -195,6 +195,9 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
             <HugeiconsIcon icon={ArrowUp02Icon} size={16} strokeWidth={3} />
           </button>
         </form>
+        <p className="text-muted-foreground mx-auto mt-2 max-w-2xl text-center text-xs">
+          O assistente pode cometer erros. Verifique sempre informação importante.
+        </p>
       </div>
     </div>
   )

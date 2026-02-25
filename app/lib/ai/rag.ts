@@ -116,7 +116,18 @@ export async function searchDocumentChunks(
   limit = 5,
 ): Promise<Array<{ content: string; similarity: number }>> {
   const queryEmbedding = await generateEmbedding(query)
+  console.log(`[RAG] query embedding dims=${queryEmbedding.length} orgId=${orgId}`)
+
   const embeddingStr = `[${queryEmbedding.join(',')}]`
+
+  // Diagnostic: count chunks for this org
+  const countResult = await db.execute<{ total: string; with_embedding: string }>(sql`
+    SELECT COUNT(*) as total, COUNT(embedding) as with_embedding
+    FROM document_chunks
+    WHERE org_id = ${orgId}
+  `)
+  const countRow = Array.from(countResult as Iterable<{ total: string; with_embedding: string }>)[0]
+  console.log(`[RAG] chunks total=${countRow?.total} with_embedding=${countRow?.with_embedding}`)
 
   const results = await db.execute<{ content: string; similarity: number }>(sql`
     SELECT content, 1 - (embedding <=> ${embeddingStr}::vector) as similarity
@@ -127,5 +138,9 @@ export async function searchDocumentChunks(
     LIMIT ${limit}
   `)
 
-  return Array.from(results as Iterable<{ content: string; similarity: number }>)
+  const rows = Array.from(results as Iterable<{ content: string; similarity: number }>)
+  console.log(
+    `[RAG] search returned ${rows.length} results, top similarity=${rows[0]?.similarity ?? 'n/a'}`,
+  )
+  return rows
 }

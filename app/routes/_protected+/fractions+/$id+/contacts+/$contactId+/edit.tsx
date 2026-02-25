@@ -253,8 +253,10 @@ function LinkAccountForm({
         <SelectContent>
           {linkableMembers.map((m) => (
             <SelectItem key={m.userId} value={m.userId}>
-              <span>{m.userName}</span>
-              <span className="text-muted-foreground ml-2 text-sm">{m.userEmail}</span>
+              <span className="flex flex-col">
+                <span>{m.userName}</span>
+                <span className="text-muted-foreground text-sm">{m.userEmail}</span>
+              </span>
             </SelectItem>
           ))}
         </SelectContent>

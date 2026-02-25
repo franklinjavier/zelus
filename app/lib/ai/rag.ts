@@ -92,7 +92,7 @@ async function extractWithClaude(fileUrl: string, mimeType: string): Promise<str
           },
           {
             type: 'text',
-            text: 'Extraia todo o conteúdo de texto visível neste documento, incluindo texto em imagens, digitalizações, tabelas, cabeçalhos, rodapés e anotações. Se o documento contiver páginas digitalizadas (fotografias ou scans de papel), leia e transcreva todo o texto visível nessas imagens. Devolva apenas o texto bruto, sem comentários nem formatação adicional.',
+            text: 'Extraia todo o conteúdo de texto visível neste documento, incluindo texto em imagens, digitalizações, tabelas, cabeçalhos, rodapés e anotações. Se o documento contiver páginas digitalizadas (fotografias ou scans de papel), leia e transcreva todo o texto visível nessas imagens. Quando encontrar tabelas, converta-as para o formato Markdown (usando | e --- para colunas e cabeçalhos), preservando todos os valores e a estrutura de colunas. Para o restante do conteúdo, devolva apenas o texto bruto sem comentários nem formatação adicional.',
           },
         ],
       },

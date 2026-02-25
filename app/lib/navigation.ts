@@ -5,6 +5,7 @@ import {
   ShieldKeyIcon,
   Ticket02Icon,
   TruckDeliveryIcon,
+  UserAdd01Icon,
   UserIcon,
   WrenchIcon,
 } from '@hugeicons/core-free-icons'
@@ -19,6 +20,7 @@ export const mainNav: NavItem[] = [
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
   { label: 'Prestadores', to: href('/suppliers'), icon: TruckDeliveryIcon },
   { label: 'Intervenções', to: href('/maintenance'), icon: WrenchIcon },
+  { label: 'Convidar', to: href('/invite'), icon: UserAdd01Icon },
 ]
 
 export const adminNav: NavItem[] = [

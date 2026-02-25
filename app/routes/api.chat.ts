@@ -21,6 +21,7 @@ import {
 } from '~/lib/services/conversations'
 import { eq, or, and } from 'drizzle-orm'
 import { listCategories } from '~/lib/services/categories'
+import { getInviteLink } from '~/lib/services/invite-link'
 import { db } from '~/lib/db'
 import { member, user as userTable } from '~/lib/db/schema'
 import { getAssistantTools } from '~/lib/ai/tools'
@@ -70,8 +71,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
-  // Load conversation history, categories, and admins in parallel
-  const [history, categories, admins] = await Promise.all([
+  // Load conversation history, categories, admins, and invite link in parallel
+  const [history, categories, admins, inviteLink] = await Promise.all([
     getRecentMessages(convId, 20),
     listCategories(),
     db
@@ -84,7 +85,14 @@ export async function action({ request, context }: Route.ActionArgs) {
           or(eq(member.role, 'owner'), eq(member.role, 'admin')),
         ),
       ),
+    getInviteLink(org.orgId),
   ])
+
+  const origin = new URL(request.url).origin
+  const inviteUrl =
+    inviteLink?.inviteEnabled && inviteLink.inviteCode
+      ? `${origin}/join/${inviteLink.inviteCode}`
+      : null
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
@@ -93,6 +101,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       userName: user.name,
       categories: categories.map((c) => c.key),
       admins: admins.map((a) => ({ name: a.name, email: a.email, phone: a.phone })),
+      inviteUrl,
     }),
     messages: buildCoreMessages(history),
     tools: getAssistantTools(org.orgId, user.id),

@@ -3,6 +3,7 @@ type PromptContext = {
   userName: string
   categories: string[]
   admins: Array<{ name: string; email: string; phone: string | null }>
+  inviteUrl: string | null
 }
 
 export function buildSystemPrompt({
@@ -10,6 +11,7 @@ export function buildSystemPrompt({
   userName,
   categories,
   admins,
+  inviteUrl,
 }: PromptContext): string {
   const categoriesList =
     categories.length > 0
@@ -60,6 +62,15 @@ ALWAYS respond in European Portuguese (pt-PT). Use a warm, simple tone — users
 - NEVER share personal data of other residents (name, email, phone, unit). Suggest contacting the administration.
 - NEVER promise deadlines or outcomes ("it will be fixed tomorrow", "we guarantee..."). Say the ticket has been registered and the administration will be informed.
 - Maximum 1 ticket per message. If the user asks for multiple, create one at a time, asking for confirmation between each.
+
+## Inviting people
+
+${
+  inviteUrl
+    ? `To invite someone to the condominium, share this link: ${inviteUrl}
+When asked how to invite someone, provide this link directly. They can use it to request access.`
+    : `The public invite link is currently disabled. If asked how to invite someone, say the invite link is not active and suggest contacting the administration to enable it.`
+}
 
 ## Documents (RAG)
 

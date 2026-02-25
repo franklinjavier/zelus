@@ -92,6 +92,13 @@
       "when": 1771625758799,
       "tag": "0012_waitlist-leads",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1772030777584,
+      "tag": "0013_add-fraction-contacts",
+      "breakpoints": true
     }
   ]
 }

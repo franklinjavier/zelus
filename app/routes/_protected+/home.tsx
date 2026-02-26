@@ -83,16 +83,20 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
       <h1 className="mb-6 text-xl font-semibold">Bem-vindo, {user.name}</h1>
 
       {/* Feature shortcuts */}
-      <section className="mb-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <section className="@container mb-8">
+        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @xl:grid-cols-3">
           {shortcuts.map((s) => (
-            <CardLink key={s.to} to={s.to}>
-              <div className="bg-primary/10 flex size-10 items-center justify-center rounded-xl">
-                <HugeiconsIcon icon={s.icon} size={20} className="text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{s.label}</p>
-                <p className="text-muted-foreground text-sm">{s.description}</p>
+            <CardLink key={s.to} to={s.to} className="min-h-28">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="font-medium">{s.label}</p>
+                  <p className="text-muted-foreground mt-1 text-sm leading-5 @xl:line-clamp-2">
+                    {s.description}
+                  </p>
+                </div>
+                <div className="bg-primary/10 flex size-10 items-center justify-center rounded-xl">
+                  <HugeiconsIcon icon={s.icon} size={20} className="text-primary" />
+                </div>
               </div>
             </CardLink>
           ))}

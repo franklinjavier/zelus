@@ -7,8 +7,8 @@ import { EmptyState } from '~/components/layout/empty-state'
 
 import type { Route } from './+types/index'
 import { orgContext } from '~/lib/auth/context'
-import { listRecords } from '~/lib/services/maintenance'
-import { listSuppliers } from '~/lib/services/suppliers'
+import { listRecords } from '~/lib/services/maintenance.server'
+import { listSuppliers } from '~/lib/services/suppliers.server'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import {

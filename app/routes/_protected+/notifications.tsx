@@ -16,7 +16,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { formatRelativeTime } from '~/lib/format'
-import { listNotifications, markAllAsRead, markAsRead } from '~/lib/services/notifications'
+import { listNotifications, markAllAsRead, markAsRead } from '~/lib/services/notifications.server'
 import { EmptyState } from '~/components/layout/empty-state'
 import type { Route } from './+types/notifications'
 

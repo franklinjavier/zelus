@@ -4,7 +4,7 @@ import { Tag01Icon } from '@hugeicons/core-free-icons'
 
 import type { Route } from './+types/_layout'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { listCategories, deleteCategory } from '~/lib/services/categories'
+import { listCategories, deleteCategory } from '~/lib/services/categories.server'
 import { translateCategory } from '~/lib/category-labels'
 import { Button } from '~/components/ui/button'
 import { ErrorBanner } from '~/components/layout/feedback'

@@ -2,7 +2,7 @@ import { eq, and, count, sql } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { fractions, userFractions, tickets, invites } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 export async function createFraction(
   orgId: string,

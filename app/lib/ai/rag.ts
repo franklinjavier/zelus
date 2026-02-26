@@ -7,7 +7,7 @@ import { sql } from 'drizzle-orm'
 
 import { chunkText } from './chunking'
 import { generateEmbedding, generateEmbeddings } from './embeddings'
-import { updateDocumentStatus } from '~/lib/services/documents'
+import { updateDocumentStatus } from '~/lib/services/documents.server'
 
 /**
  * Process a document: extract text via Claude, chunk, generate embeddings, store.

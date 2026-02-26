@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import type { Route } from './+types/new'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { createFraction } from '~/lib/services/fractions'
+import { createFraction } from '~/lib/services/fractions.server'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel } from '~/components/ui/field'

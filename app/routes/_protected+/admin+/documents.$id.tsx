@@ -4,7 +4,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { Route } from './+types/documents.$id'
 import { orgContext } from '~/lib/auth/context'
-import { getDocument, getDocumentChunks } from '~/lib/services/documents'
+import { getDocument, getDocumentChunks } from '~/lib/services/documents.server'
 import { DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '~/components/ui/drawer'
 import { Button } from '~/components/ui/button'
 

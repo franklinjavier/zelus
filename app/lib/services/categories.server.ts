@@ -2,7 +2,7 @@ import { eq, count, or } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { categories, tickets, suppliers } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 export async function listCategories() {
   return db.select().from(categories).orderBy(categories.key)

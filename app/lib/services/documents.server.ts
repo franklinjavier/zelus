@@ -3,7 +3,7 @@ import { del } from '@vercel/blob'
 
 import { db } from '~/lib/db'
 import { documents, documentChunks } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 export async function createDocument(
   orgId: string,

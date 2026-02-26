@@ -10,7 +10,7 @@ import {
   listLinkableOrgMembers,
   unlinkContact,
   updateContact,
-} from '~/lib/services/fraction-contacts'
+} from '~/lib/services/fraction-contacts.server'
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'

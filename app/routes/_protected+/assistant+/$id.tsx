@@ -13,7 +13,7 @@ import {
   deleteConversation,
   loadConversation,
   updateConversationTitle,
-} from '~/lib/services/conversations'
+} from '~/lib/services/conversations.server'
 import type { Route } from './+types/$id'
 import { LoadingBubble, MessageBubble } from './_modules/chat-bubbles'
 

@@ -39,9 +39,9 @@ import {
   listOrgMembers,
   removeAssociation,
   updateMemberRole,
-} from '~/lib/services/associations'
-import { listFractionContacts } from '~/lib/services/fraction-contacts'
-import { getFraction } from '~/lib/services/fractions'
+} from '~/lib/services/associations.server'
+import { listFractionContacts } from '~/lib/services/fraction-contacts.server'
+import { getFraction } from '~/lib/services/fractions.server'
 import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/_layout'
 

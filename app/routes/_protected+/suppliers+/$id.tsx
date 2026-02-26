@@ -9,8 +9,8 @@ import {
   updateSupplier,
   deleteSupplier,
   getSupplierMaintenanceCount,
-} from '~/lib/services/suppliers'
-import { listCategories } from '~/lib/services/categories'
+} from '~/lib/services/suppliers.server'
+import { listCategories } from '~/lib/services/categories.server'
 import { translateCategory } from '~/lib/category-labels'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'

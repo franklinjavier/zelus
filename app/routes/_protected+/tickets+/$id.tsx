@@ -50,15 +50,15 @@ import { orgContext, userContext } from '~/lib/auth/context'
 import { getFractionRole } from '~/lib/auth/rbac'
 import { hasCategoryLabel, translateCategory } from '~/lib/category-labels'
 import { formatDate } from '~/lib/format'
-import { listCategories } from '~/lib/services/categories'
+import { listCategories } from '~/lib/services/categories.server'
 import {
   createAttachment,
   deleteAttachment,
   listTicketAttachments,
-} from '~/lib/services/ticket-attachments'
-import { listFractions } from '~/lib/services/fractions'
-import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments'
-import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets'
+} from '~/lib/services/ticket-attachments.server'
+import { listFractions } from '~/lib/services/fractions.server'
+import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments.server'
+import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets.server'
 import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/$id'
 

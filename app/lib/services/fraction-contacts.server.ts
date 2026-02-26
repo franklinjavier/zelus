@@ -2,7 +2,7 @@ import { and, eq, isNotNull, notInArray } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { fractionContacts, userFractions, member, user } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 // ---------------------------------------------------------------------------
 // Queries

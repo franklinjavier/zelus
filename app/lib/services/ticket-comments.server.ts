@@ -2,7 +2,7 @@ import { eq, and, isNull, asc, inArray } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { ticketComments, ticketEvents, ticketAttachments, user } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 // ---------------------------------------------------------------------------
 // Types

@@ -15,7 +15,7 @@ import {
 } from '~/components/ui/drawer'
 import { orgContext } from '~/lib/auth/context'
 import { getInitials } from '~/lib/format'
-import { listOrgMembers } from '~/lib/services/associations'
+import { listOrgMembers } from '~/lib/services/associations.server'
 import type { Route } from './+types/_layout'
 
 export function meta(_args: Route.MetaArgs) {

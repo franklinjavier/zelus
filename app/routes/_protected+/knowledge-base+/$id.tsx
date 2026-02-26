@@ -5,7 +5,7 @@ import { href } from 'react-router'
 import { Badge } from '~/components/ui/badge'
 import { BackButton } from '~/components/layout/back-button'
 import { orgContext } from '~/lib/auth/context'
-import { getDocument } from '~/lib/services/documents'
+import { getDocument } from '~/lib/services/documents.server'
 import { getDocumentTitle } from '~/lib/services/documents-display'
 import type { Route } from './+types/$id'
 

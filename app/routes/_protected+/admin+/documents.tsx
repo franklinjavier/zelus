@@ -27,7 +27,7 @@ import {
   deleteDocument,
   resetDocumentForReprocessing,
   pinDocument,
-} from '~/lib/services/documents'
+} from '~/lib/services/documents.server'
 import { getDocumentTitle } from '~/lib/services/documents-display'
 import { processDocument, processArticle, processUrl } from '~/lib/ai/rag'
 import { Button } from '~/components/ui/button'

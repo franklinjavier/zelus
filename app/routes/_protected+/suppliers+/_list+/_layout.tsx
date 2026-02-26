@@ -9,8 +9,8 @@ import {
 
 import type { Route } from './+types/_layout'
 import { orgContext } from '~/lib/auth/context'
-import { listSuppliers } from '~/lib/services/suppliers'
-import { listCategories } from '~/lib/services/categories'
+import { listSuppliers } from '~/lib/services/suppliers.server'
+import { listCategories } from '~/lib/services/categories.server'
 import { translateCategory } from '~/lib/category-labels'
 import { formatPhone } from '~/lib/format'
 import { Button } from '~/components/ui/button'

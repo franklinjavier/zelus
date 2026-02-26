@@ -3,7 +3,7 @@ import { del } from '@vercel/blob'
 
 import { db } from '~/lib/db'
 import { ticketAttachments, user } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 export async function listTicketAttachments(orgId: string, ticketId: string) {
   return db

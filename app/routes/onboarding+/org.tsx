@@ -3,7 +3,7 @@ import { data, useFetcher, href } from 'react-router'
 import type { Route } from './+types/org'
 import { requireAuth } from '~/lib/auth/rbac'
 import { redirectWithCookies, validateForm } from '~/lib/forms'
-import { createOrgSchema, createOrganization } from '~/lib/services/organizations'
+import { createOrgSchema, createOrganization } from '~/lib/services/organizations.server'
 
 import { ErrorBanner } from '~/components/layout/feedback'
 import { OrgFormFields } from '~/components/shared/org-form-fields'

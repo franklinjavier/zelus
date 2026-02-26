@@ -2,7 +2,7 @@ import { eq, and, count, sql } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { suppliers, maintenanceRecords } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
+import { logAuditEvent } from './audit.server'
 
 export async function createSupplier(
   orgId: string,

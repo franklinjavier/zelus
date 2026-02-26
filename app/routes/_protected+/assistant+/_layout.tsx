@@ -14,7 +14,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { Route } from './+types/_layout'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { listConversations } from '~/lib/services/conversations'
+import { listConversations } from '~/lib/services/conversations.server'
 import { Button } from '~/components/ui/button'
 import {
   DropdownMenu,

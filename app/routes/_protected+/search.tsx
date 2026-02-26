@@ -12,7 +12,7 @@ import { Badge } from '~/components/ui/badge'
 import { Input } from '~/components/ui/input'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { formatShortDate } from '~/lib/format'
-import { search, type SearchScope } from '~/lib/search'
+import { search, type SearchScope } from '~/lib/search/index.server'
 import { EmptyState } from '~/components/layout/empty-state'
 import type { Route } from './+types/search'
 

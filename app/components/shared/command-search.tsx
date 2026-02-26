@@ -1,7 +1,12 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useFetcher } from 'react-router'
-import { Ticket02Icon, TruckDeliveryIcon, WrenchIcon } from '@hugeicons/core-free-icons'
+import {
+  BookOpen01Icon,
+  Ticket02Icon,
+  TruckDeliveryIcon,
+  WrenchIcon,
+} from '@hugeicons/core-free-icons'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   CommandDialog,
@@ -36,9 +41,10 @@ const scopeConfig: Record<SearchScope, { label: string; icon: IconSvgElement }> 
   tickets: { label: 'Ocorrências', icon: Ticket02Icon },
   suppliers: { label: 'Prestadores', icon: TruckDeliveryIcon },
   maintenance: { label: 'Intervenções', icon: WrenchIcon },
+  'knowledge-base': { label: 'Base de Conhecimento', icon: BookOpen01Icon },
 }
 
-const SCOPES: SearchScope[] = ['tickets', 'suppliers', 'maintenance']
+const SCOPES: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'knowledge-base']
 
 export function CommandSearch({
   open,
@@ -121,7 +127,7 @@ export function CommandSearch({
       open={open}
       onOpenChange={onOpenChange}
       title="Pesquisa"
-      description="Pesquise por ocorrências, prestadores e intervenções"
+      description="Pesquise por ocorrências, prestadores, intervenções e conhecimento"
     >
       <Command shouldFilter={false}>
         <CommandInput placeholder="Pesquisar..." value={query} onValueChange={handleValueChange} />

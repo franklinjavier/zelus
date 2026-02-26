@@ -7,6 +7,7 @@ import { BackButton } from '~/components/layout/back-button'
 import { orgContext } from '~/lib/auth/context'
 import { getDocument } from '~/lib/services/documents.server'
 import { getDocumentTitle } from '~/lib/services/documents-display'
+import { signFileUrl } from '~/lib/file-token.server'
 import { cn } from '~/lib/utils'
 import type { Route } from './+types/$id'
 
@@ -14,7 +15,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
   const doc = await getDocument(orgId, params.id)
   if (!doc || doc.status !== 'ready') throw new Response('Not Found', { status: 404 })
-  return { doc }
+  return {
+    doc: doc.fileUrl ? { ...doc, fileUrl: signFileUrl(doc.fileUrl) } : doc,
+  }
 }
 
 const typeLabel = { file: 'Ficheiro', article: 'Artigo', url: 'Fonte externa' } as const

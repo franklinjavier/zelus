@@ -61,6 +61,7 @@ import { listFractions } from '~/lib/services/fractions.server'
 import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments.server'
 import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets.server'
 import { setToast } from '~/lib/toast.server'
+import { signFileUrl } from '~/lib/file-token.server'
 import type { Route } from './+types/$id'
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -99,11 +100,22 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const isAdmin = effectiveRole === 'org_admin'
   const isCreator = ticket.createdBy === user.id
 
+  const signedAttachments = attachments.map((a) => ({ ...a, fileUrl: signFileUrl(a.fileUrl) }))
+  const signedTimeline = timeline.map((item) => {
+    if (item.type === 'attachment') return { ...item, fileUrl: signFileUrl(item.fileUrl) }
+    if (item.type === 'comment')
+      return {
+        ...item,
+        attachments: item.attachments?.map((a) => ({ ...a, fileUrl: signFileUrl(a.fileUrl) })),
+      }
+    return item
+  })
+
   return {
     ticket,
-    timeline,
+    timeline: signedTimeline,
     categories,
-    attachments,
+    attachments: signedAttachments,
     orgFractions,
     canManage,
     isAdmin,

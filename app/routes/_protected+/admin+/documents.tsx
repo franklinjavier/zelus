@@ -263,7 +263,13 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
               Novo Artigo
             </DrawerTrigger>
             <DrawerPopup className="sm:max-w-lg">
-              <div className="p-4">
+              {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- stop drawer swipe from blocking paste on inputs */}
+              <div
+                className="p-4"
+                data-swipe-ignore
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
                 <h2 className="mb-4 text-lg font-semibold">Novo Artigo</h2>
                 <Form method="post">
                   <input type="hidden" name="intent" value="add-article" />
@@ -296,7 +302,13 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
               Adicionar URL
             </DrawerTrigger>
             <DrawerPopup className="sm:max-w-lg">
-              <div className="p-4">
+              {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- stop drawer swipe from blocking paste on inputs */}
+              <div
+                className="p-4"
+                data-swipe-ignore
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
                 <h2 className="mb-4 text-lg font-semibold">Adicionar URL</h2>
                 <Form method="post">
                   <input type="hidden" name="intent" value="add-url" />
@@ -316,7 +328,8 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                       <Input
                         id="url-source"
                         name="sourceUrl"
-                        type="url"
+                        type="text"
+                        inputMode="url"
                         required
                         placeholder="https://..."
                         className="mt-1"

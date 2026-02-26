@@ -1,4 +1,4 @@
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, sql } from 'drizzle-orm'
 import { del } from '@vercel/blob'
 
 import { db } from '~/lib/db'
@@ -20,6 +20,7 @@ export async function createDocument(
     .values({
       orgId,
       uploadedBy: userId,
+      type: 'file',
       fileName: data.fileName,
       fileUrl: data.fileUrl,
       fileSize: data.fileSize,
@@ -39,12 +40,96 @@ export async function createDocument(
   return doc
 }
 
+export async function createArticle(
+  orgId: string,
+  data: { title: string; body: string },
+  userId: string,
+) {
+  const [doc] = await db
+    .insert(documents)
+    .values({
+      orgId,
+      uploadedBy: userId,
+      type: 'article',
+      title: data.title,
+      body: data.body,
+    })
+    .returning()
+
+  await logAuditEvent({
+    orgId,
+    userId,
+    action: 'document.created',
+    entityType: 'document',
+    entityId: doc.id,
+    metadata: { title: data.title, type: 'article' },
+  })
+
+  return doc
+}
+
+export async function createUrlEntry(
+  orgId: string,
+  data: { title: string; sourceUrl: string },
+  userId: string,
+) {
+  const [doc] = await db
+    .insert(documents)
+    .values({
+      orgId,
+      uploadedBy: userId,
+      type: 'url',
+      title: data.title,
+      sourceUrl: data.sourceUrl,
+    })
+    .returning()
+
+  await logAuditEvent({
+    orgId,
+    userId,
+    action: 'document.created',
+    entityType: 'document',
+    entityId: doc.id,
+    metadata: { title: data.title, type: 'url', sourceUrl: data.sourceUrl },
+  })
+
+  return doc
+}
+
 export async function listDocuments(orgId: string) {
   return db
     .select()
     .from(documents)
     .where(eq(documents.orgId, orgId))
     .orderBy(desc(documents.createdAt))
+}
+
+export async function listReadyDocuments(orgId: string) {
+  return db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.orgId, orgId), eq(documents.status, 'ready')))
+    .orderBy(desc(documents.createdAt))
+}
+
+export async function getKnowledgeBaseHighlights(orgId: string, limit = 6) {
+  return db
+    .select()
+    .from(documents)
+    .where(and(eq(documents.orgId, orgId), eq(documents.status, 'ready')))
+    .orderBy(
+      sql`CASE WHEN ${documents.pinnedAt} IS NOT NULL THEN 0 ELSE 1 END`,
+      desc(documents.pinnedAt),
+      desc(documents.createdAt),
+    )
+    .limit(limit)
+}
+
+export async function pinDocument(orgId: string, documentId: string, pin: boolean) {
+  await db
+    .update(documents)
+    .set({ pinnedAt: pin ? new Date() : null })
+    .where(and(eq(documents.id, documentId), eq(documents.orgId, orgId)))
 }
 
 export async function deleteDocument(orgId: string, documentId: string, userId: string) {
@@ -56,13 +141,12 @@ export async function deleteDocument(orgId: string, documentId: string, userId: 
 
   if (!doc) throw new Error('Documento não encontrado.')
 
-  // Delete chunks first (cascade should handle this, but be explicit)
   await db.delete(documentChunks).where(eq(documentChunks.documentId, documentId))
 
-  // Delete from Vercel Blob
-  await del(doc.fileUrl).catch(() => {})
+  if (doc.fileUrl) {
+    await del(doc.fileUrl).catch(() => {})
+  }
 
-  // Delete the document record
   const [deleted] = await db.delete(documents).where(eq(documents.id, documentId)).returning()
 
   await logAuditEvent({
@@ -71,7 +155,7 @@ export async function deleteDocument(orgId: string, documentId: string, userId: 
     action: 'document.deleted',
     entityType: 'document',
     entityId: documentId,
-    metadata: { fileName: doc.fileName },
+    metadata: { title: doc.title ?? doc.fileName, type: doc.type },
   })
 
   return deleted
@@ -114,4 +198,27 @@ export async function getDocumentChunks(documentId: string) {
     .from(documentChunks)
     .where(eq(documentChunks.documentId, documentId))
     .orderBy(documentChunks.chunkIndex)
+}
+
+/** Returns display title — falls back to fileName for file type */
+export function getDocumentTitle(doc: {
+  type: string
+  title: string | null
+  fileName: string | null
+}): string {
+  return doc.title ?? doc.fileName ?? 'Sem título'
+}
+
+/** Returns a short text preview for display in lists/cards */
+export function getDocumentPreview(
+  doc: { type: string; body: string | null; sourceUrl: string | null },
+  maxChars = 120,
+): string {
+  if (doc.type === 'article' && doc.body) {
+    return doc.body.slice(0, maxChars) + (doc.body.length > maxChars ? '…' : '')
+  }
+  if (doc.type === 'url' && doc.sourceUrl) {
+    return doc.sourceUrl
+  }
+  return ''
 }

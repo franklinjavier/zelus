@@ -2,6 +2,7 @@ import {
   AiChat02Icon,
   BookOpen01Icon,
   Building06Icon,
+  House02Icon,
   Notification03Icon,
   ShieldKeyIcon,
   Ticket02Icon,
@@ -15,6 +16,7 @@ import { href } from 'react-router'
 export type NavItem = { label: string; to: string; icon: IconSvgElement }
 
 export const mainNav: NavItem[] = [
+  { label: 'Home', to: href('/home'), icon: House02Icon },
   { label: 'Assistente', to: href('/assistant'), icon: AiChat02Icon },
   { label: 'Ocorrências', to: href('/tickets'), icon: Ticket02Icon },
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },

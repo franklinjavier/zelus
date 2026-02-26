@@ -1,31 +1,41 @@
-import { ArrowUpRightIcon } from '@hugeicons/core-free-icons'
+import { useState } from 'react'
+import { ArrowUpRightIcon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { href } from 'react-router'
 
 import { Badge } from '~/components/ui/badge'
 import { BackButton } from '~/components/layout/back-button'
+import { Button } from '~/components/ui/button'
 import { orgContext } from '~/lib/auth/context'
-import { getDocument } from '~/lib/services/documents.server'
+import { getDocument, getDocumentChunks } from '~/lib/services/documents.server'
 import { getDocumentTitle } from '~/lib/services/documents-display'
 import { signFileUrl } from '~/lib/file-token.server'
+import { decodeHtmlEntities } from '~/lib/html-decode'
+import { cn } from '~/lib/utils'
 import type { Route } from './+types/$id'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
   const doc = await getDocument(orgId, params.id)
   if (!doc || doc.status !== 'ready') throw new Response('Not Found', { status: 404 })
+
+  const chunks = await getDocumentChunks(doc.id)
+  const fullText = chunks.map((c) => c.content).join('\n\n') || null
+
   return {
     doc: doc.fileUrl ? { ...doc, fileUrl: signFileUrl(doc.fileUrl) } : doc,
+    fullText,
   }
 }
 
-const typeLabel = { file: 'Ficheiro', article: 'Artigo', url: 'Fonte externa' } as const
+const typeLabel = { file: 'Ficheiro', article: 'Texto', url: 'Fonte externa' } as const
 
 export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps) {
-  const { doc } = loaderData
+  const { doc, fullText } = loaderData
+  const [showExtracted, setShowExtracted] = useState(false)
 
   return (
-    <div className="px-4 py-6">
+    <>
       <BackButton to={href('/knowledge-base')} />
 
       <div className="mt-4 mb-4 flex items-start justify-between gap-3">
@@ -64,17 +74,44 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
         </div>
       )}
 
-      {doc.type === 'url' && doc.sourceUrl && (
-        <a
-          href={doc.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary flex items-center gap-1.5 hover:underline"
-        >
-          <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
-          {doc.sourceUrl}
-        </a>
+      {doc.type === 'url' && (
+        <div className="flex flex-col gap-4">
+          {doc.sourceUrl && (
+            <a
+              href={doc.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary flex items-center gap-1.5 hover:underline"
+            >
+              <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
+              {doc.sourceUrl}
+            </a>
+          )}
+          {fullText && (
+            <div className="flex flex-col gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowExtracted(!showExtracted)}
+                className="w-fit"
+              >
+                <HugeiconsIcon
+                  icon={ArrowDown01Icon}
+                  size={16}
+                  strokeWidth={2}
+                  className={cn('transition-transform', showExtracted && 'rotate-180')}
+                />
+                {showExtracted ? 'Ocultar' : 'Ver'} conteúdo extraído
+              </Button>
+              {showExtracted && (
+                <pre className="bg-muted text-foreground max-h-[70vh] overflow-y-auto rounded-lg p-4 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap">
+                  {decodeHtmlEntities(fullText)}
+                </pre>
+              )}
+            </div>
+          )}
+        </div>
       )}
-    </div>
+    </>
   )
 }

@@ -1,46 +1,53 @@
-import { Form, useRevalidator, useLocation, useNavigate, Outlet, href, Link } from 'react-router'
-import { upload } from '@vercel/blob/client'
-import { useState, useEffect } from 'react'
 import {
-  File02Icon,
-  Upload04Icon,
-  Clock01Icon,
+  Add01Icon,
   Alert02Icon,
+  BookOpen01Icon,
+  Clock01Icon,
   Delete02Icon,
   EyeIcon,
-  Refresh01Icon,
-  PinIcon,
-  BookOpen01Icon,
+  File02Icon,
   Link04Icon,
+  PinIcon,
+  Refresh01Icon,
   TextIcon,
+  Upload04Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { upload } from '@vercel/blob/client'
+import { useEffect, useState } from 'react'
+import { Form, href, Link, Outlet, useLocation, useNavigate, useRevalidator } from 'react-router'
 
-import type { Route } from './+types/documents'
-import { orgContext, userContext } from '~/lib/auth/context'
-import { waitUntilContext } from '~/lib/vercel/context'
-import {
-  createDocument,
-  createArticle,
-  createUrlEntry,
-  listDocuments,
-  deleteDocument,
-  resetDocumentForReprocessing,
-  pinDocument,
-} from '~/lib/services/documents.server'
-import { getDocumentTitle } from '~/lib/services/documents-display'
-import { processDocument, processArticle, processUrl } from '~/lib/ai/rag'
+import { EmptyState } from '~/components/layout/empty-state'
+import { ErrorBanner } from '~/components/layout/feedback'
+import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { Button } from '~/components/ui/button'
+import { Drawer, DrawerPopup } from '~/components/ui/drawer'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Textarea } from '~/components/ui/textarea'
-import { Drawer, DrawerPopup, DrawerTrigger } from '~/components/ui/drawer'
-import { AlertDialogAction } from '~/components/ui/alert-dialog'
-import { EmptyState } from '~/components/layout/empty-state'
-import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
-import { ErrorBanner } from '~/components/layout/feedback'
-import { formatShortDate } from '~/lib/format'
+import { processArticle, processDocument, processUrl } from '~/lib/ai/rag'
+import { orgContext, userContext } from '~/lib/auth/context'
+import { formatShortDate, formatFileSize } from '~/lib/format'
+import { getDocumentTitle } from '~/lib/services/documents-display'
+import {
+  createArticle,
+  createDocument,
+  createUrlEntry,
+  deleteDocument,
+  listDocuments,
+  pinDocument,
+  resetDocumentForReprocessing,
+} from '~/lib/services/documents.server'
 import { cn } from '~/lib/utils'
+import { waitUntilContext } from '~/lib/vercel/context'
+import type { Route } from './+types/documents'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Base de Conhecimento — Zelus' }]
@@ -73,7 +80,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const backgroundProcess = context.get(waitUntilContext)
     backgroundProcess(processDocument(doc.id, orgId, fileUrl, mimeType))
 
-    return { success: true }
+    return { success: true, intent: 'upload' as const }
   }
 
   if (intent === 'add-article') {
@@ -87,7 +94,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const doc = await createArticle(orgId, { title: title.trim(), body: body.trim() }, userId)
     const backgroundProcess = context.get(waitUntilContext)
     backgroundProcess(processArticle(doc.id, orgId, body.trim()))
-    return { success: true }
+    return { success: true, intent: 'add-article' as const }
   }
 
   if (intent === 'add-url') {
@@ -99,7 +106,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
 
     try {
-      new URL(sourceUrl)
+      const parsed = new URL(sourceUrl)
+      if (parsed.protocol !== 'https:') {
+        return { error: 'Apenas URLs HTTPS são permitidos.' }
+      }
     } catch {
       return { error: 'URL inválido.' }
     }
@@ -111,7 +121,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     )
     const backgroundProcess = context.get(waitUntilContext)
     backgroundProcess(processUrl(doc.id, orgId, sourceUrl.trim()))
-    return { success: true }
+    return { success: true, intent: 'add-url' as const }
   }
 
   if (intent === 'pin') {
@@ -160,7 +170,7 @@ const statusConfig = {
 
 const typeBadge = {
   file: { label: 'Ficheiro', className: 'bg-blue-50 text-blue-700' },
-  article: { label: 'Artigo', className: 'bg-green-50 text-green-700' },
+  article: { label: 'Texto', className: 'bg-green-50 text-green-700' },
   url: { label: 'Fonte externa', className: 'bg-purple-50 text-purple-700' },
 } as const
 
@@ -179,17 +189,12 @@ const typeIcon = {
   url: Link04Icon,
 } as const
 
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 export default function AdminDocumentsPage({ loaderData, actionData }: Route.ComponentProps) {
   const { documents } = loaderData
   const revalidator = useRevalidator()
   const hasProcessing = documents.some((d) => d.status === 'processing')
   const [uploading, setUploading] = useState(false)
+  const [openDrawer, setOpenDrawer] = useState<'article' | 'url' | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const isDrawerOpen = /\/admin\/documents\/[^/]+$/.test(location.pathname)
@@ -199,6 +204,17 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
     const interval = setInterval(() => revalidator.revalidate(), 5000)
     return () => clearInterval(interval)
   }, [hasProcessing, revalidator])
+
+  useEffect(() => {
+    if (
+      actionData &&
+      'intent' in actionData &&
+      (actionData.intent === 'add-article' || actionData.intent === 'add-url')
+    ) {
+      setOpenDrawer(null)
+    }
+  }, [actionData])
+
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
@@ -252,16 +268,56 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Base de Conhecimento</h1>
         <div className="flex flex-wrap items-center gap-2">
+          {uploading ? (
+            <Button variant="outline" disabled>
+              <HugeiconsIcon
+                icon={Upload04Icon}
+                size={16}
+                strokeWidth={2}
+                className="animate-pulse"
+              />
+              A enviar… {uploadProgress}%
+            </Button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="outline">
+                  <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
+                  Adicionar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setOpenDrawer('article')}>
+                  <HugeiconsIcon icon={TextIcon} size={16} strokeWidth={2} />
+                  <span>Texto</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenDrawer('url')}>
+                  <HugeiconsIcon icon={Link04Icon} size={16} strokeWidth={2} />
+                  <span>Site URL</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => document.getElementById('file-upload')?.click()}>
+                  <HugeiconsIcon icon={Upload04Icon} size={16} strokeWidth={2} />
+                  <span>Ficheiro</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* File upload input */}
+          <input
+            type="file"
+            id="file-upload"
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+            onChange={handleFileSelect}
+            disabled={uploading}
+          />
+
           {/* Article drawer */}
-          <Drawer>
-            <DrawerTrigger
-              className={cn(
-                'ring-foreground/10 hover:bg-muted/50 inline-flex h-10 items-center gap-2 rounded-4xl px-4 text-sm font-medium ring-1',
-              )}
-            >
-              <HugeiconsIcon icon={TextIcon} size={16} strokeWidth={2} />
-              Novo Artigo
-            </DrawerTrigger>
+          <Drawer
+            open={openDrawer === 'article'}
+            onOpenChange={(open) => !open && setOpenDrawer(null)}
+          >
             <DrawerPopup className="sm:max-w-lg">
               {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- stop drawer swipe from blocking paste on inputs */}
               <div
@@ -270,7 +326,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                 onPointerDown={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
               >
-                <h2 className="mb-4 text-lg font-semibold">Novo Artigo</h2>
+                <h2 className="mb-4 text-lg font-semibold">Novo Texto</h2>
                 <Form method="post">
                   <input type="hidden" name="intent" value="add-article" />
                   <div className="flex flex-col gap-4">
@@ -283,7 +339,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                       <Textarea id="article-body" name="body" rows={8} required className="mt-1" />
                     </div>
                     <Button type="submit" className="w-full">
-                      Guardar artigo
+                      Guardar texto
                     </Button>
                   </div>
                 </Form>
@@ -292,15 +348,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
           </Drawer>
 
           {/* URL drawer */}
-          <Drawer>
-            <DrawerTrigger
-              className={cn(
-                'ring-foreground/10 hover:bg-muted/50 inline-flex h-10 items-center gap-2 rounded-4xl px-4 text-sm font-medium ring-1',
-              )}
-            >
-              <HugeiconsIcon icon={Link04Icon} size={16} strokeWidth={2} />
-              Adicionar URL
-            </DrawerTrigger>
+          <Drawer open={openDrawer === 'url'} onOpenChange={(open) => !open && setOpenDrawer(null)}>
             <DrawerPopup className="sm:max-w-lg">
               {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- stop drawer swipe from blocking paste on inputs */}
               <div
@@ -343,32 +391,6 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
               </div>
             </DrawerPopup>
           </Drawer>
-
-          {/* File upload */}
-          <div>
-            <input
-              type="file"
-              id="file-upload"
-              className="hidden"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
-              onChange={handleFileSelect}
-              disabled={uploading}
-            />
-            <Button
-              variant="default"
-              size="lg"
-              onClick={() => document.getElementById('file-upload')?.click()}
-              disabled={uploading}
-            >
-              <HugeiconsIcon
-                icon={Upload04Icon}
-                data-icon="inline-start"
-                size={16}
-                strokeWidth={2}
-              />
-              {uploading ? `A enviar... ${uploadProgress}%` : 'Carregar ficheiro'}
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -388,87 +410,94 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
             return (
               <div
                 key={doc.id}
-                className="ring-foreground/5 flex items-start gap-3 rounded-2xl p-3 ring-1 @sm:items-center"
+                className="ring-foreground/5 flex flex-col gap-3 rounded-2xl p-3 ring-1 @sm:flex-row @sm:items-center"
               >
-                <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
-                  <HugeiconsIcon icon={icon} size={18} className="text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium [overflow-wrap:anywhere] @sm:truncate">
-                      {getDocumentTitle(doc)}
-                    </span>
-                    <TypeBadge type={doc.type} />
+                <div className="flex min-w-0 flex-1 items-start gap-3 @sm:items-center">
+                  <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
+                    <HugeiconsIcon icon={icon} size={18} className="text-primary" />
                   </div>
-                  <p className="text-muted-foreground text-sm">
-                    {doc.type === 'file' && doc.fileSize
-                      ? `${formatFileSize(doc.fileSize)} · `
-                      : ''}
-                    {formatShortDate(doc.createdAt)}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="truncate text-sm font-medium">{getDocumentTitle(doc)}</span>
+                      <TypeBadge type={doc.type} />
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {doc.type === 'file' && doc.fileSize
+                        ? `${formatFileSize(doc.fileSize)} · `
+                        : ''}
+                      {formatShortDate(doc.createdAt)}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex flex-col gap-2 @sm:shrink-0 @sm:flex-row @sm:items-center">
                   {status && (
-                    <div className={cn('flex items-center gap-1 text-sm', status.className)}>
+                    <div
+                      className={cn(
+                        'flex items-center gap-1 text-sm @sm:shrink-0',
+                        status.className,
+                      )}
+                    >
                       <HugeiconsIcon icon={status.icon} size={14} />
                       <span>{status.label}</span>
                     </div>
                   )}
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="pin" />
-                    <input type="hidden" name="documentId" value={doc.id} />
-                    <input type="hidden" name="pin" value={doc.pinnedAt ? 'false' : 'true'} />
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={doc.pinnedAt ? 'Desafixar destaque' : 'Fixar no destaque'}
-                      className={doc.pinnedAt ? 'text-amber-500' : ''}
-                    >
-                      <HugeiconsIcon icon={PinIcon} size={16} />
-                    </Button>
-                  </Form>
-                  {doc.type === 'file' && (
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      nativeButton={false}
-                      render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
-                      aria-label="Ver conteúdo extraído"
-                    >
-                      <HugeiconsIcon icon={EyeIcon} size={16} />
-                    </Button>
-                  )}
-                  {doc.status !== 'processing' && (
+                  <div className="flex shrink-0 items-center gap-2">
                     <Form method="post">
-                      <input type="hidden" name="intent" value="reprocess" />
+                      <input type="hidden" name="intent" value="pin" />
                       <input type="hidden" name="documentId" value={doc.id} />
+                      <input type="hidden" name="pin" value={doc.pinnedAt ? 'false' : 'true'} />
                       <Button
                         type="submit"
                         variant="ghost"
                         size="icon-sm"
-                        aria-label="Reprocessar documento"
+                        aria-label={doc.pinnedAt ? 'Desafixar destaque' : 'Fixar no destaque'}
+                        className={doc.pinnedAt ? 'text-amber-500' : ''}
                       >
-                        <HugeiconsIcon icon={Refresh01Icon} size={16} />
+                        <HugeiconsIcon icon={PinIcon} size={16} />
                       </Button>
                     </Form>
-                  )}
-                  <DeleteConfirmDialog
-                    title="Apagar entrada?"
-                    description={`Tem a certeza que quer apagar "${getDocumentTitle(doc)}"? Os dados do RAG associados também serão removidos.`}
-                  >
-                    <Form method="post">
-                      <input type="hidden" name="intent" value="delete" />
-                      <input type="hidden" name="documentId" value={doc.id} />
-                      <AlertDialogAction type="submit" className="sm:hidden" size="icon">
-                        <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />
-                        <span className="sr-only">Apagar</span>
-                      </AlertDialogAction>
-                      <AlertDialogAction type="submit" className="max-sm:hidden">
-                        Apagar
-                      </AlertDialogAction>
-                    </Form>
-                  </DeleteConfirmDialog>
+                    {doc.type === 'file' && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        nativeButton={false}
+                        render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
+                        aria-label="Ver conteúdo extraído"
+                      >
+                        <HugeiconsIcon icon={EyeIcon} size={16} />
+                      </Button>
+                    )}
+                    {doc.status !== 'processing' && (
+                      <Form method="post">
+                        <input type="hidden" name="intent" value="reprocess" />
+                        <input type="hidden" name="documentId" value={doc.id} />
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="Reprocessar documento"
+                        >
+                          <HugeiconsIcon icon={Refresh01Icon} size={16} />
+                        </Button>
+                      </Form>
+                    )}
+                    <DeleteConfirmDialog
+                      title="Apagar entrada?"
+                      description={`Tem a certeza que quer apagar "${getDocumentTitle(doc)}"? Os dados do RAG associados também serão removidos.`}
+                    >
+                      <Form method="post">
+                        <input type="hidden" name="intent" value="delete" />
+                        <input type="hidden" name="documentId" value={doc.id} />
+                        <AlertDialogAction type="submit" className="sm:hidden" size="icon">
+                          <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />
+                          <span className="sr-only">Apagar</span>
+                        </AlertDialogAction>
+                        <AlertDialogAction type="submit" className="max-sm:hidden">
+                          Apagar
+                        </AlertDialogAction>
+                      </Form>
+                    </DeleteConfirmDialog>
+                  </div>
                 </div>
               </div>
             )

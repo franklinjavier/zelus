@@ -11,7 +11,7 @@ import { Link, href } from 'react-router'
 import type { IconSvgElement } from '@hugeicons/react'
 
 import { Badge } from '~/components/ui/badge'
-import { orgContext } from '~/lib/auth/context'
+import { orgContext, userContext } from '~/lib/auth/context'
 import { getKnowledgeBaseHighlights } from '~/lib/services/documents.server'
 import { getDocumentTitle, getDocumentPreview } from '~/lib/services/documents-display'
 import type { Route } from './+types/home'
@@ -22,8 +22,13 @@ export function meta() {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
+  const user = context.get(userContext)
+
   const highlights = await getKnowledgeBaseHighlights(orgId, 6)
-  return { highlights }
+  return {
+    highlights,
+    user: { name: user.name },
+  }
 }
 
 const shortcuts: Array<{
@@ -46,19 +51,19 @@ const shortcuts: Array<{
   },
   {
     label: 'Prestadores',
-    description: 'Contactos de fornecedores',
+    description: 'Contactos de prestadores de serviço',
     to: href('/suppliers'),
     icon: TruckDeliveryIcon,
   },
   {
     label: 'Intervenções',
-    description: 'Histórico de manutenções',
+    description: 'Histórico de manutenções, reparos e melhorias',
     to: href('/maintenance'),
     icon: WrenchIcon,
   },
   {
     label: 'Base de Conhecimento',
-    description: 'Artigos e documentos úteis',
+    description: 'Atas, regulamentos, manuais e outros documentos importantes',
     to: href('/knowledge-base'),
     icon: BookOpen01Icon,
   },
@@ -70,18 +75,18 @@ const shortcuts: Array<{
   },
 ]
 
-const typeLabel = { file: 'Ficheiro', article: 'Artigo', url: 'Fonte externa' } as const
+const typeLabel = { file: 'Ficheiro', article: 'Texto', url: 'Fonte externa' } as const
 
 export default function HomePage({ loaderData }: Route.ComponentProps) {
-  const { highlights } = loaderData
+  const { highlights, user } = loaderData
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="mb-6 text-xl font-semibold">Início</h1>
+    <>
+      <h1 className="mb-6 text-xl font-semibold">Bem-vindo, {user.name}</h1>
 
       {/* Feature shortcuts */}
       <section className="mb-8">
-        <div className="grid grid-cols-2 gap-3 @sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {shortcuts.map((s) => (
             <Link
               key={s.to}
@@ -132,6 +137,6 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
           </div>
         </section>
       )}
-    </div>
+    </>
   )
 }

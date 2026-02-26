@@ -1,4 +1,4 @@
-# Design: Knowledge Base + Home Page
+# Design: Documents + Home Page
 
 **Date:** 2026-02-26
 **Status:** Approved
@@ -7,15 +7,15 @@
 
 ## 1. Context
 
-The PRD (§9.3) requires a FAQ search scope. The current `documents` feature only supports file uploads (PDFs/text) for the AI assistant's RAG pipeline. This design expands the knowledge base to support multiple content types and adds a resident-facing browsable page, while also redesigning the `/dashboard` home page for better usability — particularly for elderly, non-technical residents.
+The PRD (§9.3) requires a FAQ search scope. The current `documents` feature only supports file uploads (PDFs/text) for the AI assistant's RAG pipeline. This design expands the Documents to support multiple content types and adds a resident-facing browsable page, while also redesigning the `/dashboard` home page for better usability — particularly for elderly, non-technical residents.
 
 ---
 
-## 2. Knowledge Base (Base de Conhecimento)
+## 2. Documents (Documentos)
 
 ### 2.1 Admin Section
 
-Rename **Admin > Documentos → Admin > Base de Conhecimento** (URL: `/admin/knowledge-base`, or keep `/admin/documents` and update labels only).
+Rename **Admin > Documentos → Admin > Documentos** (URL: `/admin/documents`, or keep `/admin/documents` and update labels only).
 
 Three content types managed from the same admin section:
 
@@ -51,7 +51,7 @@ Existing `fileUrl`, `fileSize`, `mimeType` become nullable (null for `article` a
 
 ### 2.4 Resident-Facing Page
 
-New route: `/knowledge-base`
+New route: `/documents`
 
 - Paginated list with FTS search across titles and content
 - Each card: title, type badge (`Ficheiro` / `Artigo` / `Fonte externa`), content preview
@@ -78,30 +78,30 @@ Cards linking to the main app sections:
 - Assistente IA (`/assistant`)
 - Ocorrências (`/tickets`)
 - Prestadores (`/suppliers`)
-- Base de Conhecimento (`/knowledge-base`)
+- Documentos (`/documents`)
 - Manutenções (`/maintenance`)
 - Pesquisa (`/search`)
 
 Each card: icon, label, brief description. No counters or operational state (that lives in the admin dashboard).
 
-**Zone 2 — Knowledge Base Highlights**
+**Zone 2 — Documents Highlights**
 
 Shows up to 4–6 entries:
 
 1. Pinned entries first (ordered by `pinnedAt` desc)
 2. Most recent non-pinned entries fill remaining slots (ordered by `createdAt` desc)
 
-Each highlight: title, type badge, first ~120 chars of content. "Ver todos" link to `/knowledge-base`.
+Each highlight: title, type badge, first ~120 chars of content. "Ver todos" link to `/documents`.
 
-If no knowledge base entries exist yet, this zone is hidden (not shown as empty state).
+If no Documents entries exist yet, this zone is hidden (not shown as empty state).
 
 ---
 
 ## 4. Constraints & Invariants
 
-- All knowledge base entries scoped by `org_id`
+- All Documents entries scoped by `org_id`
 - Only `org_admin` can create, edit, delete, pin entries (enforced server-side)
-- All roles can read `/knowledge-base` and see highlights on `/home`
+- All roles can read `/documents` and see highlights on `/home`
 - Only `status = 'ready'` entries are visible to residents
 - URL fetch errors set status to `error` (same as file processing errors)
 - Pinning does not change `status` — a pinned entry in `error` state is not shown on home

@@ -41,10 +41,10 @@ const scopeConfig: Record<SearchScope, { label: string; icon: IconSvgElement }> 
   tickets: { label: 'Ocorrências', icon: Ticket02Icon },
   suppliers: { label: 'Prestadores', icon: TruckDeliveryIcon },
   maintenance: { label: 'Intervenções', icon: WrenchIcon },
-  'knowledge-base': { label: 'Base de Conhecimento', icon: BookOpen01Icon },
+  documents: { label: 'Documents', icon: BookOpen01Icon },
 }
 
-const SCOPES: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'knowledge-base']
+const SCOPES: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'documents']
 
 export function CommandSearch({
   open,

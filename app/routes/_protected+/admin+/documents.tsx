@@ -32,9 +32,11 @@ import {
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Textarea } from '~/components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip'
 import { processArticle, processDocument, processUrl } from '~/lib/ai/rag'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { formatShortDate, formatFileSize } from '~/lib/format'
+import { signFileUrl } from '~/lib/file-token.server'
+import { formatFileSize, formatShortDate } from '~/lib/format'
 import { getDocumentTitle } from '~/lib/services/documents-display'
 import {
   createArticle,
@@ -50,13 +52,18 @@ import { waitUntilContext } from '~/lib/vercel/context'
 import type { Route } from './+types/documents'
 
 export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'Base de Conhecimento — Zelus' }]
+  return [{ title: 'Documentos — Zelus' }]
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
   const docs = await listDocuments(orgId)
-  return { documents: docs }
+  return {
+    documents: docs.map((doc) => ({
+      ...doc,
+      signedFileUrl: doc.fileUrl ? signFileUrl(doc.fileUrl) : null,
+    })),
+  }
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -266,7 +273,12 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-lg font-semibold tracking-tight">Base de Conhecimento</h1>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight">Documentos</h1>
+          <p className="text-muted-foreground text-sm">
+            Gerir atas, regulamentos, manuais e outros conteúdos partilhados com os condóminos
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {uploading ? (
             <Button variant="outline" disabled>
@@ -319,7 +331,6 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
             onOpenChange={(open) => !open && setOpenDrawer(null)}
           >
             <DrawerPopup className="sm:max-w-lg">
-              {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- stop drawer swipe from blocking paste on inputs */}
               <div
                 className="p-4"
                 data-swipe-ignore
@@ -350,7 +361,6 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
           {/* URL drawer */}
           <Drawer open={openDrawer === 'url'} onOpenChange={(open) => !open && setOpenDrawer(null)}>
             <DrawerPopup className="sm:max-w-lg">
-              {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- stop drawer swipe from blocking paste on inputs */}
               <div
                 className="p-4"
                 data-swipe-ignore
@@ -402,7 +412,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
 
       <div className="@container mt-5 flex flex-col gap-2">
         {documents.length === 0 ? (
-          <EmptyState icon={BookOpen01Icon} message="Nenhum conteúdo na base de conhecimento." />
+          <EmptyState icon={BookOpen01Icon} message="Nenhum documento adicionado." />
         ) : (
           documents.map((doc) => {
             const status = statusConfig[doc.status]
@@ -410,15 +420,28 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
             return (
               <div
                 key={doc.id}
-                className="ring-foreground/5 flex flex-col gap-3 rounded-2xl p-3 ring-1 @sm:flex-row @sm:items-center"
+                className="ring-foreground/5 flex flex-col gap-3 rounded-2xl p-3 ring-1 @md:flex-row @md:items-center"
               >
-                <div className="flex min-w-0 flex-1 items-start gap-3 @sm:items-center">
+                <div className="flex min-w-0 flex-1 items-start gap-3 @md:items-center">
                   <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
                     <HugeiconsIcon icon={icon} size={18} className="text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate text-sm font-medium">{getDocumentTitle(doc)}</span>
+                      {doc.signedFileUrl || doc.sourceUrl ? (
+                        <a
+                          href={doc.signedFileUrl || doc.sourceUrl || ''}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate text-sm font-medium hover:underline"
+                        >
+                          {getDocumentTitle(doc)}
+                        </a>
+                      ) : (
+                        <span className="truncate text-sm font-medium">
+                          {getDocumentTitle(doc)}
+                        </span>
+                      )}
                       <TypeBadge type={doc.type} />
                     </div>
                     <p className="text-muted-foreground text-sm">
@@ -429,11 +452,11 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 @sm:shrink-0 @sm:flex-row @sm:items-center">
+                <div className="flex flex-col gap-2 @md:shrink-0 @md:flex-row @md:items-center">
                   {status && (
                     <div
                       className={cn(
-                        'flex items-center gap-1 text-sm @sm:shrink-0',
+                        'flex items-center gap-1 text-sm @md:shrink-0',
                         status.className,
                       )}
                     >
@@ -442,42 +465,56 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                     </div>
                   )}
                   <div className="flex shrink-0 items-center gap-2">
-                    <Form method="post">
-                      <input type="hidden" name="intent" value="pin" />
-                      <input type="hidden" name="documentId" value={doc.id} />
-                      <input type="hidden" name="pin" value={doc.pinnedAt ? 'false' : 'true'} />
-                      <Button
-                        type="submit"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={doc.pinnedAt ? 'Desafixar destaque' : 'Fixar no destaque'}
-                        className={doc.pinnedAt ? 'text-amber-500' : ''}
-                      >
-                        <HugeiconsIcon icon={PinIcon} size={16} />
-                      </Button>
-                    </Form>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      nativeButton={false}
-                      render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
-                      aria-label="Ver conteúdo extraído"
-                    >
-                      <HugeiconsIcon icon={EyeIcon} size={16} />
-                    </Button>
-                    {doc.status !== 'processing' && (
+                    <Tooltip>
                       <Form method="post">
-                        <input type="hidden" name="intent" value="reprocess" />
+                        <input type="hidden" name="intent" value="pin" />
                         <input type="hidden" name="documentId" value={doc.id} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Reprocessar documento"
+                        <input type="hidden" name="pin" value={doc.pinnedAt ? 'false' : 'true'} />
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="icon-sm"
+                              className={doc.pinnedAt ? 'text-amber-500' : ''}
+                            />
+                          }
                         >
-                          <HugeiconsIcon icon={Refresh01Icon} size={16} />
-                        </Button>
+                          <HugeiconsIcon icon={PinIcon} size={16} />
+                        </TooltipTrigger>
                       </Form>
+                      <TooltipContent>
+                        {doc.pinnedAt ? 'Desafixar destaque' : 'Fixar no destaque'}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            nativeButton={false}
+                            render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
+                          />
+                        }
+                      >
+                        <HugeiconsIcon icon={EyeIcon} size={16} />
+                      </TooltipTrigger>
+                      <TooltipContent>Ver conteúdo</TooltipContent>
+                    </Tooltip>
+                    {doc.status !== 'processing' && (
+                      <Tooltip>
+                        <Form method="post">
+                          <input type="hidden" name="intent" value="reprocess" />
+                          <input type="hidden" name="documentId" value={doc.id} />
+                          <TooltipTrigger
+                            render={<Button type="submit" variant="ghost" size="icon-sm" />}
+                          >
+                            <HugeiconsIcon icon={Refresh01Icon} size={16} />
+                          </TooltipTrigger>
+                        </Form>
+                        <TooltipContent>Reprocessar</TooltipContent>
+                      </Tooltip>
                     )}
                     <DeleteConfirmDialog
                       title="Apagar entrada?"

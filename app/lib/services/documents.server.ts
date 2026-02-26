@@ -112,7 +112,7 @@ export async function listReadyDocuments(orgId: string) {
     .orderBy(desc(documents.createdAt))
 }
 
-export async function getKnowledgeBaseHighlights(orgId: string, limit = 6) {
+export async function getDocumentsHighlights(orgId: string, limit = 6) {
   return db
     .select()
     .from(documents)

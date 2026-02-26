@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { tickets, suppliers, maintenanceRecords, documents } from '~/lib/db/schema'
-import type { SearchProvider, SearchResult, SearchResults, SearchScope } from './provider'
+import type { SearchProvider, SearchResult, SearchScope } from './provider'
 
 /**
  * Postgres Full-Text Search implementation using Portuguese language config.
@@ -38,8 +38,8 @@ async function searchScope(
       return searchSuppliers(orgId, query)
     case 'maintenance':
       return searchMaintenance(orgId, query)
-    case 'knowledge-base':
-      return searchKnowledgeBase(orgId, query)
+    case 'documents':
+      return searchDocuments(orgId, query)
   }
 }
 
@@ -185,7 +185,7 @@ async function searchMaintenance(orgId: string, query: string): Promise<SearchRe
   }))
 }
 
-async function searchKnowledgeBase(orgId: string, query: string): Promise<SearchResult[]> {
+async function searchDocuments(orgId: string, query: string): Promise<SearchResult[]> {
   const rows = await db
     .select({
       id: documents.id,
@@ -219,10 +219,10 @@ async function searchKnowledgeBase(orgId: string, query: string): Promise<Search
 
   return rows.map((r) => ({
     id: r.id,
-    scope: 'knowledge-base' as const,
+    scope: 'documents' as const,
     title: r.title ?? r.fileName ?? 'Sem título',
     description: r.body ? r.body.slice(0, 200) : (r.sourceUrl ?? ''),
-    url: `/knowledge-base/${r.id}`,
+    url: `/documents/${r.id}`,
     createdAt: r.createdAt,
     rank: r.rank,
   }))

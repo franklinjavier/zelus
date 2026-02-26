@@ -62,7 +62,7 @@ function DrawerPopup({
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"
           className={cn(
-            'bg-background group/drawer-popup h-full w-3/4 [transform:translateX(var(--drawer-swipe-movement-x))] overflow-y-auto overscroll-contain border-l shadow-lg transition-[transform,box-shadow] duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-[ending-style]:[transform:translateX(100%)] data-[ending-style]:shadow-none data-[ending-style]:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[starting-style]:[transform:translateX(100%)] data-[starting-style]:shadow-none data-[swiping]:duration-0 data-[swiping]:select-none sm:max-w-sm',
+            'bg-background group/drawer-popup h-full w-full [transform:translateX(var(--drawer-swipe-movement-x))] overflow-y-auto overscroll-contain border-l shadow-lg transition-[transform,box-shadow] duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-[ending-style]:[transform:translateX(100%)] data-[ending-style]:shadow-none data-[ending-style]:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-[starting-style]:[transform:translateX(100%)] data-[starting-style]:shadow-none data-[swiping]:duration-0 data-[swiping]:select-none sm:w-3/4 sm:max-w-sm',
             className,
           )}
           {...props}

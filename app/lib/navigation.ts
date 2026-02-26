@@ -22,7 +22,7 @@ export const mainNav: NavItem[] = [
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
   { label: 'Prestadores', to: href('/suppliers'), icon: TruckDeliveryIcon },
   { label: 'Intervenções', to: href('/maintenance'), icon: WrenchIcon },
-  { label: 'Base de Conhecimento', to: href('/knowledge-base'), icon: BookOpen01Icon },
+  { label: 'Documentos', to: href('/documents'), icon: BookOpen01Icon },
 ]
 
 export const adminNav: NavItem[] = [
@@ -30,7 +30,7 @@ export const adminNav: NavItem[] = [
   { label: 'Categorias', to: href('/admin/categories'), icon: ShieldKeyIcon },
   { label: 'Condomínio', to: href('/admin/organization'), icon: ShieldKeyIcon },
   { label: 'Convites', to: href('/admin/invites'), icon: ShieldKeyIcon },
-  { label: 'Base de Conhecimento', to: href('/admin/documents'), icon: ShieldKeyIcon },
+  { label: 'Documentos', to: href('/admin/documents'), icon: ShieldKeyIcon },
   { label: 'Membros', to: href('/admin/members'), icon: ShieldKeyIcon },
   { label: 'Pedidos de acesso', to: href('/admin/associations'), icon: ShieldKeyIcon },
 ]

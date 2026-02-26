@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { href, data, useNavigate } from 'react-router'
-import { Loading03Icon, Alert02Icon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
+import { Loading03Icon, Alert02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { Route } from './+types/documents.$id'
@@ -8,8 +7,7 @@ import { orgContext } from '~/lib/auth/context'
 import { getDocument, getDocumentChunks } from '~/lib/services/documents.server'
 import { DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '~/components/ui/drawer'
 import { Button } from '~/components/ui/button'
-import { decodeHtmlEntities } from '~/lib/html-decode'
-import { cn } from '~/lib/utils'
+import { MarkdownContent } from '~/components/shared/markdown-content'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
@@ -28,7 +26,6 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 export default function DocumentDetailDrawer({ loaderData }: Route.ComponentProps) {
   const { doc, fullText } = loaderData
   const navigate = useNavigate()
-  const [showExtracted, setShowExtracted] = useState(false)
 
   return (
     <>
@@ -66,26 +63,8 @@ export default function DocumentDetailDrawer({ loaderData }: Route.ComponentProp
         )}
 
         {doc.status === 'ready' && fullText && (
-          <div className="flex flex-col gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowExtracted(!showExtracted)}
-              className="w-fit"
-            >
-              <HugeiconsIcon
-                icon={ArrowDown01Icon}
-                size={16}
-                strokeWidth={2}
-                className={cn('transition-transform', showExtracted && 'rotate-180')}
-              />
-              {showExtracted ? 'Ocultar' : 'Ver'} conteúdo extraído
-            </Button>
-            {showExtracted && (
-              <pre className="bg-muted text-foreground max-h-[calc(100vh-220px)] overflow-y-auto rounded-lg p-4 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap">
-                {decodeHtmlEntities(fullText)}
-              </pre>
-            )}
+          <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+            <MarkdownContent>{fullText}</MarkdownContent>
           </div>
         )}
 

@@ -65,13 +65,14 @@ export async function processDocument(
  * Sends the file URL to Claude which fetches it directly — zero local memory usage.
  */
 async function extractText(fileUrl: string, mimeType: string): Promise<string> {
-  if (mimeType === 'application/pdf') {
-    return extractWithClaude(fileUrl, mimeType)
+  // Plain text files can be read directly
+  if (mimeType === 'text/plain') {
+    const response = await fetch(fileUrl)
+    return response.text()
   }
 
-  // Plain text fallback — these are small, safe to fetch locally
-  const response = await fetch(fileUrl)
-  return response.text()
+  // Everything else (PDF, Word, Excel, images) goes through Claude
+  return extractWithClaude(fileUrl, mimeType)
 }
 
 /**
@@ -92,15 +93,29 @@ async function extractWithClaude(fileUrl: string, mimeType: string): Promise<str
           },
           {
             type: 'text',
-            text: 'Extraia todo o conteúdo de texto visível neste documento, incluindo texto em imagens, digitalizações, tabelas, cabeçalhos, rodapés e anotações. Se o documento contiver páginas digitalizadas (fotografias ou scans de papel), leia e transcreva todo o texto visível nessas imagens. Quando encontrar tabelas, converta-as para o formato Markdown (usando | e --- para colunas e cabeçalhos), preservando todos os valores e a estrutura de colunas. Omite linhas decorativas compostas apenas por traços ou hífenes (ex: "----------" ou "- - - -") que sejam usadas como separadores visuais — não fazem parte do conteúdo. Para o restante do conteúdo, devolva apenas o texto bruto sem comentários nem formatação adicional.',
+            text: `Extract all visible text content from this document and return it as clean Markdown.
+
+Rules:
+- Use headings (#, ##, ###) for titles and sections
+- Use lists (- or 1.) where appropriate
+- Convert tables to Markdown format (| and --- for columns and headers), preserving all values
+- Include text from images, scans, headers, footers, and annotations
+- If the document contains scanned pages (photos or paper scans), read and transcribe all visible text
+- Omit decorative separator lines made of dashes or hyphens ("----------")
+- Keep the extracted content in its ORIGINAL language — do NOT translate
+- Do NOT add comments, explanations, or any text not present in the original document
+- Do NOT wrap the output in markdown code fences (\`\`\`markdown ... \`\`\`)
+- Return ONLY the extracted content as Markdown`,
           },
         ],
       },
     ],
   })
 
-  // Strip any decorative separator lines the model may have left (e.g. "------")
+  // Clean up common LLM artifacts
   return text
+    .replace(/^```(?:markdown)?\s*\n?/i, '')
+    .replace(/\n?```\s*$/, '')
     .replace(/^[-–—\s]{5,}$/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
@@ -147,7 +162,7 @@ export async function processArticle(documentId: string, orgId: string, body: st
 export async function processUrl(documentId: string, orgId: string, sourceUrl: string) {
   try {
     const response = await fetch(sourceUrl, {
-      headers: { 'User-Agent': 'Zelus/1.0 (knowledge base indexer)' },
+      headers: { 'User-Agent': 'Zelus/1.0 (documents indexer)' },
       signal: AbortSignal.timeout(10_000),
     })
 
@@ -157,19 +172,57 @@ export async function processUrl(documentId: string, orgId: string, sourceUrl: s
     }
 
     const html = await response.text()
-    const text = html
+
+    // Strip non-content elements before sending to Claude (saves tokens)
+    const cleaned = html
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
+      .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+      .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+      .replace(/<aside[\s\S]*?<\/aside>/gi, '')
+      .replace(/<header[\s\S]*?<\/header>/gi, '')
 
-    if (!text || text.length < 10) {
+    if (!cleaned || cleaned.length < 10) {
       await updateDocumentStatus(documentId, 'error')
       return
     }
 
-    const chunks = chunkText(text)
+    const { text } = await generateText({
+      model: anthropic('claude-haiku-4-5-20251001'),
+      messages: [
+        {
+          role: 'user',
+          content: `Extract the main content from this HTML page and return it as clean Markdown.
+
+Rules:
+- Use headings (#, ##, ###) for titles and sections
+- Use lists (- or 1.) where appropriate
+- Convert tables to Markdown format
+- Skip navigation, menus, footers, sidebars, cookie banners, and other non-content elements
+- Keep the extracted content in its ORIGINAL language — do NOT translate
+- Do NOT add comments, explanations, or any text not present in the page
+- Do NOT wrap the output in markdown code fences (\`\`\`markdown ... \`\`\`)
+- Return ONLY the main content as Markdown
+
+HTML:
+${cleaned.slice(0, 50_000)}`,
+        },
+      ],
+    })
+
+    // Clean up common LLM artifacts
+    const cleaned2 = text
+      .replace(/^```(?:markdown)?\s*\n?/i, '')
+      .replace(/\n?```\s*$/, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+
+    if (!cleaned2 || cleaned2.length < 10) {
+      await updateDocumentStatus(documentId, 'error')
+      return
+    }
+
+    const chunks = chunkText(cleaned2)
     const BATCH_SIZE = 20
 
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {

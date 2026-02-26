@@ -1,18 +1,15 @@
-import { useState } from 'react'
-import { ArrowUpRightIcon, ArrowDown01Icon } from '@hugeicons/core-free-icons'
+import { ArrowUpRightIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { href } from 'react-router'
 
-import { Badge } from '~/components/ui/badge'
 import { BackButton } from '~/components/layout/back-button'
-import { Button } from '~/components/ui/button'
-import { orgContext } from '~/lib/auth/context'
-import { getDocument, getDocumentChunks } from '~/lib/services/documents.server'
-import { getDocumentTitle } from '~/lib/services/documents-display'
-import { signFileUrl } from '~/lib/file-token.server'
 import { MarkdownContent } from '~/components/shared/markdown-content'
-import { cn } from '~/lib/utils'
-import type { Route } from '../documents+/+types/$id'
+import { Badge } from '~/components/ui/badge'
+import { orgContext } from '~/lib/auth/context'
+import { signFileUrl } from '~/lib/file-token.server'
+import { getDocumentTitle } from '~/lib/services/documents-display'
+import { getDocument, getDocumentChunks } from '~/lib/services/documents.server'
+import type { Route } from './+types/$id'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
@@ -32,7 +29,6 @@ const typeLabel = { file: 'Ficheiro', article: 'Texto', url: 'Fonte externa' } a
 
 export default function DocumentsDetail({ loaderData }: Route.ComponentProps) {
   const { doc, fullText } = loaderData
-  const [showExtracted, setShowExtracted] = useState(false)
 
   return (
     <>
@@ -94,26 +90,8 @@ export default function DocumentsDetail({ loaderData }: Route.ComponentProps) {
             </a>
           )}
           {fullText && (
-            <div className="flex flex-col gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowExtracted(!showExtracted)}
-                className="w-fit"
-              >
-                <HugeiconsIcon
-                  icon={ArrowDown01Icon}
-                  size={16}
-                  strokeWidth={2}
-                  className={cn('transition-transform', showExtracted && 'rotate-180')}
-                />
-                {showExtracted ? 'Ocultar' : 'Ver'} conteúdo extraído
-              </Button>
-              {showExtracted && (
-                <div className="max-h-[70vh] overflow-y-auto">
-                  <MarkdownContent>{fullText}</MarkdownContent>
-                </div>
-              )}
+            <div className="max-h-[70vh] overflow-y-auto">
+              <MarkdownContent>{fullText}</MarkdownContent>
             </div>
           )}
         </div>

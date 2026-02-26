@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { admin, captcha, oneTap, organization } from 'better-auth/plugins'
+import { adminAc, defaultAc, memberAc, ownerAc } from 'better-auth/plugins/organization/access'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { eq } from 'drizzle-orm'
 
@@ -101,6 +102,14 @@ export const auth = betterAuth({
       creatorRole: 'owner',
       organizationLimit: 10,
       membershipLimit: 100,
+      roles: {
+        owner: ownerAc,
+        member: memberAc,
+        admin: defaultAc.newRole({
+          ...adminAc.statements,
+          organization: ['update', 'delete'],
+        }),
+      },
       schema: {
         organization: {
           fields: {

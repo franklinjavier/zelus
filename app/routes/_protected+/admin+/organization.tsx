@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { data, Form, useFetcher } from 'react-router'
+import { data, Form } from 'react-router'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -22,19 +21,12 @@ import {
 } from '~/components/ui/select'
 import { Field, FieldDescription, FieldError, FieldLabel } from '~/components/ui/field'
 import { ErrorBanner } from '~/components/layout/feedback'
-import {
-  enableInviteLink,
-  disableInviteLink,
-  regenerateInviteCode,
-} from '~/lib/services/invite-link.server'
-import { Copy01Icon, RefreshIcon } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Condomínio — Zelus' }]
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
 
   const org = await db
@@ -47,8 +39,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       notes: organization.notes,
       language: organization.language,
       timezone: organization.timezone,
-      inviteCode: organization.inviteCode,
-      inviteEnabled: organization.inviteEnabled,
     })
     .from(organization)
     .where(eq(organization.id, orgId))
@@ -57,9 +47,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   if (!org) throw new Response('Not Found', { status: 404 })
 
-  const origin = new URL(request.url).origin
-
-  return { org, origin }
+  return { org }
 }
 
 const updateSchema = z.object({
@@ -74,22 +62,6 @@ const updateSchema = z.object({
 export async function action({ request, context }: Route.ActionArgs) {
   const { orgId } = context.get(orgContext)
   const formData = await request.formData()
-  const intent = formData.get('intent')
-
-  if (intent === 'toggle-invite') {
-    const currentlyEnabled = formData.get('enabled') === 'true'
-    if (currentlyEnabled) {
-      await disableInviteLink(orgId)
-    } else {
-      await enableInviteLink(orgId)
-    }
-    return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
-  }
-
-  if (intent === 'regenerate-invite') {
-    await regenerateInviteCode(orgId)
-    return data({ success: true }, { headers: await setToast('Link regenerado.') })
-  }
 
   // Default: org update form
   const result = validateForm(formData, updateSchema)
@@ -241,102 +213,6 @@ export default function OrganizationPage({ loaderData, actionData }: Route.Compo
           </Button>
         </div>
       </Form>
-
-      <InviteLinkCard org={org} origin={loaderData.origin} />
     </div>
-  )
-}
-
-function InviteLinkCard({
-  org,
-  origin,
-}: {
-  org: { inviteCode: string | null; inviteEnabled: boolean }
-  origin: string
-}) {
-  const fetcher = useFetcher()
-  const [copied, setCopied] = useState(false)
-  const [confirmRegen, setConfirmRegen] = useState(false)
-  const isSubmitting = fetcher.state !== 'idle'
-
-  // Optimistic state
-  const isEnabled = fetcher.formData
-    ? fetcher.formData.get('intent') === 'toggle-invite'
-      ? fetcher.formData.get('enabled') !== 'true'
-      : org.inviteEnabled
-    : org.inviteEnabled
-
-  const inviteUrl = org.inviteCode ? `${origin}/join/${org.inviteCode}` : null
-
-  const copyLink = () => {
-    if (!inviteUrl) return
-    navigator.clipboard.writeText(inviteUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Link de convite</CardTitle>
-            <CardDescription>
-              Partilhe este link para que novos membros possam juntar-se ao condomínio.
-            </CardDescription>
-          </div>
-          <fetcher.Form method="post">
-            <input type="hidden" name="intent" value="toggle-invite" />
-            <input type="hidden" name="enabled" value={String(org.inviteEnabled)} />
-            <Button
-              type="submit"
-              variant={isEnabled ? 'outline' : 'default'}
-              disabled={isSubmitting}
-            >
-              {isEnabled ? 'Desativar' : 'Ativar'}
-            </Button>
-          </fetcher.Form>
-        </div>
-      </CardHeader>
-      {isEnabled && inviteUrl && (
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Input readOnly value={inviteUrl} className="font-mono text-sm" />
-            <Button variant="outline" size="icon" onClick={copyLink}>
-              <HugeiconsIcon icon={Copy01Icon} size={16} strokeWidth={2} />
-            </Button>
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              {copied ? 'Copiado!' : 'Qualquer pessoa com este link pode juntar-se.'}
-            </p>
-            {confirmRegen ? (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">O link atual será invalidado.</span>
-                <fetcher.Form method="post" onSubmit={() => setConfirmRegen(false)}>
-                  <input type="hidden" name="intent" value="regenerate-invite" />
-                  <Button type="submit" variant="destructive" disabled={isSubmitting}>
-                    Confirmar
-                  </Button>
-                </fetcher.Form>
-                <Button variant="ghost" onClick={() => setConfirmRegen(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            ) : (
-              <Button variant="ghost" onClick={() => setConfirmRegen(true)}>
-                <HugeiconsIcon
-                  icon={RefreshIcon}
-                  data-icon="inline-start"
-                  size={16}
-                  strokeWidth={2}
-                />
-                Regenerar
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      )}
-    </Card>
   )
 }

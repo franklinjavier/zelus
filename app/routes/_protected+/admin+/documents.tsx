@@ -456,17 +456,15 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
                         <HugeiconsIcon icon={PinIcon} size={16} />
                       </Button>
                     </Form>
-                    {doc.type === 'file' && (
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        nativeButton={false}
-                        render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
-                        aria-label="Ver conteúdo extraído"
-                      >
-                        <HugeiconsIcon icon={EyeIcon} size={16} />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      nativeButton={false}
+                      render={<Link to={href('/admin/documents/:id', { id: doc.id })} />}
+                      aria-label="Ver conteúdo extraído"
+                    >
+                      <HugeiconsIcon icon={EyeIcon} size={16} />
+                    </Button>
                     {doc.status !== 'processing' && (
                       <Form method="post">
                         <input type="hidden" name="intent" value="reprocess" />

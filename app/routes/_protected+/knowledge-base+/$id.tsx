@@ -38,9 +38,24 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
     <>
       <BackButton to={href('/knowledge-base')} />
 
-      <div className="mt-4 mb-4 flex items-start justify-between gap-3">
-        <h1 className="text-xl font-semibold">{getDocumentTitle(doc)}</h1>
-        <Badge variant="secondary">{typeLabel[doc.type]}</Badge>
+      <div className="mt-4 mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <h1 className="text-xl font-semibold">{getDocumentTitle(doc)}</h1>
+          <Badge variant="secondary" className="shrink-0">
+            {typeLabel[doc.type]}
+          </Badge>
+        </div>
+        {doc.type === 'file' && doc.fileUrl && (
+          <a
+            href={doc.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary flex shrink-0 items-center gap-1 text-sm hover:underline"
+          >
+            <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
+            Abrir ficheiro
+          </a>
+        )}
       </div>
 
       {doc.type === 'article' && doc.body && (
@@ -48,7 +63,7 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
       )}
 
       {doc.type === 'file' && doc.fileUrl && (
-        <div className="flex flex-col gap-3">
+        <>
           {doc.mimeType === 'application/pdf' ? (
             <iframe
               src={doc.fileUrl}
@@ -62,16 +77,7 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
               className="ring-foreground/5 max-h-[85vh] w-full rounded-2xl object-contain ring-1"
             />
           ) : null}
-          <a
-            href={doc.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary flex items-center gap-1.5 text-sm hover:underline"
-          >
-            <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
-            Abrir ficheiro
-          </a>
-        </div>
+        </>
       )}
 
       {doc.type === 'url' && (

@@ -35,15 +35,30 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
       )}
 
       {doc.type === 'file' && doc.fileUrl && (
-        <a
-          href={doc.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary flex items-center gap-1.5 hover:underline"
-        >
-          <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
-          Abrir ficheiro
-        </a>
+        <div className="flex flex-col gap-3">
+          {doc.mimeType === 'application/pdf' ? (
+            <iframe
+              src={doc.fileUrl}
+              title={getDocumentTitle(doc)}
+              className="ring-foreground/5 h-[70vh] w-full rounded-2xl ring-1"
+            />
+          ) : doc.mimeType?.startsWith('image/') ? (
+            <img
+              src={doc.fileUrl}
+              alt={getDocumentTitle(doc)}
+              className="ring-foreground/5 max-h-[70vh] w-full rounded-2xl object-contain ring-1"
+            />
+          ) : null}
+          <a
+            href={doc.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary flex items-center gap-1.5 text-sm hover:underline"
+          >
+            <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
+            Abrir ficheiro
+          </a>
+        </div>
       )}
 
       {doc.type === 'url' && doc.sourceUrl && (

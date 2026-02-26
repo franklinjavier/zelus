@@ -1,5 +1,6 @@
 import {
   AiChat02Icon,
+  BookOpen01Icon,
   Building06Icon,
   Notification03Icon,
   ShieldKeyIcon,
@@ -19,6 +20,7 @@ export const mainNav: NavItem[] = [
   { label: 'Frações', to: href('/fractions'), icon: Building06Icon },
   { label: 'Prestadores', to: href('/suppliers'), icon: TruckDeliveryIcon },
   { label: 'Intervenções', to: href('/maintenance'), icon: WrenchIcon },
+  { label: 'Base de Conhecimento', to: href('/knowledge-base'), icon: BookOpen01Icon },
 ]
 
 export const adminNav: NavItem[] = [

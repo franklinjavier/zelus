@@ -1,5 +1,3 @@
-'use client'
-
 import { LazyMotion, domAnimation, m } from 'motion/react'
 import { useEffect, useState } from 'react'
 

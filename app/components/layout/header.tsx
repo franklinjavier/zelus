@@ -1,5 +1,3 @@
-'use client'
-
 import { Notification03Icon, Search01Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link, href } from 'react-router'

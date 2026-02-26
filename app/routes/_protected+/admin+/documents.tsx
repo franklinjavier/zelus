@@ -211,7 +211,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
     setUploadError(null)
     try {
       const blob = await upload(`documents/${file.name}`, file, {
-        access: 'public',
+        access: 'private',
         handleUploadUrl: '/api/document-upload',
         multipart: true,
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),

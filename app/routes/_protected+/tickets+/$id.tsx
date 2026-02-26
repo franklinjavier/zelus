@@ -399,7 +399,7 @@ function EvidenceGallery({
               setIsEvidenceUploading(true)
               try {
                 const blob = await upload(file.name, file, {
-                  access: 'public',
+                  access: 'private',
                   handleUploadUrl: href('/api/upload'),
                 })
                 evidenceFetcher.submit(

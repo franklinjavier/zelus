@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { eq, and } from 'drizzle-orm'
 
 import { createTicket, listTickets, getTicket, updateTicketStatus } from '~/lib/services/tickets'
-import { addComment } from '~/lib/services/ticket-comments'
+import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments'
 import { searchTicketsByText } from '~/lib/search'
 import { listCategories } from '~/lib/services/categories'
 import { listSuppliers } from '~/lib/services/suppliers'
@@ -103,12 +103,16 @@ export function getAssistantTools(orgId: string, userId: string) {
     }),
 
     get_ticket_details: tool({
-      description: 'Obter detalhes de uma ocorrência específica pelo ID.',
+      description:
+        'Obter detalhes completos de uma ocorrência específica pelo ID, incluindo comentários e histórico de alterações de estado.',
       inputSchema: z.object({
         ticketId: z.string().describe('ID da ocorrência'),
       }),
       execute: async ({ ticketId }) => {
-        const ticket = await getTicket(orgId, ticketId, userId)
+        const [ticket, timeline] = await Promise.all([
+          getTicket(orgId, ticketId, userId),
+          getTicketTimeline(orgId, ticketId),
+        ])
         if (!ticket) return { error: 'Ocorrência não encontrada.' }
         return {
           id: ticket.id,
@@ -119,6 +123,31 @@ export function getAssistantTools(orgId: string, userId: string) {
           category: ticket.category,
           createdAt: ticket.createdAt,
           fractionLabel: ticket.fractionLabel,
+          timeline: timeline.map((item) => {
+            if (item.type === 'comment') {
+              return {
+                type: 'comment',
+                author: item.userName,
+                content: item.content,
+                at: item.createdAt,
+              }
+            }
+            if (item.type === 'status_change') {
+              return {
+                type: 'status_change',
+                author: item.userName,
+                from: item.fromStatus,
+                to: item.toStatus,
+                at: item.createdAt,
+              }
+            }
+            return {
+              type: 'attachment',
+              author: item.userName,
+              fileName: item.fileName,
+              at: item.createdAt,
+            }
+          }),
         }
       },
     }),

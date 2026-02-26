@@ -107,6 +107,94 @@ async function extractWithClaude(fileUrl: string, mimeType: string): Promise<str
 }
 
 /**
+ * Process a free-text article: chunk the body directly, generate embeddings, store.
+ */
+export async function processArticle(documentId: string, orgId: string, body: string) {
+  try {
+    if (!body || body.length < 10) {
+      await updateDocumentStatus(documentId, 'error')
+      return
+    }
+
+    const chunks = chunkText(body)
+    const BATCH_SIZE = 20
+
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE)
+      const batchEmbeddings = await generateEmbeddings(batch)
+
+      await db.insert(documentChunks).values(
+        batch.map((content, j) => ({
+          documentId,
+          orgId,
+          content,
+          embedding: `[${batchEmbeddings[j].join(',')}]`,
+          chunkIndex: i + j,
+        })),
+      )
+    }
+
+    await updateDocumentStatus(documentId, 'ready')
+  } catch (error) {
+    console.error('[RAG] Error processing article:', error)
+    await updateDocumentStatus(documentId, 'error')
+  }
+}
+
+/**
+ * Process a URL entry: fetch the page, strip HTML, chunk, generate embeddings, store.
+ */
+export async function processUrl(documentId: string, orgId: string, sourceUrl: string) {
+  try {
+    const response = await fetch(sourceUrl, {
+      headers: { 'User-Agent': 'Zelus/1.0 (knowledge base indexer)' },
+      signal: AbortSignal.timeout(10_000),
+    })
+
+    if (!response.ok) {
+      await updateDocumentStatus(documentId, 'error')
+      return
+    }
+
+    const html = await response.text()
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    if (!text || text.length < 10) {
+      await updateDocumentStatus(documentId, 'error')
+      return
+    }
+
+    const chunks = chunkText(text)
+    const BATCH_SIZE = 20
+
+    for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+      const batch = chunks.slice(i, i + BATCH_SIZE)
+      const batchEmbeddings = await generateEmbeddings(batch)
+
+      await db.insert(documentChunks).values(
+        batch.map((content, j) => ({
+          documentId,
+          orgId,
+          content,
+          embedding: `[${batchEmbeddings[j].join(',')}]`,
+          chunkIndex: i + j,
+        })),
+      )
+    }
+
+    await updateDocumentStatus(documentId, 'ready')
+  } catch (error) {
+    console.error('[RAG] Error processing URL:', error)
+    await updateDocumentStatus(documentId, 'error')
+  }
+}
+
+/**
  * Search document chunks by semantic similarity using pgvector cosine distance.
  * Returns top `limit` matching chunks for the given org.
  */

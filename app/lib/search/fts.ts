@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { tickets, suppliers, maintenanceRecords } from '~/lib/db/schema'
+import { tickets, suppliers, maintenanceRecords, documents } from '~/lib/db/schema'
 import type { SearchProvider, SearchResult, SearchResults, SearchScope } from './provider'
 
 /**
@@ -38,6 +38,8 @@ async function searchScope(
       return searchSuppliers(orgId, query)
     case 'maintenance':
       return searchMaintenance(orgId, query)
+    case 'knowledge-base':
+      return searchKnowledgeBase(orgId, query)
   }
 }
 
@@ -178,6 +180,49 @@ async function searchMaintenance(orgId: string, query: string): Promise<SearchRe
     title: r.title,
     description: r.description.slice(0, 200),
     url: `/maintenance/${r.id}`,
+    createdAt: r.createdAt,
+    rank: r.rank,
+  }))
+}
+
+async function searchKnowledgeBase(orgId: string, query: string): Promise<SearchResult[]> {
+  const rows = await db
+    .select({
+      id: documents.id,
+      type: documents.type,
+      title: documents.title,
+      fileName: documents.fileName,
+      body: documents.body,
+      sourceUrl: documents.sourceUrl,
+      createdAt: documents.createdAt,
+      rank: sql<number>`ts_rank(
+        to_tsvector('portuguese',
+          coalesce(${documents.title}, '') || ' ' ||
+          coalesce(${documents.fileName}, '') || ' ' ||
+          coalesce(${documents.body}, '')
+        ),
+        websearch_to_tsquery('portuguese', ${query})
+      )`.as('rank'),
+    })
+    .from(documents)
+    .where(
+      sql`${documents.orgId} = ${orgId}
+        AND ${documents.status} = 'ready'
+        AND to_tsvector('portuguese',
+          coalesce(${documents.title}, '') || ' ' ||
+          coalesce(${documents.fileName}, '') || ' ' ||
+          coalesce(${documents.body}, '')
+        ) @@ websearch_to_tsquery('portuguese', ${query})`,
+    )
+    .orderBy(sql`rank DESC`)
+    .limit(20)
+
+  return rows.map((r) => ({
+    id: r.id,
+    scope: 'knowledge-base' as const,
+    title: r.title ?? r.fileName ?? 'Sem título',
+    description: r.body ? r.body.slice(0, 200) : (r.sourceUrl ?? ''),
+    url: `/knowledge-base/${r.id}`,
     createdAt: r.createdAt,
     rank: r.rank,
   }))

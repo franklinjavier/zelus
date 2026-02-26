@@ -1,4 +1,5 @@
 import {
+  BookOpen01Icon,
   Search01Icon,
   Ticket02Icon,
   TruckDeliveryIcon,
@@ -30,7 +31,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return { query: '', results: null }
   }
 
-  const scopes: SearchScope[] = ['tickets', 'suppliers', 'maintenance']
+  const scopes: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'knowledge-base']
   const searchResults = await search.search(orgId, q, scopes, userId)
 
   return { query: q, results: searchResults }
@@ -40,7 +41,8 @@ const scopeConfig = {
   tickets: { label: 'Ocorrências', icon: Ticket02Icon },
   suppliers: { label: 'Prestadores', icon: TruckDeliveryIcon },
   maintenance: { label: 'Intervenções', icon: WrenchIcon },
-} satisfies Partial<{ [K in SearchScope]: { label: string; icon: IconSvgElement } }>
+  'knowledge-base': { label: 'Base de Conhecimento', icon: BookOpen01Icon },
+} satisfies { [K in SearchScope]: { label: string; icon: IconSvgElement } }
 
 export default function SearchPage({ loaderData }: Route.ComponentProps) {
   const { query, results } = loaderData
@@ -48,7 +50,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
   const isSearching = navigation.state === 'loading' && navigation.location?.pathname === '/search'
 
   const grouped = results
-    ? (['tickets', 'suppliers', 'maintenance'] as SearchScope[])
+    ? (['tickets', 'suppliers', 'maintenance', 'knowledge-base'] as SearchScope[])
         .map((scope) => ({
           scope,
           items: results.results.filter((r) => r.scope === scope),
@@ -61,7 +63,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Pesquisa</h1>
         <p className="text-muted-foreground text-sm">
-          Pesquise por ocorrências, prestadores e intervenções
+          Pesquise por ocorrências, prestadores, intervenções e conhecimento
         </p>
       </div>
 

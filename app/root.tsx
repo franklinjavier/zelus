@@ -14,6 +14,7 @@ import { getToast } from '~/lib/toast.server'
 import { ErrorPage } from '~/components/brand/error-page'
 import { Toaster } from '~/components/ui/sonner'
 import { GlobalToast } from '~/components/layout/global-toast'
+import { GlobalNavigationLoading } from '~/components/layout/global-navigation-loading'
 import { Analytics } from '@vercel/analytics/react'
 import './app.css'
 
@@ -52,6 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <>
+      <GlobalNavigationLoading />
       <GlobalToast message={loaderData.toast} />
       <Outlet />
     </>

@@ -137,6 +137,21 @@ body {
   }
 }
 
+@keyframes rr-route-progress-slide {
+  0% {
+    transform: translateX(-130%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+.rr-route-progress-indicator {
+  animation: rr-route-progress-slide 1s ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -145,6 +160,10 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .rr-route-progress-indicator {
+    animation-duration: 1.8s !important;
   }
 }
 

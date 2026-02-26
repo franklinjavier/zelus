@@ -25,5 +25,5 @@ export async function action({ request, context }: Route.ActionArgs) {
     headers.append('set-cookie', cookie)
   }
 
-  throw redirect(href('/dashboard'), { headers })
+  throw redirect(href('/home'), { headers })
 }

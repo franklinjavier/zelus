@@ -31,7 +31,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   // If user already has an active org and is on the initial steps, redirect to dashboard
   if (session.session.activeOrganizationId) {
     if (pathname === href('/onboarding') || pathname === href('/onboarding/org')) {
-      throw redirect(href('/dashboard'))
+      throw redirect(href('/home'))
     }
     // On /onboarding/fractions or /onboarding/done, allow through — wizard in progress
     return null
@@ -50,7 +50,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       asResponse: true,
       headers: request.headers,
     })
-    throw redirect(href('/dashboard'), { headers: forwardCookies(res) })
+    throw redirect(href('/home'), { headers: forwardCookies(res) })
   }
 
   return null

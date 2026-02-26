@@ -64,7 +64,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       headers.append('set-cookie', cookie)
     }
 
-    return redirect(href('/dashboard'), { headers })
+    return redirect(href('/home'), { headers })
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao aceitar convite.' }
   }

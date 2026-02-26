@@ -7,7 +7,7 @@ import { getSafeRedirect } from '~/lib/misc/safe-redirect'
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = context.get(sessionContext)
   if (session) {
-    throw redirect(getSafeRedirect(request, href('/dashboard')))
+    throw redirect(getSafeRedirect(request, href('/home')))
   }
   return null
 }

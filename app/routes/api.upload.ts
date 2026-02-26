@@ -1,11 +1,9 @@
-import { put } from '@vercel/blob'
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
 
 import type { Route } from './+types/api.upload'
 import { sessionContext } from '~/lib/auth/context'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-
-const ALLOWED_MIME_TYPES = [
+const ALLOWED_CONTENT_TYPES = [
   'image/jpeg',
   'image/png',
   'image/gif',
@@ -24,30 +22,17 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ error: 'Não autenticado.' }, { status: 401 })
   }
 
-  const formData = await request.formData()
-  const file = formData.get('file')
+  const body = (await request.json()) as HandleUploadBody
 
-  if (!file || !(file instanceof File)) {
-    return Response.json({ error: 'Nenhum ficheiro enviado.' }, { status: 400 })
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return Response.json({ error: 'Ficheiro excede o limite de 10 MB.' }, { status: 400 })
-  }
-
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    return Response.json(
-      { error: 'Tipo de ficheiro não permitido. Envie imagens, PDFs ou documentos Office.' },
-      { status: 400 },
-    )
-  }
-
-  const blob = await put(file.name, file, { access: 'public', addRandomSuffix: true })
-
-  return Response.json({
-    url: blob.url,
-    fileName: file.name,
-    fileSize: file.size,
-    mimeType: file.type,
+  const response = await handleUpload({
+    body,
+    request,
+    onBeforeGenerateToken: async () => ({
+      allowedContentTypes: ALLOWED_CONTENT_TYPES,
+      maximumSizeInBytes: 10 * 1024 * 1024,
+      addRandomSuffix: true,
+    }),
   })
+
+  return Response.json(response)
 }

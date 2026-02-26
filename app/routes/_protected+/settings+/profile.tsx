@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import { data, Form, href, useFetcher, useNavigation } from 'react-router'
 import { Camera01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -110,14 +111,12 @@ export default function ProfilePage({ loaderData, actionData }: Route.ComponentP
 
     setIsUploading(true)
     try {
-      const body = new FormData()
-      body.append('file', file)
-      const res = await fetch(href('/api/upload'), { method: 'POST', body })
-      const json = await res.json()
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: href('/api/upload'),
+      })
 
-      if (!res.ok || !json.url) return
-
-      avatarFetcher.submit({ intent: 'update-avatar', imageUrl: json.url }, { method: 'post' })
+      avatarFetcher.submit({ intent: 'update-avatar', imageUrl: blob.url }, { method: 'post' })
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''

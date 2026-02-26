@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import {
   ArrowUp01Icon,
   Attachment01Icon,
@@ -385,18 +386,17 @@ function EvidenceGallery({
               if (!file) return
               setIsEvidenceUploading(true)
               try {
-                const body = new FormData()
-                body.append('file', file)
-                const res = await fetch(href('/api/upload'), { method: 'POST', body })
-                const json = await res.json()
-                if (!res.ok || !json.url) return
+                const blob = await upload(file.name, file, {
+                  access: 'public',
+                  handleUploadUrl: href('/api/upload'),
+                })
                 evidenceFetcher.submit(
                   {
                     intent: 'attach',
-                    fileName: json.fileName,
-                    fileUrl: json.url,
-                    fileSize: String(json.fileSize),
-                    mimeType: json.mimeType,
+                    fileName: file.name,
+                    fileUrl: blob.url,
+                    fileSize: String(file.size),
+                    mimeType: file.type,
                   },
                   { method: 'post' },
                 )
@@ -537,18 +537,17 @@ function ActivityCard({
                 if (!file) return
                 setIsUploading(true)
                 try {
-                  const body = new FormData()
-                  body.append('file', file)
-                  const res = await fetch(href('/api/upload'), { method: 'POST', body })
-                  const json = await res.json()
-                  if (!res.ok || !json.url) return
+                  const blob = await upload(file.name, file, {
+                    access: 'public',
+                    handleUploadUrl: href('/api/upload'),
+                  })
                   attachFetcher.submit(
                     {
                       intent: 'attach',
-                      fileName: json.fileName,
-                      fileUrl: json.url,
-                      fileSize: String(json.fileSize),
-                      mimeType: json.mimeType,
+                      fileName: file.name,
+                      fileUrl: blob.url,
+                      fileSize: String(file.size),
+                      mimeType: file.type,
                     },
                     { method: 'post' },
                   )

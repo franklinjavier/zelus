@@ -11,8 +11,8 @@ import {
   bulkAssignFractionsToUser,
   getUserAssociatedFractionIds,
   removeAssociation,
-} from '~/lib/services/associations'
-import { listFractions } from '~/lib/services/fractions'
+} from '~/lib/services/associations.server'
+import { listFractions } from '~/lib/services/fractions.server'
 import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/$userId'
 import { db } from '~/lib/db'

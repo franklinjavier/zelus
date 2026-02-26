@@ -8,7 +8,7 @@ import {
   listPendingAssociations,
   approveAssociation,
   rejectAssociation,
-} from '~/lib/services/associations'
+} from '~/lib/services/associations.server'
 import { setToast } from '~/lib/toast.server'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'

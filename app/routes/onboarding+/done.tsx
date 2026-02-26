@@ -34,7 +34,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     headers: request.headers,
   })
 
-  throw redirect(href('/dashboard'), { headers: forwardCookies(res) })
+  throw redirect(href('/home'), { headers: forwardCookies(res) })
 }
 
 export default function OnboardingDone() {

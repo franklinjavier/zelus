@@ -47,7 +47,7 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: body?.message || 'Credenciais inválidas.' }
   }
 
-  return redirectWithCookies(res, getSafeRedirect(request, href('/dashboard')))
+  return redirectWithCookies(res, getSafeRedirect(request, href('/home')))
 }
 
 export default function LoginPage({ actionData }: Route.ComponentProps) {
@@ -60,7 +60,7 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
   const errors = actionData && 'errors' in actionData ? actionData.errors : null
   const error = actionData && 'error' in actionData ? actionData.error : null
   const callbackURL =
-    redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : href('/dashboard')
+    redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : href('/home')
 
   useEffect(() => {
     authClient.oneTap({

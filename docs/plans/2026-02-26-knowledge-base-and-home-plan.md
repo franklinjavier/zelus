@@ -4,7 +4,7 @@
 
 **Goal:** Expand the documents/RAG feature into a multi-type knowledge base (files, articles, URLs), add a resident-facing browsable page, add a FAQ search scope, and redesign the home page with feature shortcuts and knowledge base highlights.
 
-**Architecture:** All three content types (file, article, url) share the same `documents` + `documentChunks` tables and RAG pipeline. The `/home` page replaces `/dashboard` (which currently just redirects to `/assistant`). A new `/knowledge-base` resident page satisfies PRD §9.3 FAQ scope.
+**Architecture:** All three content types (file, article, url) share the same `documents` + `documentChunks` tables and RAG pipeline. The `/home` page replaces `/dashboard` (which currently just redirects to `/assistant`). A new `/documents` resident page satisfies PRD §9.3 FAQ scope.
 
 **Tech Stack:** React Router v7, Drizzle ORM, Postgres FTS, pgvector, Vercel Blob, Tailwind + shadcn/ui, `@hugeicons/react`
 
@@ -215,7 +215,7 @@ export async function listReadyDocuments(orgId: string) {
     .orderBy(desc(documents.createdAt))
 }
 
-export async function getKnowledgeBaseHighlights(orgId: string, limit = 6) {
+export async function getDocumentsHighlights(orgId: string, limit = 6) {
   // Pinned entries first, then most recent, only 'ready' status
   return db
     .select()
@@ -341,7 +341,7 @@ Expected: no errors in `documents.ts`. Errors may appear in route files — thos
 
 ```bash
 git add app/lib/services/documents.ts
-git commit -m "feat: add createArticle, createUrlEntry, pinDocument, getKnowledgeBaseHighlights to documents service"
+git commit -m "feat: add createArticle, createUrlEntry, pinDocument, getDocumentsHighlights to documents service"
 ```
 
 ---
@@ -478,7 +478,7 @@ This is the largest task. The existing documents page needs to become a tabbed/s
 In `app/lib/navigation.ts`, change the documents nav entry:
 
 ```ts
-{ label: 'Base de Conhecimento', to: href('/admin/documents'), icon: ShieldKeyIcon },
+{ label: 'Documentos', to: href('/admin/documents'), icon: ShieldKeyIcon },
 ```
 
 **Step 2: Rewrite `app/routes/_protected+/admin+/documents.tsx`**
@@ -489,7 +489,7 @@ Replace the loader, action, and component. Key changes:
 - Import `processArticle`, `processUrl` from `~/lib/ai/rag`
 - Import `getDocumentTitle`, `getDocumentPreview` from `~/lib/services/documents`
 - Action handles new intents: `'add-article'`, `'add-url'`, `'pin'`
-- UI: page title "Base de Conhecimento", three Drawer triggers (upload file / novo artigo / adicionar URL), pin toggle button on each row
+- UI: page title "Documentos", three Drawer triggers (upload file / novo artigo / adicionar URL), pin toggle button on each row
 - Row display: show type badge (`Ficheiro` / `Artigo` / `Fonte externa`) and use `getDocumentTitle()`
 
 **Action additions (add alongside existing `upload`, `reprocess`, `delete` intents):**
@@ -647,27 +647,27 @@ git commit -m "feat: expand admin knowledge base with articles, URLs, and pin to
 - Modify: `app/lib/search/fts.ts`
 - Modify: `app/routes/_protected+/search.tsx`
 
-**Step 1: Add `knowledge-base` to `SearchScope`**
+**Step 1: Add `documents` to `SearchScope`**
 
 In `app/lib/search/provider.ts`:
 
 ```ts
-export type SearchScope = 'tickets' | 'suppliers' | 'maintenance' | 'knowledge-base'
+export type SearchScope = 'tickets' | 'suppliers' | 'maintenance' | 'documents'
 ```
 
-**Step 2: Add knowledge-base search to `app/lib/search/fts.ts`**
+**Step 2: Add documents search to `app/lib/search/fts.ts`**
 
 Add to the `switch` in `searchScope`:
 
 ```ts
-case 'knowledge-base':
-  return searchKnowledgeBase(orgId, query)
+case 'documents':
+  return searchDocuments(orgId, query)
 ```
 
 Add the function:
 
 ```ts
-async function searchKnowledgeBase(orgId: string, query: string): Promise<SearchResult[]> {
+async function searchDocuments(orgId: string, query: string): Promise<SearchResult[]> {
   const rows = await db
     .select({
       id: documents.id,
@@ -701,10 +701,10 @@ async function searchKnowledgeBase(orgId: string, query: string): Promise<Search
 
   return rows.map((r) => ({
     id: r.id,
-    scope: 'knowledge-base' as const,
+    scope: 'documents' as const,
     title: r.title ?? r.fileName ?? 'Sem título',
     description: r.body ? r.body.slice(0, 200) : (r.sourceUrl ?? ''),
-    url: `/knowledge-base/${r.id}`,
+    url: `/documents/${r.id}`,
     createdAt: r.createdAt,
     rank: r.rank,
   }))
@@ -717,18 +717,18 @@ Add the `documents` import at the top of `fts.ts`:
 import { tickets, suppliers, maintenanceRecords, documents } from '~/lib/db/schema'
 ```
 
-**Step 3: Add `knowledge-base` scope to the search route**
+**Step 3: Add `documents` scope to the search route**
 
 In `app/routes/_protected+/search.tsx`, update the scopes array:
 
 ```ts
-const scopes: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'knowledge-base']
+const scopes: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'documents']
 ```
 
 Add to `scopeConfig`:
 
 ```ts
-'knowledge-base': { label: 'Base de Conhecimento', icon: BookOpen01Icon },
+'documents': { label: 'Documentos', icon: BookOpen01Icon },
 ```
 
 Import `BookOpen01Icon` (or similar) from `@hugeicons/core-free-icons`.
@@ -752,9 +752,9 @@ git commit -m "feat: add knowledge-base FTS search scope"
 
 **Files:**
 
-- Create: `app/routes/_protected+/knowledge-base+/_layout.tsx`
-- Create: `app/routes/_protected+/knowledge-base+/index.tsx`
-- Create: `app/routes/_protected+/knowledge-base+/$id.tsx`
+- Create: `app/routes/_protected+/documents+/_layout.tsx`
+- Create: `app/routes/_protected+/documents+/index.tsx`
+- Create: `app/routes/_protected+/documents+/$id.tsx`
 - Modify: `app/lib/navigation.ts`
 
 **Step 1: Create the list page `index.tsx`**
@@ -772,7 +772,7 @@ import { EmptyState } from '~/components/layout/empty-state'
 import type { Route } from './+types/index'
 
 export function meta() {
-  return [{ title: 'Base de Conhecimento — Zelus' }]
+  return [{ title: 'Documentos — Zelus' }]
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -800,7 +800,7 @@ const typeLabel = {
   url: 'Fonte externa',
 } as const
 
-export default function KnowledgeBaseIndex({ loaderData }: Route.ComponentProps) {
+export default function DocumentsIndex({ loaderData }: Route.ComponentProps) {
   const { docs, query } = loaderData
   const navigation = useNavigation()
   const isSearching = navigation.state === 'loading'
@@ -809,7 +809,7 @@ export default function KnowledgeBaseIndex({ loaderData }: Route.ComponentProps)
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
         <HugeiconsIcon icon={BookOpen01Icon} size={24} className="text-primary" />
-        <h1 className="text-xl font-semibold">Base de Conhecimento</h1>
+        <h1 className="text-xl font-semibold">Documentos</h1>
       </div>
 
       <Form method="get" className="mb-6">
@@ -823,7 +823,7 @@ export default function KnowledgeBaseIndex({ loaderData }: Route.ComponentProps)
           {docs.map((doc) => (
             <Link
               key={doc.id}
-              to={href('/knowledge-base/:id', { id: doc.id })}
+              to={href('/documents/:id', { id: doc.id })}
               className="ring-foreground/5 hover:bg-muted/50 flex flex-col gap-1.5 rounded-2xl p-4 ring-1"
             >
               <div className="flex items-start justify-between gap-2">
@@ -868,7 +868,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
 const typeLabel = { file: 'Ficheiro', article: 'Artigo', url: 'Fonte externa' } as const
 
-export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps) {
+export default function DocumentsDetail({ loaderData }: Route.ComponentProps) {
   const { doc } = loaderData
 
   return (
@@ -878,7 +878,7 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
         size="sm"
         className="mb-4 -ml-2"
         nativeButton={false}
-        render={<Link to={href('/knowledge-base')} />}
+        render={<Link to={href('/documents')} />}
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
         Voltar
@@ -926,7 +926,7 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
 ```tsx
 import { Outlet } from 'react-router'
 
-export default function KnowledgeBaseLayout() {
+export default function DocumentsLayout() {
   return <Outlet />
 }
 ```
@@ -939,7 +939,7 @@ In `app/lib/navigation.ts`, add to `mainNav`:
 import { BookOpen01Icon } from '@hugeicons/core-free-icons'
 
 // Add to mainNav array:
-{ label: 'Base de Conhecimento', to: href('/knowledge-base'), icon: BookOpen01Icon },
+{ label: 'Documentos', to: href('/documents'), icon: BookOpen01Icon },
 ```
 
 **Step 5: Typecheck**
@@ -951,7 +951,7 @@ bun run typecheck
 **Step 6: Commit**
 
 ```bash
-git add app/routes/_protected+/knowledge-base+/ app/lib/navigation.ts
+git add app/routes/_protected+/documents+/ app/lib/navigation.ts
 git commit -m "feat: add resident-facing knowledge base browsable page"
 ```
 
@@ -983,7 +983,7 @@ import type { IconSvgElement } from '@hugeicons/react'
 import { Badge } from '~/components/ui/badge'
 import { orgContext } from '~/lib/auth/context'
 import {
-  getKnowledgeBaseHighlights,
+  getDocumentsHighlights,
   getDocumentTitle,
   getDocumentPreview,
 } from '~/lib/services/documents'
@@ -995,7 +995,7 @@ export function meta() {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
-  const highlights = await getKnowledgeBaseHighlights(orgId, 6)
+  const highlights = await getDocumentsHighlights(orgId, 6)
   return { highlights }
 }
 
@@ -1030,9 +1030,9 @@ const shortcuts: Array<{
     icon: WrenchIcon,
   },
   {
-    label: 'Base de Conhecimento',
+    label: 'Documentos',
     description: 'Artigos e documentos úteis',
-    to: href('/knowledge-base'),
+    to: href('/documents'),
     icon: BookOpen01Icon,
   },
   {
@@ -1078,7 +1078,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold">Destaques</h2>
-            <Link to={href('/knowledge-base')} className="text-primary text-sm hover:underline">
+            <Link to={href('/documents')} className="text-primary text-sm hover:underline">
               Ver todos
             </Link>
           </div>
@@ -1086,7 +1086,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
             {highlights.map((doc) => (
               <Link
                 key={doc.id}
-                to={href('/knowledge-base/:id', { id: doc.id })}
+                to={href('/documents/:id', { id: doc.id })}
                 className="ring-foreground/5 hover:bg-muted/50 flex flex-col gap-1 rounded-2xl p-3 ring-1"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -1188,14 +1188,14 @@ Expected: clean build.
 
 **Step 4: Manual smoke test checklist**
 
-- [ ] `/admin/documents` loads and shows "Base de Conhecimento" title
+- [ ] `/admin/documents` loads and shows "Documentos" title
 - [ ] Can create an article (title + body), entry appears with "Artigo" badge
 - [ ] Can add a URL entry, status goes to processing then ready/error
 - [ ] Pin toggle works: pinned entry shows amber pin icon
-- [ ] `/knowledge-base` lists all ready entries, search filters them
-- [ ] `/knowledge-base/:id` shows article body / file link / URL link correctly
+- [ ] `/documents` lists all ready entries, search filters them
+- [ ] `/documents/:id` shows article body / file link / URL link correctly
 - [ ] `/home` shows 6 shortcut cards and highlights section
 - [ ] Highlights show pinned entries first
 - [ ] `/dashboard` redirects to `/home`
-- [ ] `/search` returns knowledge-base results
+- [ ] `/search` returns documents results
 - [ ] AI assistant still works (RAG uses same chunks)

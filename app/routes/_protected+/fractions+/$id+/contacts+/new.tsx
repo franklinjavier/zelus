@@ -2,7 +2,7 @@ import { href, redirect, Form } from 'react-router'
 
 import type { Route } from './+types/new'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { createContact } from '~/lib/services/fraction-contacts'
+import { createContact } from '~/lib/services/fraction-contacts.server'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Textarea } from '~/components/ui/textarea'

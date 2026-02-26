@@ -1,4 +1,4 @@
-import { Add01Icon, LockIcon, Ticket02Icon } from '@hugeicons/core-free-icons'
+import { Add01Icon, FilterHorizontalIcon, LockIcon, Ticket02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { href, Link, Outlet, useMatches, useNavigate } from 'react-router'
 
@@ -17,6 +17,13 @@ import {
   DrawerTitle,
 } from '~/components/ui/drawer'
 import {
+  PopoverPopup,
+  PopoverPositioner,
+  PopoverPortal,
+  PopoverRoot,
+  PopoverTrigger,
+} from '~/components/ui/popover'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -25,8 +32,8 @@ import {
 } from '~/components/ui/select'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { formatShortDate } from '~/lib/format'
-import { listCategories } from '~/lib/services/categories'
-import { listTickets } from '~/lib/services/tickets'
+import { listCategories } from '~/lib/services/categories.server'
+import { listTickets } from '~/lib/services/tickets.server'
 import { useFilterParams } from '~/lib/use-filter-params'
 import { cn } from '~/lib/utils'
 import type { Route } from './+types/_layout'
@@ -79,6 +86,11 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate()
   const matches = useMatches()
   const isDrawerOpen = matches.some((m) => m.pathname.endsWith('/new'))
+
+  const activeFilterCount =
+    (searchParams.get('status') && searchParams.get('status') !== '_all' ? 1 : 0) +
+    (searchParams.get('priority') && searchParams.get('priority') !== '_all' ? 1 : 0) +
+    (searchParams.get('category') && searchParams.get('category') !== '_all' ? 1 : 0)
 
   const statusItems = [
     { label: 'Todos os estados', value: '_all' },
@@ -149,54 +161,134 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
           </button>
         </div>
 
-        <Select
-          value={searchParams.get('status') ?? '_all'}
-          onValueChange={(v) => setFilter('status', v)}
-          items={statusItems}
-        >
-          <SelectTrigger size="sm" className="w-auto">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {statusItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Mobile: filter popover */}
+        <PopoverRoot>
+          <PopoverTrigger
+            className={cn(
+              'ring-foreground/10 hover:bg-muted/50 relative inline-flex h-8 items-center gap-2 rounded-4xl px-3 text-sm font-medium ring-1 sm:hidden',
+            )}
+          >
+            <HugeiconsIcon icon={FilterHorizontalIcon} size={16} />
+            Filtros
+            {activeFilterCount > 0 && (
+              <Badge className="bg-primary text-primary-foreground absolute -top-1.5 -right-1.5 size-5 justify-center rounded-full p-0 text-xs">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </PopoverTrigger>
+          <PopoverPortal>
+            <PopoverPositioner sideOffset={8}>
+              <PopoverPopup className="w-72">
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm font-medium">Filtros</p>
+                  <Select
+                    value={searchParams.get('status') ?? '_all'}
+                    onValueChange={(v) => setFilter('status', v)}
+                    items={statusItems}
+                  >
+                    <SelectTrigger size="sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusItems.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-        <Select
-          value={searchParams.get('priority') ?? '_all'}
-          onValueChange={(v) => setFilter('priority', v)}
-          items={priorityItems}
-        >
-          <SelectTrigger size="sm" className="w-auto">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {priorityItems.map((item) => {
-              const config = priorityConfig[item.value]
-              return (
-                <SelectItem key={item.value} value={item.value} className={config?.className}>
-                  {config && <config.icon className="size-4" />}
+                  <Select
+                    value={searchParams.get('priority') ?? '_all'}
+                    onValueChange={(v) => setFilter('priority', v)}
+                    items={priorityItems}
+                  >
+                    <SelectTrigger size="sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {priorityItems.map((item) => {
+                        const config = priorityConfig[item.value]
+                        return (
+                          <SelectItem
+                            key={item.value}
+                            value={item.value}
+                            className={config?.className}
+                          >
+                            {config && <config.icon className="size-4" />}
+                            {item.label}
+                          </SelectItem>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
+
+                  {categories.length > 0 && (
+                    <CategorySelect
+                      categories={categories}
+                      defaultValue={searchParams.get('category')}
+                      name="category"
+                      placeholder="Todas as categorias"
+                      onValueChange={(v) => setFilter('category', v ?? '_all')}
+                    />
+                  )}
+                </div>
+              </PopoverPopup>
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+
+        {/* Desktop: inline filters */}
+        <div className="hidden items-center gap-3 sm:flex">
+          <Select
+            value={searchParams.get('status') ?? '_all'}
+            onValueChange={(v) => setFilter('status', v)}
+            items={statusItems}
+          >
+            <SelectTrigger size="sm" className="w-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>
-              )
-            })}
-          </SelectContent>
-        </Select>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {categories.length > 0 && (
-          <CategorySelect
-            categories={categories}
-            defaultValue={searchParams.get('category')}
-            name="category"
-            className="w-56"
-            placeholder="Todas as categorias"
-            onValueChange={(v) => setFilter('category', v ?? '_all')}
-          />
-        )}
+          <Select
+            value={searchParams.get('priority') ?? '_all'}
+            onValueChange={(v) => setFilter('priority', v)}
+            items={priorityItems}
+          >
+            <SelectTrigger size="sm" className="w-auto">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {priorityItems.map((item) => {
+                const config = priorityConfig[item.value]
+                return (
+                  <SelectItem key={item.value} value={item.value} className={config?.className}>
+                    {config && <config.icon className="size-4" />}
+                    {item.label}
+                  </SelectItem>
+                )
+              })}
+            </SelectContent>
+          </Select>
+
+          {categories.length > 0 && (
+            <CategorySelect
+              categories={categories}
+              defaultValue={searchParams.get('category')}
+              name="category"
+              className="w-56"
+              placeholder="Todas as categorias"
+              onValueChange={(v) => setFilter('category', v ?? '_all')}
+            />
+          )}
+        </div>
       </div>
 
       {/* Ticket list */}

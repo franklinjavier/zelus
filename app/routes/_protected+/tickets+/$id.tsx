@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import {
   ArrowUp01Icon,
   Attachment01Icon,
@@ -50,16 +51,17 @@ import { orgContext, userContext } from '~/lib/auth/context'
 import { getFractionRole } from '~/lib/auth/rbac'
 import { hasCategoryLabel, translateCategory } from '~/lib/category-labels'
 import { formatDate } from '~/lib/format'
-import { listCategories } from '~/lib/services/categories'
+import { listCategories } from '~/lib/services/categories.server'
 import {
   createAttachment,
   deleteAttachment,
   listTicketAttachments,
-} from '~/lib/services/ticket-attachments'
-import { listFractions } from '~/lib/services/fractions'
-import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments'
-import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets'
+} from '~/lib/services/ticket-attachments.server'
+import { listFractions } from '~/lib/services/fractions.server'
+import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments.server'
+import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets.server'
 import { setToast } from '~/lib/toast.server'
+import { signFileUrl } from '~/lib/file-token.server'
 import type { Route } from './+types/$id'
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -98,11 +100,22 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const isAdmin = effectiveRole === 'org_admin'
   const isCreator = ticket.createdBy === user.id
 
+  const signedAttachments = attachments.map((a) => ({ ...a, fileUrl: signFileUrl(a.fileUrl) }))
+  const signedTimeline = timeline.map((item) => {
+    if (item.type === 'attachment') return { ...item, fileUrl: signFileUrl(item.fileUrl) }
+    if (item.type === 'comment')
+      return {
+        ...item,
+        attachments: item.attachments?.map((a) => ({ ...a, fileUrl: signFileUrl(a.fileUrl) })),
+      }
+    return item
+  })
+
   return {
     ticket,
-    timeline,
+    timeline: signedTimeline,
     categories,
-    attachments,
+    attachments: signedAttachments,
     orgFractions,
     canManage,
     isAdmin,
@@ -385,18 +398,17 @@ function EvidenceGallery({
               if (!file) return
               setIsEvidenceUploading(true)
               try {
-                const body = new FormData()
-                body.append('file', file)
-                const res = await fetch(href('/api/upload'), { method: 'POST', body })
-                const json = await res.json()
-                if (!res.ok || !json.url) return
+                const blob = await upload(file.name, file, {
+                  access: 'private',
+                  handleUploadUrl: href('/api/upload'),
+                })
                 evidenceFetcher.submit(
                   {
                     intent: 'attach',
-                    fileName: json.fileName,
-                    fileUrl: json.url,
-                    fileSize: String(json.fileSize),
-                    mimeType: json.mimeType,
+                    fileName: file.name,
+                    fileUrl: blob.url,
+                    fileSize: String(file.size),
+                    mimeType: file.type,
                   },
                   { method: 'post' },
                 )
@@ -537,18 +549,17 @@ function ActivityCard({
                 if (!file) return
                 setIsUploading(true)
                 try {
-                  const body = new FormData()
-                  body.append('file', file)
-                  const res = await fetch(href('/api/upload'), { method: 'POST', body })
-                  const json = await res.json()
-                  if (!res.ok || !json.url) return
+                  const blob = await upload(file.name, file, {
+                    access: 'public',
+                    handleUploadUrl: href('/api/upload'),
+                  })
                   attachFetcher.submit(
                     {
                       intent: 'attach',
-                      fileName: json.fileName,
-                      fileUrl: json.url,
-                      fileSize: String(json.fileSize),
-                      mimeType: json.mimeType,
+                      fileName: file.name,
+                      fileUrl: blob.url,
+                      fileSize: String(file.size),
+                      mimeType: file.type,
                     },
                     { method: 'post' },
                   )

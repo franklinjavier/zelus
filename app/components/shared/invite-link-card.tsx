@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { Copy01Icon, Link01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'

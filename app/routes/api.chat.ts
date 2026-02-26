@@ -18,10 +18,10 @@ import {
   saveMessage,
   getRecentMessages,
   updateConversationTitle,
-} from '~/lib/services/conversations'
+} from '~/lib/services/conversations.server'
 import { eq, or, and } from 'drizzle-orm'
-import { listCategories } from '~/lib/services/categories'
-import { getInviteLink } from '~/lib/services/invite-link'
+import { listCategories } from '~/lib/services/categories.server'
+import { getInviteLink } from '~/lib/services/invite-link.server'
 import { db } from '~/lib/db'
 import { member, user as userTable } from '~/lib/db/schema'
 import { getAssistantTools } from '~/lib/ai/tools'

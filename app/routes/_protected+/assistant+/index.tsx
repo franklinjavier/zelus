@@ -154,6 +154,7 @@ export default function AssistantIndexPage({ loaderData }: Route.ComponentProps)
             placeholder="Escreva a sua mensagem..."
             className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none"
             disabled={isLoading}
+            autoFocus
           />
           <button
             type="submit"

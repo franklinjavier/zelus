@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm'
 import type { Route } from './+types/join.$code'
 import { auth } from '~/lib/auth/auth.server'
 import { sessionContext } from '~/lib/auth/context'
-import { getOrgByInviteCode } from '~/lib/services/invite-link'
+import { getOrgByInviteCode } from '~/lib/services/invite-link.server'
 import { setToast } from '~/lib/toast.server'
 import { db } from '~/lib/db'
 import { member } from '~/lib/db/schema'
@@ -76,7 +76,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     for (const cookie of res.headers.getSetCookie()) {
       headers.append('set-cookie', cookie)
     }
-    return redirect(href('/dashboard'), { headers })
+    return redirect(href('/home'), { headers })
   }
 
   try {
@@ -103,7 +103,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     const toastHeaders = await setToast('Bem-vindo ao condomínio!')
     headers.append('set-cookie', toastHeaders['set-cookie'])
 
-    return redirect(href('/dashboard'), { headers })
+    return redirect(href('/home'), { headers })
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao juntar-se ao condomínio.' }
   }
@@ -144,7 +144,7 @@ export default function JoinPage({ loaderData, actionData }: Route.ComponentProp
               <Button
                 size="lg"
                 nativeButton={false}
-                render={<Link to={href('/dashboard')} />}
+                render={<Link to={href('/home')} />}
                 className="w-full"
               >
                 Ir para o painel

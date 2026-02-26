@@ -26,7 +26,7 @@ import {
   enableInviteLink,
   disableInviteLink,
   regenerateInviteCode,
-} from '~/lib/services/invite-link'
+} from '~/lib/services/invite-link.server'
 import { Copy01Icon, RefreshIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 

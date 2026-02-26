@@ -21,10 +21,17 @@ export const documents = pgTable(
     uploadedBy: text('uploaded_by')
       .notNull()
       .references(() => user.id),
-    fileName: text('file_name').notNull(),
-    fileUrl: text('file_url').notNull(),
-    fileSize: integer('file_size').notNull(),
-    mimeType: text('mime_type').notNull(),
+    type: text('type', { enum: ['file', 'article', 'url'] })
+      .notNull()
+      .default('file'),
+    title: text('title'),
+    body: text('body'),
+    sourceUrl: text('source_url'),
+    fileName: text('file_name'),
+    fileUrl: text('file_url'),
+    fileSize: integer('file_size'),
+    mimeType: text('mime_type'),
+    pinnedAt: timestamp('pinned_at'),
     status: text('status', { enum: ['processing', 'ready', 'error'] })
       .notNull()
       .default('processing'),

@@ -13,7 +13,7 @@ import {
   deleteConversation,
   loadConversation,
   updateConversationTitle,
-} from '~/lib/services/conversations'
+} from '~/lib/services/conversations.server'
 import type { Route } from './+types/$id'
 import { LoadingBubble, MessageBubble } from './_modules/chat-bubbles'
 
@@ -186,6 +186,7 @@ export default function ConversationPage({ loaderData }: Route.ComponentProps) {
             placeholder="Escreva a sua mensagem..."
             className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none"
             disabled={isLoading}
+            autoFocus
           />
           <button
             type="submit"

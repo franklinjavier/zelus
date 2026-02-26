@@ -1,4 +1,4 @@
-export type SearchScope = 'tickets' | 'suppliers' | 'maintenance'
+export type SearchScope = 'tickets' | 'suppliers' | 'maintenance' | 'documents'
 
 export interface SearchResult {
   id: string

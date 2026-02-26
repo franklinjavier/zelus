@@ -2,11 +2,16 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { eq, and } from 'drizzle-orm'
 
-import { createTicket, listTickets, getTicket, updateTicketStatus } from '~/lib/services/tickets'
-import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments'
-import { searchTicketsByText } from '~/lib/search'
-import { listCategories } from '~/lib/services/categories'
-import { listSuppliers } from '~/lib/services/suppliers'
+import {
+  createTicket,
+  listTickets,
+  getTicket,
+  updateTicketStatus,
+} from '~/lib/services/tickets.server'
+import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments.server'
+import { searchTicketsByText } from '~/lib/search/index.server'
+import { listCategories } from '~/lib/services/categories.server'
+import { listSuppliers } from '~/lib/services/suppliers.server'
 import { db } from '~/lib/db'
 import { tickets, userFractions, fractions } from '~/lib/db/schema'
 

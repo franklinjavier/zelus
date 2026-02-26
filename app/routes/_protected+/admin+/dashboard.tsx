@@ -15,7 +15,7 @@ import { InviteLinkCard } from '~/components/shared/invite-link-card'
 import { orgContext } from '~/lib/auth/context'
 import { db } from '~/lib/db'
 import { fractions, maintenanceRecords, suppliers, tickets } from '~/lib/db/schema'
-import { getInviteLink } from '~/lib/services/invite-link'
+import { getInviteLink } from '~/lib/services/invite-link.server'
 import type { Route } from './+types/dashboard'
 
 export function meta(_args: Route.MetaArgs) {

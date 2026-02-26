@@ -1,7 +1,7 @@
-import { ftsProvider } from './fts'
+import { ftsProvider } from './fts.server'
 import type { SearchProvider } from './provider'
 
-export { searchTicketsByText } from './fts'
+export { searchTicketsByText } from './fts.server'
 export type { SearchProvider, SearchResult, SearchResults, SearchScope } from './provider'
 
 /**

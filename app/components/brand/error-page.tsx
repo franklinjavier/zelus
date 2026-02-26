@@ -25,7 +25,7 @@ export function ErrorContent({ status, title, message, stack }: ErrorProps) {
         <p className="text-muted-foreground mt-2">{message}</p>
         <div className="mt-8">
           <Link
-            to={href('/dashboard')}
+            to={href('/home')}
             className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center rounded-full px-6 text-sm font-medium"
           >
             Voltar ao início

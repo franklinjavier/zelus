@@ -19,8 +19,11 @@ import {
 
 import type { Route } from './+types/_layout'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { listFractions } from '~/lib/services/fractions'
-import { requestAssociation, getUserAssociatedFractionIds } from '~/lib/services/associations'
+import { listFractions } from '~/lib/services/fractions.server'
+import {
+  requestAssociation,
+  getUserAssociatedFractionIds,
+} from '~/lib/services/associations.server'
 import { Button } from '~/components/ui/button'
 import { CardLink } from '~/components/brand/card-link'
 import { EmptyState } from '~/components/layout/empty-state'

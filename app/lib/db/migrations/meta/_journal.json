@@ -99,6 +99,13 @@
       "when": 1772030777584,
       "tag": "0013_add-fraction-contacts",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1772092800000,
+      "tag": "0014_knowledge-base",
+      "breakpoints": true
     }
   ]
 }

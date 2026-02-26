@@ -16,7 +16,7 @@ import {
   DrawerTitle,
 } from '~/components/ui/drawer'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { listInvites, revokeInvite } from '~/lib/services/invites'
+import { listInvites, revokeInvite } from '~/lib/services/invites.server'
 import { setToast } from '~/lib/toast.server'
 import { cn } from '~/lib/utils'
 import type { Route } from './+types/_layout'

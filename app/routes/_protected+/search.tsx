@@ -1,4 +1,5 @@
 import {
+  BookOpen01Icon,
   Search01Icon,
   Ticket02Icon,
   TruckDeliveryIcon,
@@ -11,7 +12,7 @@ import { Badge } from '~/components/ui/badge'
 import { Input } from '~/components/ui/input'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { formatShortDate } from '~/lib/format'
-import { search, type SearchScope } from '~/lib/search'
+import { search, type SearchScope } from '~/lib/search/index.server'
 import { EmptyState } from '~/components/layout/empty-state'
 import type { Route } from './+types/search'
 
@@ -30,9 +31,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return { query: '', results: null }
   }
 
-  const scopes: SearchScope[] = ['tickets', 'suppliers', 'maintenance']
+  const scopes: SearchScope[] = ['tickets', 'suppliers', 'maintenance', 'documents']
   const searchResults = await search.search(orgId, q, scopes, userId)
 
+  console.log('Search results:', searchResults)
   return { query: q, results: searchResults }
 }
 
@@ -40,7 +42,8 @@ const scopeConfig = {
   tickets: { label: 'Ocorrências', icon: Ticket02Icon },
   suppliers: { label: 'Prestadores', icon: TruckDeliveryIcon },
   maintenance: { label: 'Intervenções', icon: WrenchIcon },
-} satisfies Partial<{ [K in SearchScope]: { label: string; icon: IconSvgElement } }>
+  documents: { label: 'Documentos', icon: BookOpen01Icon },
+} satisfies { [K in SearchScope]: { label: string; icon: IconSvgElement } }
 
 export default function SearchPage({ loaderData }: Route.ComponentProps) {
   const { query, results } = loaderData
@@ -48,7 +51,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
   const isSearching = navigation.state === 'loading' && navigation.location?.pathname === '/search'
 
   const grouped = results
-    ? (['tickets', 'suppliers', 'maintenance'] as SearchScope[])
+    ? (['tickets', 'suppliers', 'maintenance', 'documents'] as SearchScope[])
         .map((scope) => ({
           scope,
           items: results.results.filter((r) => r.scope === scope),
@@ -61,7 +64,7 @@ export default function SearchPage({ loaderData }: Route.ComponentProps) {
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Pesquisa</h1>
         <p className="text-muted-foreground text-sm">
-          Pesquise por ocorrências, prestadores e intervenções
+          Pesquise por ocorrências, prestadores, intervenções e documentos
         </p>
       </div>
 

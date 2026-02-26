@@ -2,7 +2,7 @@ import { data, href, redirect, Form, useFetcher } from 'react-router'
 
 import type { Route } from './+types/edit'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { getFraction, updateFraction, deleteFraction } from '~/lib/services/fractions'
+import { getFraction, updateFraction, deleteFraction } from '~/lib/services/fractions.server'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel } from '~/components/ui/field'

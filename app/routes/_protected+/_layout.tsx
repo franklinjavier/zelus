@@ -8,8 +8,8 @@ import { AppShell } from '~/components/layout/app-shell'
 import { ErrorContent } from '~/components/brand/error-page'
 import { db } from '~/lib/db'
 import { member, organization } from '~/lib/db/schema'
-import { getUnreadCount } from '~/lib/services/notifications'
-import { getInviteLink } from '~/lib/services/invite-link'
+import { getUnreadCount } from '~/lib/services/notifications.server'
+import { getInviteLink } from '~/lib/services/invite-link.server'
 
 export const middleware: Route.MiddlewareFunction[] = [orgMemberMiddleware]
 

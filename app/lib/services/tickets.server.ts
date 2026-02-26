@@ -2,8 +2,8 @@ import { eq, and, or, inArray, sql, desc } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
 import { tickets, ticketEvents, fractions, userFractions, user } from '~/lib/db/schema'
-import { logAuditEvent } from './audit'
-import { createNotification } from './notifications'
+import { logAuditEvent } from './audit.server'
+import { createNotification } from './notifications.server'
 import { sendEmail } from '~/lib/email/client'
 import { ticketUpdateEmail } from '~/lib/email/templates/ticket-update'
 

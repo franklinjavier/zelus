@@ -5,7 +5,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 
 import type { Route } from './+types/bulk'
 import { orgContext, userContext } from '~/lib/auth/context'
-import { createFraction } from '~/lib/services/fractions'
+import { createFraction } from '~/lib/services/fractions.server'
 import { generateFractionLabels } from '~/lib/fractions-generator'
 import { setToast } from '~/lib/toast.server'
 import { Button } from '~/components/ui/button'

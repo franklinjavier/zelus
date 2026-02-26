@@ -3,7 +3,7 @@ import { redirect, Form, Link, href } from 'react-router'
 import type { Route } from './+types/invite.$token'
 import { auth } from '~/lib/auth/auth.server'
 import { sessionContext } from '~/lib/auth/context'
-import { getInviteByToken, acceptInvite } from '~/lib/services/invites'
+import { getInviteByToken, acceptInvite } from '~/lib/services/invites.server'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card'
 import { AzulejoPattern } from '~/components/brand/azulejo-pattern'
@@ -64,7 +64,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
       headers.append('set-cookie', cookie)
     }
 
-    return redirect(href('/dashboard'), { headers })
+    return redirect(href('/home'), { headers })
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Erro ao aceitar convite.' }
   }

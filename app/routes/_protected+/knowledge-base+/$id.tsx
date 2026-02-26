@@ -7,6 +7,7 @@ import { BackButton } from '~/components/layout/back-button'
 import { orgContext } from '~/lib/auth/context'
 import { getDocument } from '~/lib/services/documents.server'
 import { getDocumentTitle } from '~/lib/services/documents-display'
+import { cn } from '~/lib/utils'
 import type { Route } from './+types/$id'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -21,8 +22,10 @@ const typeLabel = { file: 'Ficheiro', article: 'Artigo', url: 'Fonte externa' } 
 export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps) {
   const { doc } = loaderData
 
+  const isFile = doc.type === 'file' && doc.fileUrl
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className={cn('mx-auto px-4 py-6', isFile ? 'max-w-5xl' : 'max-w-2xl')}>
       <BackButton to={href('/knowledge-base')} />
 
       <div className="mt-4 mb-4 flex items-start justify-between gap-3">
@@ -40,13 +43,13 @@ export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps
             <iframe
               src={doc.fileUrl}
               title={getDocumentTitle(doc)}
-              className="ring-foreground/5 h-[70vh] w-full rounded-2xl ring-1"
+              className="ring-foreground/5 h-[85vh] w-full rounded-2xl ring-1"
             />
           ) : doc.mimeType?.startsWith('image/') ? (
             <img
               src={doc.fileUrl}
               alt={getDocumentTitle(doc)}
-              className="ring-foreground/5 max-h-[70vh] w-full rounded-2xl object-contain ring-1"
+              className="ring-foreground/5 max-h-[85vh] w-full rounded-2xl object-contain ring-1"
             />
           ) : null}
           <a

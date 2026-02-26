@@ -249,9 +249,9 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Base de Conhecimento</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Article drawer */}
           <Drawer>
             <DrawerTrigger

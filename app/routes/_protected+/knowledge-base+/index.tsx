@@ -43,7 +43,7 @@ export default function KnowledgeBaseIndex({ loaderData }: Route.ComponentProps)
   const { docs, query } = loaderData
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className="px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
         <HugeiconsIcon icon={BookOpen01Icon} size={24} className="text-primary" />
         <h1 className="text-xl font-semibold">Base de Conhecimento</h1>

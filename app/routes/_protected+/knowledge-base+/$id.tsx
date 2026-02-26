@@ -8,7 +8,6 @@ import { orgContext } from '~/lib/auth/context'
 import { getDocument } from '~/lib/services/documents.server'
 import { getDocumentTitle } from '~/lib/services/documents-display'
 import { signFileUrl } from '~/lib/file-token.server'
-import { cn } from '~/lib/utils'
 import type { Route } from './+types/$id'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
@@ -25,10 +24,8 @@ const typeLabel = { file: 'Ficheiro', article: 'Artigo', url: 'Fonte externa' } 
 export default function KnowledgeBaseDetail({ loaderData }: Route.ComponentProps) {
   const { doc } = loaderData
 
-  const isFile = doc.type === 'file' && doc.fileUrl
-
   return (
-    <div className={cn('mx-auto px-4 py-6', isFile ? 'max-w-5xl' : 'max-w-2xl')}>
+    <div className="px-4 py-6">
       <BackButton to={href('/knowledge-base')} />
 
       <div className="mt-4 mb-4 flex items-start justify-between gap-3">

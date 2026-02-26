@@ -12,11 +12,8 @@ import type { IconSvgElement } from '@hugeicons/react'
 
 import { Badge } from '~/components/ui/badge'
 import { orgContext } from '~/lib/auth/context'
-import {
-  getKnowledgeBaseHighlights,
-  getDocumentTitle,
-  getDocumentPreview,
-} from '~/lib/services/documents'
+import { getKnowledgeBaseHighlights } from '~/lib/services/documents'
+import { getDocumentTitle, getDocumentPreview } from '~/lib/services/documents-display'
 import type { Route } from './+types/home'
 
 export function meta() {

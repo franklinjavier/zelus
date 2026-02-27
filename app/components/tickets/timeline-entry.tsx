@@ -99,9 +99,7 @@ function ImagePreview({
           src={src}
           alt={alt}
           className={
-            className
-              ? 'size-full rounded-xl border object-cover'
-              : 'max-h-64 rounded-lg border object-contain'
+            className ? 'size-full object-cover' : 'max-h-64 rounded-lg border object-contain'
           }
         />
       </button>

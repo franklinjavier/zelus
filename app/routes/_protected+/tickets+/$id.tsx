@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { uploadFile } from '~/lib/upload'
 import {
   ArrowUp01Icon,
@@ -369,81 +369,43 @@ function EvidenceGallery({
 }) {
   const [isEvidenceUploading, setIsEvidenceUploading] = useState(false)
   const evidenceFileInputRef = useRef<HTMLInputElement>(null)
+  const [pendingPreviews, setPendingPreviews] = useState<
+    { fileName: string; previewUrl: string; fileSize: number; mimeType: string }[]
+  >([])
+  const lastAttachmentCount = useRef(attachments.length)
 
-  if (attachments.length === 0 && !canEdit) return null
+  // Remove pending previews as server confirms new attachments
+  useEffect(() => {
+    if (attachments.length > lastAttachmentCount.current) {
+      const diff = attachments.length - lastAttachmentCount.current
+      setPendingPreviews((prev) => {
+        const toRemove = prev.slice(0, diff)
+        toRemove.forEach((p) => URL.revokeObjectURL(p.previewUrl))
+        return prev.slice(diff)
+      })
+    }
+    lastAttachmentCount.current = attachments.length
+  }, [attachments.length])
+
+  if (attachments.length === 0 && pendingPreviews.length === 0 && !canEdit) return null
 
   return (
-    <div className="bg-muted/30 mb-5 flex flex-wrap items-center gap-2 rounded-2xl p-2">
-      {canEdit && (
-        <>
-          <input
-            ref={evidenceFileInputRef}
-            type="file"
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-              setIsEvidenceUploading(true)
-              try {
-                const { url } = await uploadFile(file, { access: 'public' })
-                evidenceFetcher.submit(
-                  {
-                    intent: 'attach',
-                    fileName: file.name,
-                    fileUrl: url,
-                    fileSize: String(file.size),
-                    mimeType: file.type,
-                  },
-                  { method: 'post' },
-                )
-              } finally {
-                setIsEvidenceUploading(false)
-                if (evidenceFileInputRef.current) evidenceFileInputRef.current.value = ''
-              }
-            }}
-          />
-          <Button
-            variant="outline"
-            disabled={isEvidenceUploading || evidenceFetcher.state !== 'idle'}
-            onClick={() => evidenceFileInputRef.current?.click()}
-          >
-            <HugeiconsIcon
-              icon={isEvidenceUploading ? Loading03Icon : Camera01Icon}
-              data-icon="inline-start"
-              size={16}
-              strokeWidth={1.5}
-              className={isEvidenceUploading ? 'animate-spin' : undefined}
-            />
-            {isEvidenceUploading ? 'A carregar...' : 'Adicionar evidência'}
-          </Button>
-        </>
-      )}
+    <div className="mb-5 flex flex-wrap items-start gap-3">
       {!canEdit && attachments.length > 0 && (
-        <span className="text-muted-foreground mr-1 flex items-center gap-1.5">
+        <span className="text-muted-foreground flex h-36 items-center gap-1.5">
           <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
-          <span className="text-sm">Evidências</span>
+          <span className="text-sm font-medium">Evidências</span>
         </span>
-      )}
-      {(isEvidenceUploading || evidenceFetcher.state !== 'idle') && (
-        <div className="border-border bg-muted/50 flex size-16 items-center justify-center rounded-xl border">
-          <HugeiconsIcon
-            icon={Loading03Icon}
-            size={18}
-            strokeWidth={1.5}
-            className="text-muted-foreground animate-spin"
-          />
-        </div>
       )}
       {attachments.map((att) => {
         const isImage = att.mimeType.startsWith('image/')
         return (
-          <div key={att.id} className="group relative">
+          <div key={att.id} className="group relative w-32">
             {isImage ? (
               <ImagePreview
                 src={att.fileUrl}
                 alt={att.fileName}
-                className="block size-16 cursor-zoom-in overflow-hidden rounded-xl border"
+                className="ring-foreground/10 block h-36 w-full cursor-zoom-in overflow-hidden rounded-2xl ring-1"
                 caption={`${att.uploaderName} · ${formatDate(att.createdAt)}`}
               />
             ) : (
@@ -452,16 +414,16 @@ function EvidenceGallery({
                 target="_blank"
                 rel="noopener noreferrer"
                 title={`${att.fileName} (${formatFileSize(att.fileSize)})`}
-                className="border-border bg-muted/50 hover:bg-muted flex size-16 flex-col items-center justify-center gap-1 rounded-xl border transition-colors"
+                className="ring-foreground/10 hover:ring-primary/20 flex h-36 w-full flex-col items-center justify-center gap-1.5 rounded-2xl ring-1 transition-colors"
               >
                 <HugeiconsIcon
                   icon={File01Icon}
-                  size={18}
+                  size={24}
                   strokeWidth={1.5}
                   className="text-muted-foreground"
                 />
-                <span className="text-muted-foreground w-14 truncate text-center text-sm">
-                  {att.fileName.split('.').pop()}
+                <span className="text-muted-foreground text-sm">
+                  {att.fileName.split('.').pop()?.toUpperCase()}
                 </span>
               </a>
             )}
@@ -482,6 +444,97 @@ function EvidenceGallery({
           </div>
         )
       })}
+      {pendingPreviews.map((p, i) => {
+        const isImage = p.mimeType.startsWith('image/')
+        return (
+          <div key={`pending-${i}`} className="relative w-32">
+            {isImage ? (
+              <div className="ring-foreground/10 relative h-36 w-full overflow-hidden rounded-2xl ring-1">
+                <img
+                  src={p.previewUrl}
+                  alt={p.fileName}
+                  className="size-full object-cover opacity-60"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <HugeiconsIcon
+                    icon={Loading03Icon}
+                    size={20}
+                    strokeWidth={1.5}
+                    className="animate-spin text-white drop-shadow"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="ring-foreground/10 flex h-36 w-full flex-col items-center justify-center gap-1.5 rounded-2xl ring-1">
+                <HugeiconsIcon
+                  icon={File01Icon}
+                  size={24}
+                  strokeWidth={1.5}
+                  className="text-muted-foreground"
+                />
+                <HugeiconsIcon
+                  icon={Loading03Icon}
+                  size={16}
+                  strokeWidth={1.5}
+                  className="text-muted-foreground animate-spin"
+                />
+              </div>
+            )}
+          </div>
+        )
+      })}
+      {canEdit && (
+        <>
+          <input
+            ref={evidenceFileInputRef}
+            type="file"
+            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              const previewUrl = URL.createObjectURL(file)
+              setPendingPreviews((prev) => [
+                ...prev,
+                { fileName: file.name, previewUrl, fileSize: file.size, mimeType: file.type },
+              ])
+              setIsEvidenceUploading(true)
+              try {
+                const { url } = await uploadFile(file, { access: 'public' })
+                evidenceFetcher.submit(
+                  {
+                    intent: 'attach',
+                    fileName: file.name,
+                    fileUrl: url,
+                    fileSize: String(file.size),
+                    mimeType: file.type,
+                  },
+                  { method: 'post' },
+                )
+              } catch {
+                setPendingPreviews((prev) => {
+                  const idx = prev.findIndex((p) => p.previewUrl === previewUrl)
+                  if (idx === -1) return prev
+                  URL.revokeObjectURL(previewUrl)
+                  return [...prev.slice(0, idx), ...prev.slice(idx + 1)]
+                })
+              } finally {
+                setIsEvidenceUploading(false)
+                if (evidenceFileInputRef.current) evidenceFileInputRef.current.value = ''
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="border-foreground/10 text-muted-foreground hover:border-primary/30 hover:text-primary flex h-36 w-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed transition-colors"
+            disabled={isEvidenceUploading}
+            onClick={() => evidenceFileInputRef.current?.click()}
+          >
+            <HugeiconsIcon icon={Camera01Icon} size={20} strokeWidth={1.5} />
+            <span className="text-sm font-medium">Adicionar evidência</span>
+          </button>
+        </>
+      )}
     </div>
   )
 }
@@ -498,12 +551,13 @@ function ActivityCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Atividade</CardTitle>
-      </CardHeader>
       <CardContent>
         {timeline.length === 0 ? (
-          <EmptyState icon={CheckmarkCircle01Icon} message="Sem atividade registada" />
+          <EmptyState
+            icon={CheckmarkCircle01Icon}
+            message="Sem atividade registada"
+            className="mt-4"
+          />
         ) : (
           <div className="flex flex-col">
             {timeline

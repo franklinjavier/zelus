@@ -1,7 +1,14 @@
 import { eq, and, or, inArray, sql, desc } from 'drizzle-orm'
 
 import { db } from '~/lib/db'
-import { tickets, ticketEvents, fractions, userFractions, user } from '~/lib/db/schema'
+import {
+  tickets,
+  ticketComments,
+  ticketEvents,
+  fractions,
+  userFractions,
+  user,
+} from '~/lib/db/schema'
 import { logAuditEvent } from './audit.server'
 import { createNotification } from './notifications.server'
 import { sendEmail } from '~/lib/email/client'
@@ -253,4 +260,63 @@ export async function updateTicketStatus(
   }
 
   return updated
+}
+
+export async function bulkCreateTickets(
+  orgId: string,
+  rows: Array<{
+    title: string
+    description: string
+    status: 'open' | 'in_progress' | 'resolved' | 'closed'
+    category?: string | null
+    priority?: 'urgent' | 'high' | 'medium' | 'low' | null
+    comment?: string | null
+  }>,
+  userId: string,
+) {
+  const results: Array<{ row: number; ticketId?: string; error?: string }> = []
+
+  await db.transaction(async (tx) => {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      try {
+        const [ticket] = await tx
+          .insert(tickets)
+          .values({
+            orgId,
+            title: row.title,
+            description: row.description || '',
+            status: row.status,
+            category: row.category ?? null,
+            priority: row.priority ?? null,
+            createdBy: userId,
+          })
+          .returning()
+
+        if (row.comment) {
+          await tx.insert(ticketComments).values({
+            orgId,
+            ticketId: ticket.id,
+            userId,
+            content: row.comment,
+          })
+        }
+
+        await logAuditEvent({
+          orgId,
+          userId,
+          action: 'ticket.imported',
+          entityType: 'ticket',
+          entityId: ticket.id,
+          metadata: { title: row.title, source: 'csv_import' },
+        })
+
+        results.push({ row: i, ticketId: ticket.id })
+      } catch (e) {
+        results.push({ row: i, error: e instanceof Error ? e.message : 'Unknown error' })
+      }
+    }
+  })
+
+  return results
 }

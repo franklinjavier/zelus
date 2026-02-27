@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Building06Icon,
+  FileImportIcon,
   Ticket02Icon,
   TruckDeliveryIcon,
   WrenchIcon,
@@ -98,6 +99,26 @@ export default function AdminDashboardPage({ loaderData }: Route.ComponentProps)
       </div>
 
       {joinUrl && <InviteLinkCard url={joinUrl} />}
+
+      <div className="mt-8">
+        <h2 className="text-base font-semibold tracking-tight">Ferramentas</h2>
+        <div className="mt-3 grid gap-4 sm:grid-cols-4">
+          <CardLink to={href('/admin/import-tickets')} className="p-5">
+            <div className="flex items-start justify-between">
+              <p className="font-medium">Importar CSV</p>
+              <HugeiconsIcon
+                icon={FileImportIcon}
+                size={20}
+                strokeWidth={1.5}
+                className="text-muted-foreground"
+              />
+            </div>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Importar ocorrências de um ficheiro CSV
+            </p>
+          </CardLink>
+        </div>
+      </div>
     </div>
   )
 }

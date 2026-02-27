@@ -66,6 +66,22 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 const statusOrder: Status[] = ['open', 'in_progress', 'resolved', 'closed']
 
+const priorityOrder: Record<string, number> = {
+  urgent: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+}
+
+function sortByPriority<T extends { priority: string | null; createdAt: Date }>(tickets: T[]): T[] {
+  return [...tickets].sort((a, b) => {
+    const pa = a.priority ? (priorityOrder[a.priority] ?? 4) : 4
+    const pb = b.priority ? (priorityOrder[b.priority] ?? 4) : 4
+    if (pa !== pb) return pa - pb
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+}
+
 const statusBadgeColors: Record<Status, string> = {
   open: 'bg-primary/15 text-primary',
   in_progress: 'bg-amber-500/15 text-amber-600',
@@ -297,7 +313,7 @@ export default function TicketsLayout({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {statusOrder.map((status) => {
-            const groupTickets = tickets.filter((t) => t.status === status)
+            const groupTickets = sortByPriority(tickets.filter((t) => t.status === status))
             const activeStatusFilter = searchParams.get('status')
             const isFiltered = activeStatusFilter && activeStatusFilter !== '_all'
 

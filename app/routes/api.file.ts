@@ -1,3 +1,5 @@
+import { get } from '@vercel/blob'
+
 import type { Route } from './+types/api.file'
 import { sessionContext } from '~/lib/auth/context'
 import { verifyFileToken } from '~/lib/file-token.server'
@@ -12,16 +14,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const blobUrl = verifyFileToken(token)
   if (!blobUrl) throw new Response('Forbidden', { status: 403 })
 
-  const blobResponse = await fetch(blobUrl, {
-    headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+  const result = await get(blobUrl, {
+    access: 'private',
+    token: process.env.BLOB_PRIVATE_READ_WRITE_TOKEN,
   })
 
-  if (!blobResponse.ok) throw new Response('Not Found', { status: 404 })
+  if (!result) {
+    throw new Response('Not Found', { status: 404 })
+  }
 
-  return new Response(blobResponse.body, {
+  return new Response(result.stream, {
     headers: {
-      'Content-Type': blobResponse.headers.get('Content-Type') ?? 'application/octet-stream',
-      'Content-Disposition': blobResponse.headers.get('Content-Disposition') ?? 'inline',
+      'Content-Type': result.blob.contentType ?? 'application/octet-stream',
       'Cache-Control': 'private, max-age=900',
     },
   })

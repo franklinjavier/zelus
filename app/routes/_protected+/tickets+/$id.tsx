@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { upload } from '@vercel/blob/client'
+import { uploadFile } from '~/lib/upload'
 import {
   ArrowUp01Icon,
   Attachment01Icon,
@@ -61,7 +61,6 @@ import { listFractions } from '~/lib/services/fractions.server'
 import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments.server'
 import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets.server'
 import { setToast } from '~/lib/toast.server'
-import { signFileUrl } from '~/lib/file-token.server'
 import type { Route } from './+types/$id'
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -100,22 +99,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const isAdmin = effectiveRole === 'org_admin'
   const isCreator = ticket.createdBy === user.id
 
-  const signedAttachments = attachments.map((a) => ({ ...a, fileUrl: signFileUrl(a.fileUrl) }))
-  const signedTimeline = timeline.map((item) => {
-    if (item.type === 'attachment') return { ...item, fileUrl: signFileUrl(item.fileUrl) }
-    if (item.type === 'comment')
-      return {
-        ...item,
-        attachments: item.attachments?.map((a) => ({ ...a, fileUrl: signFileUrl(a.fileUrl) })),
-      }
-    return item
-  })
-
   return {
     ticket,
-    timeline: signedTimeline,
+    timeline,
     categories,
-    attachments: signedAttachments,
+    attachments,
     orgFractions,
     canManage,
     isAdmin,
@@ -398,15 +386,12 @@ function EvidenceGallery({
               if (!file) return
               setIsEvidenceUploading(true)
               try {
-                const blob = await upload(file.name, file, {
-                  access: 'private',
-                  handleUploadUrl: href('/api/upload'),
-                })
+                const { url } = await uploadFile(file, { access: 'public' })
                 evidenceFetcher.submit(
                   {
                     intent: 'attach',
                     fileName: file.name,
-                    fileUrl: blob.url,
+                    fileUrl: url,
                     fileSize: String(file.size),
                     mimeType: file.type,
                   },
@@ -549,15 +534,12 @@ function ActivityCard({
                 if (!file) return
                 setIsUploading(true)
                 try {
-                  const blob = await upload(file.name, file, {
-                    access: 'public',
-                    handleUploadUrl: href('/api/upload'),
-                  })
+                  const { url } = await uploadFile(file, { access: 'public' })
                   attachFetcher.submit(
                     {
                       intent: 'attach',
                       fileName: file.name,
-                      fileUrl: blob.url,
+                      fileUrl: url,
                       fileSize: String(file.size),
                       mimeType: file.type,
                     },

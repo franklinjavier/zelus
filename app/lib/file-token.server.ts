@@ -3,8 +3,8 @@ import { createHmac, timingSafeEqual } from 'crypto'
 const TTL_SECONDS = 15 * 60 // 15 minutes
 
 function getSecret() {
-  const secret = process.env.BLOB_READ_WRITE_TOKEN
-  if (!secret) throw new Error('BLOB_READ_WRITE_TOKEN is not set')
+  const secret = process.env.BLOB_PRIVATE_READ_WRITE_TOKEN ?? process.env.BLOB_READ_WRITE_TOKEN
+  if (!secret) throw new Error('BLOB_PRIVATE_READ_WRITE_TOKEN is not set')
   return secret
 }
 

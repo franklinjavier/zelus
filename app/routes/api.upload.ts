@@ -24,15 +24,22 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   const body = (await request.json()) as HandleUploadBody
 
-  const response = await handleUpload({
-    body,
-    request,
-    onBeforeGenerateToken: async () => ({
-      allowedContentTypes: ALLOWED_CONTENT_TYPES,
-      maximumSizeInBytes: 10 * 1024 * 1024,
-      addRandomSuffix: true,
-    }),
-  })
+  try {
+    const response = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async () => ({
+        allowedContentTypes: ALLOWED_CONTENT_TYPES,
+        maximumSizeInBytes: 10 * 1024 * 1024,
+        addRandomSuffix: true,
+      }),
+      onUploadCompleted: async () => {
+        // no-op: called by Vercel after upload completes
+      },
+    })
 
-  return Response.json(response)
+    return Response.json(response)
+  } catch (error) {
+    return Response.json({ error: (error as Error).message }, { status: 400 })
+  }
 }

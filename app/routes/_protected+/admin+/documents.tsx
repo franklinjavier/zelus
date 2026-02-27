@@ -13,7 +13,7 @@ import {
   Upload04Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { upload } from '@vercel/blob/client'
+import { uploadFile } from '~/lib/upload'
 import { useEffect, useState } from 'react'
 import { Form, href, Link, Outlet, useLocation, useNavigate, useRevalidator } from 'react-router'
 
@@ -233,10 +233,9 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
     setUploadProgress(0)
     setUploadError(null)
     try {
-      const blob = await upload(`documents/${file.name}`, file, {
+      const blob = await uploadFile(file, {
         access: 'private',
-        handleUploadUrl: '/api/document-upload',
-        multipart: true,
+        pathname: `documents/${file.name}`,
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
       })
 

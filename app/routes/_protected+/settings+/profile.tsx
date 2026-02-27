@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import { upload } from '@vercel/blob/client'
-import { data, Form, href, useFetcher, useNavigation } from 'react-router'
+import { uploadFile } from '~/lib/upload'
+import { data, Form, useFetcher, useNavigation } from 'react-router'
 import { Camera01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { z } from 'zod'
@@ -111,12 +111,9 @@ export default function ProfilePage({ loaderData, actionData }: Route.ComponentP
 
     setIsUploading(true)
     try {
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: href('/api/upload'),
-      })
+      const { url } = await uploadFile(file, { access: 'public' })
 
-      avatarFetcher.submit({ intent: 'update-avatar', imageUrl: blob.url }, { method: 'post' })
+      avatarFetcher.submit({ intent: 'update-avatar', imageUrl: url }, { method: 'post' })
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigation } from 'react-router'
 
+import { Item, ItemContent, ItemMedia, ItemTitle } from '~/components/ui/item'
+import { Spinner } from '~/components/ui/spinner'
 import { cn } from '~/lib/utils'
 
 export function GlobalNavigationLoading() {
@@ -18,8 +20,10 @@ export function GlobalNavigationLoading() {
       showTimer = window.setTimeout(() => setIsVisible(true), 120)
       slowHintTimer = window.setTimeout(() => setShowSlowHint(true), 900)
     } else {
-      setShowSlowHint(false)
-      hideTimer = window.setTimeout(() => setIsVisible(false), 160)
+      hideTimer = window.setTimeout(() => {
+        setShowSlowHint(false)
+        setIsVisible(false)
+      }, 160)
     }
 
     return () => {
@@ -48,11 +52,20 @@ export function GlobalNavigationLoading() {
         aria-atomic="true"
         role="status"
         className={cn(
-          'border-border/70 bg-background/90 text-muted-foreground pointer-events-none fixed top-3 right-3 z-[101] rounded-full border px-3 py-1.5 text-xs shadow-sm backdrop-blur transition-all duration-200',
+          'pointer-events-none fixed inset-x-0 top-3 z-[101] flex justify-center transition-all duration-200',
           showSlowHint ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0',
         )}
       >
-        {showSlowHint ? 'Carregando... isso pode levar alguns segundos.' : null}
+        {showSlowHint && (
+          <Item variant="outline" size="xs" className="w-auto backdrop-blur">
+            <ItemMedia>
+              <Spinner />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>A carregar...</ItemTitle>
+            </ItemContent>
+          </Item>
+        )}
       </div>
     </>
   )

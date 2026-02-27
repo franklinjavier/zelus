@@ -18,3 +18,4 @@ video/recordings/
 video/screenshots/
 video/node_modules/
 video/bun.lock
+.codex

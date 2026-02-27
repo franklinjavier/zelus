@@ -294,7 +294,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
           <ActivityCard timeline={timeline} attachFetcher={attachFetcher} />
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="lg:sticky lg:top-4 lg:col-span-2 lg:self-start">
           <DetailsCard
             ticket={ticket}
             categories={categories}

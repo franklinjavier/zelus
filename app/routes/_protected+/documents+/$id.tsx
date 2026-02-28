@@ -58,22 +58,18 @@ export default function DocumentsDetail({ loaderData }: Route.ComponentProps) {
         <div className="max-w-none text-sm leading-relaxed whitespace-pre-wrap">{doc.body}</div>
       )}
 
-      {doc.type === 'file' && doc.fileUrl && (
-        <>
-          {doc.mimeType === 'application/pdf' ? (
-            <iframe
-              src={doc.fileUrl}
-              title={getDocumentTitle(doc)}
-              className="ring-foreground/5 h-[85vh] w-full rounded-2xl ring-1"
-            />
-          ) : doc.mimeType?.startsWith('image/') ? (
-            <img
-              src={doc.fileUrl}
-              alt={getDocumentTitle(doc)}
-              className="ring-foreground/5 max-h-[85vh] w-full rounded-2xl object-contain ring-1"
-            />
-          ) : null}
-        </>
+      {doc.type === 'file' && doc.fileUrl && doc.mimeType?.startsWith('image/') && (
+        <img
+          src={doc.fileUrl}
+          alt={getDocumentTitle(doc)}
+          className="ring-foreground/5 max-h-[85vh] w-full rounded-2xl object-contain ring-1"
+        />
+      )}
+
+      {doc.type === 'file' && fullText && (
+        <div className="max-h-[70vh] overflow-y-auto">
+          <MarkdownContent>{fullText}</MarkdownContent>
+        </div>
       )}
 
       {doc.type === 'url' && (

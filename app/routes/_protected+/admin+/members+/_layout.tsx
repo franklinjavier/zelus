@@ -19,11 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
+import { z } from 'zod'
+
 import { orgContext, userContext } from '~/lib/auth/context'
 import { getInitials } from '~/lib/format'
+import { validateForm } from '~/lib/forms'
 import { listOrgMembers, updateOrgMemberRole } from '~/lib/services/associations.server'
 import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/_layout'
+
+const changeOrgRoleSchema = z.object({
+  memberId: z.string().min(1, 'Membro não especificado.'),
+  role: z.enum(['admin', 'member'], { message: 'Papel inválido.' }),
+})
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Membros — Zelus' }]
@@ -48,18 +56,14 @@ export async function action({ request, context }: Route.ActionArgs) {
   const intent = formData.get('intent')
 
   if (intent === 'change-org-role') {
-    const memberId = formData.get('memberId') as string
-    const role = formData.get('role') as string
-
-    if (role !== 'admin' && role !== 'member') {
-      return data(
-        { error: 'Papel inválido.' },
-        { headers: await setToast('Papel inválido.', 'error') },
-      )
+    const result = validateForm(formData, changeOrgRoleSchema)
+    if ('errors' in result) {
+      const msg = Object.values(result.errors)[0] ?? 'Dados inválidos.'
+      return data({ error: msg }, { status: 400, headers: await setToast(msg, 'error') })
     }
 
     try {
-      await updateOrgMemberRole(orgId, memberId, role, admin.id)
+      await updateOrgMemberRole(orgId, result.data.memberId, result.data.role, admin.id)
       return data({ success: true }, { headers: await setToast('Papel atualizado.') })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Erro ao alterar papel.'

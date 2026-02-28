@@ -232,8 +232,10 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   if (intent === 'delete-attachment') {
     const attachmentId = formData.get('attachmentId') as string
     if (!attachmentId) return { error: 'Anexo não encontrado.' }
+    const ticket = await getTicket(orgId, params.id, user.id)
+    const isTicketCreator = ticket?.createdBy === user.id
     try {
-      await deleteAttachment(orgId, attachmentId, user.id)
+      await deleteAttachment(orgId, attachmentId, user.id, { isTicketCreator })
       return data({ success: true }, { headers: await setToast('Alterações guardadas.') })
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Erro ao apagar anexo.' }
@@ -284,7 +286,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
 
       <EvidenceGallery
         attachments={attachments}
-        canEdit={canEdit}
+        isCreator={isCreator}
         userId={userId}
         evidenceFetcher={evidenceFetcher}
       />
@@ -349,7 +351,7 @@ function TicketHeader({
 
 function EvidenceGallery({
   attachments,
-  canEdit,
+  isCreator,
   userId,
   evidenceFetcher,
 }: {
@@ -363,7 +365,7 @@ function EvidenceGallery({
     uploaderName: string
     createdAt: Date | string
   }[]
-  canEdit: boolean
+  isCreator: boolean
   userId: string
   evidenceFetcher: ReturnType<typeof useFetcher>
 }) {
@@ -387,16 +389,8 @@ function EvidenceGallery({
     lastAttachmentCount.current = attachments.length
   }, [attachments.length])
 
-  if (attachments.length === 0 && pendingPreviews.length === 0 && !canEdit) return null
-
   return (
     <div className="mb-5 flex flex-wrap items-start gap-3">
-      {!canEdit && attachments.length > 0 && (
-        <span className="text-muted-foreground flex h-36 items-center gap-1.5">
-          <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
-          <span className="text-sm font-medium">Evidências</span>
-        </span>
-      )}
       {attachments.map((att) => {
         const isImage = att.mimeType.startsWith('image/')
         return (
@@ -427,7 +421,7 @@ function EvidenceGallery({
                 </span>
               </a>
             )}
-            {canEdit && att.uploadedBy === userId && (
+            {(isCreator || att.uploadedBy === userId) && (
               <evidenceFetcher.Form method="post" className="absolute -top-2 -right-2">
                 <input type="hidden" name="intent" value="delete-attachment" />
                 <input type="hidden" name="attachmentId" value={att.id} />
@@ -483,9 +477,8 @@ function EvidenceGallery({
           </div>
         )
       })}
-      {canEdit && (
-        <>
-          <input
+      <>
+        <input
             ref={evidenceFileInputRef}
             type="file"
             accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
@@ -533,8 +526,7 @@ function EvidenceGallery({
             <HugeiconsIcon icon={Camera01Icon} size={20} strokeWidth={1.5} />
             <span className="text-sm font-medium">Adicionar evidência</span>
           </button>
-        </>
-      )}
+      </>
     </div>
   )
 }

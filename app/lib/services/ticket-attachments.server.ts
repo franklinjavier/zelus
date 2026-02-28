@@ -67,7 +67,12 @@ export async function createAttachment(
   return attachment
 }
 
-export async function deleteAttachment(orgId: string, attachmentId: string, userId: string) {
+export async function deleteAttachment(
+  orgId: string,
+  attachmentId: string,
+  userId: string,
+  { isTicketCreator = false }: { isTicketCreator?: boolean } = {},
+) {
   const [attachment] = await db
     .select()
     .from(ticketAttachments)
@@ -78,7 +83,7 @@ export async function deleteAttachment(orgId: string, attachmentId: string, user
     throw new Error('Anexo não encontrado.')
   }
 
-  if (attachment.uploadedBy !== userId) {
+  if (attachment.uploadedBy !== userId && !isTicketCreator) {
     throw new Error('Sem permissão para apagar este anexo.')
   }
 

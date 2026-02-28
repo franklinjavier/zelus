@@ -49,7 +49,7 @@ export default function DocumentsDetail({ loaderData }: Route.ComponentProps) {
             className="text-primary flex shrink-0 items-center gap-1 text-sm hover:underline"
           >
             <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
-            Abrir ficheiro
+            Abrir ficheiro original
           </a>
         )}
       </div>
@@ -58,22 +58,39 @@ export default function DocumentsDetail({ loaderData }: Route.ComponentProps) {
         <div className="max-w-none text-sm leading-relaxed whitespace-pre-wrap">{doc.body}</div>
       )}
 
-      {doc.type === 'file' && doc.fileUrl && (
-        <>
-          {doc.mimeType === 'application/pdf' ? (
-            <iframe
-              src={doc.fileUrl}
-              title={getDocumentTitle(doc)}
-              className="ring-foreground/5 h-[85vh] w-full rounded-2xl ring-1"
-            />
-          ) : doc.mimeType?.startsWith('image/') ? (
-            <img
-              src={doc.fileUrl}
-              alt={getDocumentTitle(doc)}
-              className="ring-foreground/5 max-h-[85vh] w-full rounded-2xl object-contain ring-1"
-            />
-          ) : null}
-        </>
+      {doc.type === 'file' && doc.fileUrl && doc.mimeType?.startsWith('image/') && (
+        <img
+          src={doc.fileUrl}
+          alt={getDocumentTitle(doc)}
+          className="ring-foreground/5 max-h-[85vh] w-full rounded-2xl object-contain ring-1"
+        />
+      )}
+
+      {doc.type === 'file' && doc.fileUrl && doc.mimeType === 'application/pdf' && (
+        <iframe
+          src={doc.fileUrl}
+          title={getDocumentTitle(doc)}
+          className="ring-foreground/5 hidden h-[85vh] w-full rounded-2xl ring-1 md:block"
+        />
+      )}
+
+      {doc.type === 'file' && fullText && (
+        <div className="md:hidden">
+          <div className="max-h-[70vh] overflow-y-auto">
+            <MarkdownContent>{fullText}</MarkdownContent>
+          </div>
+          {doc.fileUrl && (
+            <a
+              href={doc.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-primary text-primary-foreground mt-4 flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium"
+            >
+              <HugeiconsIcon icon={ArrowUpRightIcon} size={16} />
+              Abrir ficheiro original
+            </a>
+          )}
+        </div>
       )}
 
       {doc.type === 'url' && (

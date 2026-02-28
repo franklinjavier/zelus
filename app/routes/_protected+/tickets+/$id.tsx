@@ -391,12 +391,6 @@ function EvidenceGallery({
 
   return (
     <div className="mb-5 flex flex-wrap items-start gap-3">
-      {!canEdit && attachments.length > 0 && (
-        <span className="text-muted-foreground flex h-36 items-center gap-1.5">
-          <HugeiconsIcon icon={Camera01Icon} size={16} strokeWidth={1.5} />
-          <span className="text-sm font-medium">Evidências</span>
-        </span>
-      )}
       {attachments.map((att) => {
         const isImage = att.mimeType.startsWith('image/')
         return (

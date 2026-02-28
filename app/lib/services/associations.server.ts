@@ -395,6 +395,7 @@ export async function removeAssociation(orgId: string, associationId: string, ad
 export async function listOrgMembers(orgId: string) {
   const members = await db
     .select({
+      memberId: member.id,
       userId: member.userId,
       orgRole: member.role,
       userName: user.name,
@@ -420,6 +421,35 @@ export async function listOrgMembers(orgId: string) {
     ...m,
     fractionCount: countMap.get(m.userId) ?? 0,
   }))
+}
+
+export async function updateOrgMemberRole(
+  orgId: string,
+  memberId: string,
+  role: 'admin' | 'member',
+  adminUserId: string,
+) {
+  const [memberRow] = await db
+    .select()
+    .from(member)
+    .where(and(eq(member.id, memberId), eq(member.organizationId, orgId)))
+    .limit(1)
+
+  if (!memberRow) throw new Error('Membro não encontrado.')
+  if (memberRow.role === 'owner') throw new Error('Não é possível alterar o papel do proprietário.')
+
+  const [updated] = await db.update(member).set({ role }).where(eq(member.id, memberId)).returning()
+
+  await logAuditEvent({
+    orgId,
+    userId: adminUserId,
+    action: 'member.role_changed',
+    entityType: 'member',
+    entityId: memberId,
+    metadata: { targetUserId: memberRow.userId, role },
+  })
+
+  return updated
 }
 
 export async function bulkAssignUsersToFraction(

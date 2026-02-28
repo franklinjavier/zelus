@@ -1,9 +1,8 @@
 import { UserMultiple02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { href, Link, Outlet, useMatches, useNavigate } from 'react-router'
+import { data, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
 
 import { EmptyState } from '~/components/layout/empty-state'
-import { roleLabel } from '~/components/shared/role-badge'
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Badge } from '~/components/ui/badge'
 import {
@@ -13,9 +12,17 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from '~/components/ui/drawer'
-import { orgContext } from '~/lib/auth/context'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select'
+import { orgContext, userContext } from '~/lib/auth/context'
 import { getInitials } from '~/lib/format'
-import { listOrgMembers } from '~/lib/services/associations.server'
+import { listOrgMembers, updateOrgMemberRole } from '~/lib/services/associations.server'
+import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/_layout'
 
 export function meta(_args: Route.MetaArgs) {
@@ -24,12 +31,47 @@ export function meta(_args: Route.MetaArgs) {
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
+  const currentUser = context.get(userContext)
   const members = await listOrgMembers(orgId)
-  return { members }
+  return { members, currentUserId: currentUser.id }
+}
+
+export async function action({ request, context }: Route.ActionArgs) {
+  const { orgId, effectiveRole } = context.get(orgContext)
+  const admin = context.get(userContext)
+
+  if (effectiveRole !== 'org_admin') {
+    throw new Response('Forbidden', { status: 403 })
+  }
+
+  const formData = await request.formData()
+  const intent = formData.get('intent')
+
+  if (intent === 'change-org-role') {
+    const memberId = formData.get('memberId') as string
+    const role = formData.get('role') as string
+
+    if (role !== 'admin' && role !== 'member') {
+      return data(
+        { error: 'Papel inválido.' },
+        { headers: await setToast('Papel inválido.', 'error') },
+      )
+    }
+
+    try {
+      await updateOrgMemberRole(orgId, memberId, role, admin.id)
+      return data({ success: true }, { headers: await setToast('Papel atualizado.') })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro ao alterar papel.'
+      return data({ error: msg }, { headers: await setToast(msg, 'error') })
+    }
+  }
+
+  return { error: 'Ação desconhecida.' }
 }
 
 export default function MembersLayout({ loaderData }: Route.ComponentProps) {
-  const { members } = loaderData
+  const { members, currentUserId } = loaderData
   const navigate = useNavigate()
   const matches = useMatches()
   const drawerMatch = matches.find((m) => m.params.userId)
@@ -64,18 +106,22 @@ export default function MembersLayout({ loaderData }: Route.ComponentProps) {
                       {m.userEmail}
                     </p>
                     <div className="mt-1 flex items-center gap-2 @sm:hidden">
-                      {(m.orgRole === 'owner' || m.orgRole === 'admin') && (
-                        <Badge variant="secondary">{roleLabel('org_admin')}</Badge>
-                      )}
+                      <OrgRoleBadgeOrSelect
+                        memberId={m.memberId}
+                        orgRole={m.orgRole}
+                        isSelf={m.userId === currentUserId}
+                      />
                       <span className="text-muted-foreground text-sm">
                         {m.fractionCount} {m.fractionCount === 1 ? 'fração' : 'frações'}
                       </span>
                     </div>
                   </div>
                   <div className="hidden shrink-0 items-center gap-2 @sm:flex">
-                    {(m.orgRole === 'owner' || m.orgRole === 'admin') && (
-                      <Badge variant="secondary">{roleLabel('org_admin')}</Badge>
-                    )}
+                    <OrgRoleBadgeOrSelect
+                      memberId={m.memberId}
+                      orgRole={m.orgRole}
+                      isSelf={m.userId === currentUserId}
+                    />
                     <span className="text-muted-foreground text-sm">
                       {m.fractionCount} {m.fractionCount === 1 ? 'fração' : 'frações'}
                     </span>
@@ -102,5 +148,64 @@ export default function MembersLayout({ loaderData }: Route.ComponentProps) {
         </DrawerPopup>
       </Drawer>
     </div>
+  )
+}
+
+const orgRoleItems = [
+  { label: 'Membro', value: 'member' },
+  { label: 'Admin', value: 'admin' },
+]
+
+function OrgRoleBadgeOrSelect({
+  memberId,
+  orgRole,
+  isSelf,
+}: {
+  memberId: string
+  orgRole: string
+  isSelf: boolean
+}) {
+  if (orgRole === 'owner') {
+    return <Badge variant="secondary">Proprietário</Badge>
+  }
+
+  if (isSelf) {
+    return orgRole === 'admin' ? <Badge variant="secondary">Admin</Badge> : null
+  }
+
+  return <OrgRoleSelect memberId={memberId} currentRole={orgRole} />
+}
+
+function OrgRoleSelect({ memberId, currentRole }: { memberId: string; currentRole: string }) {
+  const fetcher = useFetcher()
+  const hasError = fetcher.data && 'error' in fetcher.data
+  const effectiveRole = hasError
+    ? currentRole
+    : ((fetcher.formData?.get('role') as string) ?? currentRole)
+
+  return (
+    <Select
+      value={effectiveRole}
+      items={orgRoleItems}
+      onValueChange={(value) => {
+        if (value === currentRole) return
+        fetcher.submit({ intent: 'change-org-role', memberId, role: value }, { method: 'post' })
+      }}
+    >
+      <SelectTrigger
+        className="h-8 gap-1 rounded-full px-2.5 text-sm"
+        onClick={(e) => e.preventDefault()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="min-w-48">
+        {orgRoleItems.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

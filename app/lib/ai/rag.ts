@@ -1,5 +1,6 @@
 import { generateText } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
+import { get } from '@vercel/blob'
 
 import { db } from '~/lib/db'
 import { documentChunks } from '~/lib/db/schema'
@@ -61,14 +62,37 @@ export async function processDocument(
 }
 
 /**
+ * Fetch file content from Vercel Blob (handles private blobs).
+ * Returns the raw bytes as a Buffer.
+ */
+async function fetchBlobContent(fileUrl: string): Promise<Buffer> {
+  const isPrivate = fileUrl.includes('.private.blob.')
+  if (isPrivate) {
+    const result = await get(fileUrl, {
+      access: 'private',
+      token: process.env.BLOB_PRIVATE_READ_WRITE_TOKEN,
+    })
+    if (!result) throw new Error('File not found in blob storage')
+    // Consume the ReadableStream into a Buffer
+    const response = new Response(result.stream)
+    const arrayBuffer = await response.arrayBuffer()
+    return Buffer.from(arrayBuffer)
+  }
+  const response = await fetch(fileUrl)
+  if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`)
+  const arrayBuffer = await response.arrayBuffer()
+  return Buffer.from(arrayBuffer)
+}
+
+/**
  * Extract plain text from a document.
- * Sends the file URL to Claude which fetches it directly — zero local memory usage.
+ * Fetches the file from Vercel Blob and sends its content to Claude for extraction.
  */
 async function extractText(fileUrl: string, mimeType: string): Promise<string> {
   // Plain text files can be read directly
   if (mimeType === 'text/plain') {
-    const response = await fetch(fileUrl)
-    return response.text()
+    const buffer = await fetchBlobContent(fileUrl)
+    return buffer.toString('utf-8')
   }
 
   // Everything else (PDF, Word, Excel, images) goes through Claude
@@ -76,10 +100,13 @@ async function extractText(fileUrl: string, mimeType: string): Promise<string> {
 }
 
 /**
- * Send the file URL to Claude for text extraction.
- * Claude fetches the file directly from Vercel Blob — nothing loaded into our process.
+ * Fetch file from Vercel Blob and send its content inline to Claude for text extraction.
+ * Private blob URLs aren't accessible externally, so we fetch the bytes ourselves.
  */
 async function extractWithClaude(fileUrl: string, mimeType: string): Promise<string> {
+  const buffer = await fetchBlobContent(fileUrl)
+  const base64Data = buffer.toString('base64')
+
   const { text } = await generateText({
     model: anthropic('claude-haiku-4-5-20251001'),
     messages: [
@@ -88,7 +115,7 @@ async function extractWithClaude(fileUrl: string, mimeType: string): Promise<str
         content: [
           {
             type: 'file',
-            data: new URL(fileUrl),
+            data: base64Data,
             mediaType: mimeType,
           },
           {

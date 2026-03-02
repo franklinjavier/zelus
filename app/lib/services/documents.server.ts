@@ -199,3 +199,76 @@ export async function getDocumentChunks(documentId: string) {
     .where(eq(documentChunks.documentId, documentId))
     .orderBy(documentChunks.chunkIndex)
 }
+
+/**
+ * Handle document creation intents (upload, add-article, add-url).
+ * Shared between admin and user-facing document routes.
+ */
+export async function handleDocumentCreation(
+  formData: FormData,
+  orgId: string,
+  userId: string,
+  backgroundProcess: (promise: Promise<unknown>) => void,
+): Promise<{ success: true; intent: 'upload' | 'add-article' | 'add-url' } | { error: string }> {
+  const intent = formData.get('intent') as string
+
+  if (intent === 'upload') {
+    const fileUrl = formData.get('fileUrl') as string
+    const fileName = formData.get('fileName') as string
+    const fileSize = Number(formData.get('fileSize'))
+    const mimeType = formData.get('mimeType') as string
+
+    if (!fileUrl || !fileName) {
+      return { error: 'Dados do ficheiro em falta.' }
+    }
+
+    const { processDocument } = await import('~/lib/ai/rag')
+    const doc = await createDocument(orgId, { fileName, fileUrl, fileSize, mimeType }, userId)
+    backgroundProcess(processDocument(doc.id, orgId, fileUrl, mimeType))
+
+    return { success: true, intent: 'upload' }
+  }
+
+  if (intent === 'add-article') {
+    const title = formData.get('title') as string
+    const body = formData.get('body') as string
+
+    if (!title?.trim() || !body?.trim()) {
+      return { error: 'Título e conteúdo são obrigatórios.' }
+    }
+
+    const { processArticle } = await import('~/lib/ai/rag')
+    const doc = await createArticle(orgId, { title: title.trim(), body: body.trim() }, userId)
+    backgroundProcess(processArticle(doc.id, orgId, body.trim()))
+    return { success: true, intent: 'add-article' }
+  }
+
+  if (intent === 'add-url') {
+    const title = formData.get('title') as string
+    const sourceUrl = formData.get('sourceUrl') as string
+
+    if (!title?.trim() || !sourceUrl?.trim()) {
+      return { error: 'Título e URL são obrigatórios.' }
+    }
+
+    try {
+      const parsed = new URL(sourceUrl)
+      if (parsed.protocol !== 'https:') {
+        return { error: 'Apenas URLs HTTPS são permitidos.' }
+      }
+    } catch {
+      return { error: 'URL inválido.' }
+    }
+
+    const { processUrl } = await import('~/lib/ai/rag')
+    const doc = await createUrlEntry(
+      orgId,
+      { title: title.trim(), sourceUrl: sourceUrl.trim() },
+      userId,
+    )
+    backgroundProcess(processUrl(doc.id, orgId, sourceUrl.trim()))
+    return { success: true, intent: 'add-url' }
+  }
+
+  return { error: 'Ação inválida.' }
+}

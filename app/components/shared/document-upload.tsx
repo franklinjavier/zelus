@@ -1,7 +1,7 @@
 import { Add01Icon, Link04Icon, TextIcon, Upload04Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useEffect, useState } from 'react'
-import { Form, useActionData } from 'react-router'
+import { Form, useActionData, useFetcher } from 'react-router'
 
 import { Button } from '~/components/ui/button'
 import { Drawer, DrawerPopup } from '~/components/ui/drawer'
@@ -24,6 +24,7 @@ type ActionData =
 
 export function DocumentUpload() {
   const actionData = useActionData<ActionData>()
+  const uploadFetcher = useFetcher()
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -53,28 +54,16 @@ export function DocumentUpload() {
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
       })
 
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.style.display = 'none'
-
-      const fields = {
-        intent: 'upload',
-        fileUrl: blob.url,
-        fileName: file.name,
-        fileSize: String(file.size),
-        mimeType: file.type || 'application/octet-stream',
-      }
-
-      for (const [key, value] of Object.entries(fields)) {
-        const input = document.createElement('input')
-        input.name = key
-        input.value = value
-        form.appendChild(input)
-      }
-
-      document.body.appendChild(form)
-      form.requestSubmit()
-      document.body.removeChild(form)
+      uploadFetcher.submit(
+        {
+          intent: 'upload',
+          fileUrl: blob.url,
+          fileName: file.name,
+          fileSize: String(file.size),
+          mimeType: file.type || 'application/octet-stream',
+        },
+        { method: 'post' },
+      )
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Erro ao enviar ficheiro.')
     } finally {

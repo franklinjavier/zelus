@@ -8,7 +8,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { eq } from 'drizzle-orm'
 import { useState } from 'react'
-import { data, Form, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
+import { data, href, Link, Outlet, useFetcher, useMatches, useNavigate } from 'react-router'
 
 import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
@@ -43,16 +43,18 @@ export function meta(_args: Route.MetaArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
-  const org = await db
-    .select({
-      inviteCode: organization.inviteCode,
-      inviteEnabled: organization.inviteEnabled,
-    })
-    .from(organization)
-    .where(eq(organization.id, orgId))
-    .limit(1)
-    .then((rows) => rows[0])
-  const invitesList = await listInvites(orgId)
+  const [org, invitesList] = await Promise.all([
+    db
+      .select({
+        inviteCode: organization.inviteCode,
+        inviteEnabled: organization.inviteEnabled,
+      })
+      .from(organization)
+      .where(eq(organization.id, orgId))
+      .limit(1)
+      .then((rows) => rows[0]),
+    listInvites(orgId),
+  ])
   if (!org) throw new Response('Not Found', { status: 404 })
 
   return { invites: invitesList, org, origin: new URL(request.url).origin }
@@ -133,62 +135,7 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
         ) : (
           <div className="@container flex flex-col gap-2">
             {invites.map((invite) => (
-              <div
-                key={invite.id}
-                className={cn(
-                  'flex items-start gap-3 rounded-2xl p-3 ring-1 transition-colors @sm:items-center',
-                  statusStyles[invite.status] ?? statusStyles.default,
-                )}
-              >
-                <div
-                  className={cn(
-                    'flex size-9 shrink-0 items-center justify-center rounded-xl',
-                    statusIconStyles[invite.status] ?? statusIconStyles.default,
-                  )}
-                >
-                  <HugeiconsIcon icon={MailSend02Icon} size={18} strokeWidth={1.5} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium [overflow-wrap:anywhere] @sm:truncate">
-                    {invite.email}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {invite.type === 'org' ? 'Condomínio' : (invite.fractionLabel ?? 'Fração')}
-                    {' · '}
-                    {roleLabel(invite.role)}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2 @sm:hidden">
-                    {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
-                    {invite.status === 'pending' && (
-                      <>
-                        <CopyLinkButton token={invite.token} />
-                        <Form method="post">
-                          <input type="hidden" name="intent" value="revoke-invite" />
-                          <input type="hidden" name="inviteId" value={invite.id} />
-                          <Button type="submit" variant="destructive">
-                            Revogar
-                          </Button>
-                        </Form>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="hidden shrink-0 items-center gap-2 @sm:flex">
-                  {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
-                  {invite.status === 'pending' && (
-                    <>
-                      <CopyLinkButton token={invite.token} />
-                      <Form method="post">
-                        <input type="hidden" name="intent" value="revoke-invite" />
-                        <input type="hidden" name="inviteId" value={invite.id} />
-                        <Button type="submit" variant="destructive">
-                          Revogar
-                        </Button>
-                      </Form>
-                    </>
-                  )}
-                </div>
-              </div>
+              <InviteRow key={invite.id} invite={invite} />
             ))}
           </div>
         )}
@@ -208,6 +155,70 @@ export default function InvitesLayout({ loaderData, actionData }: Route.Componen
           <Outlet />
         </DrawerPopup>
       </Drawer>
+    </div>
+  )
+}
+
+function InviteRow({
+  invite,
+}: {
+  invite: {
+    id: string
+    email: string
+    status: string
+    type: string
+    fractionLabel: string | null
+    role: string
+    token: string
+  }
+}) {
+  const fetcher = useFetcher({ key: `revoke-${invite.id}` })
+  const isRevoking = fetcher.state !== 'idle'
+
+  const pendingActions = invite.status === 'pending' && (
+    <>
+      <CopyLinkButton token={invite.token} />
+      <fetcher.Form method="post">
+        <input type="hidden" name="intent" value="revoke-invite" />
+        <input type="hidden" name="inviteId" value={invite.id} />
+        <Button type="submit" variant="destructive" disabled={isRevoking}>
+          {isRevoking ? 'A revogar...' : 'Revogar'}
+        </Button>
+      </fetcher.Form>
+    </>
+  )
+
+  return (
+    <div
+      className={cn(
+        'flex items-start gap-3 rounded-2xl p-3 ring-1 transition-colors @sm:items-center',
+        statusStyles[invite.status] ?? statusStyles.default,
+      )}
+    >
+      <div
+        className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-xl',
+          statusIconStyles[invite.status] ?? statusIconStyles.default,
+        )}
+      >
+        <HugeiconsIcon icon={MailSend02Icon} size={18} strokeWidth={1.5} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium [overflow-wrap:anywhere] @sm:truncate">{invite.email}</p>
+        <p className="text-muted-foreground text-sm">
+          {invite.type === 'org' ? 'Condomínio' : (invite.fractionLabel ?? 'Fração')}
+          {' · '}
+          {roleLabel(invite.role)}
+        </p>
+        <div className="mt-2 flex items-center gap-2 @sm:hidden">
+          {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
+          {pendingActions}
+        </div>
+      </div>
+      <div className="hidden shrink-0 items-center gap-2 @sm:flex">
+        {invite.status === 'expired' && <Badge variant="destructive">Expirado</Badge>}
+        {pendingActions}
+      </div>
     </div>
   )
 }

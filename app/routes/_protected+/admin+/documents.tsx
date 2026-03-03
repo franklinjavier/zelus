@@ -15,7 +15,16 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { uploadFile } from '~/lib/upload'
 import { useEffect, useState } from 'react'
-import { Form, href, Link, Outlet, useLocation, useNavigate, useRevalidator } from 'react-router'
+import {
+  Form,
+  href,
+  Link,
+  Outlet,
+  useFetcher,
+  useLocation,
+  useNavigate,
+  useRevalidator,
+} from 'react-router'
 
 import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
@@ -200,6 +209,7 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
   const { documents } = loaderData
   const revalidator = useRevalidator()
   const hasProcessing = documents.some((d) => d.status === 'processing')
+  const uploadFetcher = useFetcher()
   const [uploading, setUploading] = useState(false)
   const [openDrawer, setOpenDrawer] = useState<'article' | 'url' | null>(null)
   const location = useLocation()
@@ -239,28 +249,16 @@ export default function AdminDocumentsPage({ loaderData, actionData }: Route.Com
         onUploadProgress: ({ percentage }) => setUploadProgress(percentage),
       })
 
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.style.display = 'none'
-
-      const fields = {
-        intent: 'upload',
-        fileUrl: blob.url,
-        fileName: file.name,
-        fileSize: String(file.size),
-        mimeType: file.type || 'application/octet-stream',
-      }
-
-      for (const [key, value] of Object.entries(fields)) {
-        const input = document.createElement('input')
-        input.name = key
-        input.value = value
-        form.appendChild(input)
-      }
-
-      document.body.appendChild(form)
-      form.requestSubmit()
-      document.body.removeChild(form)
+      uploadFetcher.submit(
+        {
+          intent: 'upload',
+          fileUrl: blob.url,
+          fileName: file.name,
+          fileSize: String(file.size),
+          mimeType: file.type || 'application/octet-stream',
+        },
+        { method: 'post' },
+      )
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'Erro ao enviar ficheiro.')
     } finally {

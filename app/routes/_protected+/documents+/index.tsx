@@ -6,20 +6,29 @@ import {
   EyeIcon,
   File02Icon,
   Link04Icon,
+  Loading03Icon,
   PinIcon,
   Refresh01Icon,
   TextIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect } from 'react'
-import { Form, href, Link, Outlet, useLocation, useNavigate, useRevalidator } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Form, href, Link, useFetcher, useRevalidator } from 'react-router'
 
 import { EmptyState } from '~/components/layout/empty-state'
 import { DocumentUpload } from '~/components/shared/document-upload'
+import { MarkdownContent } from '~/components/shared/markdown-content'
 import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
 import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { Button } from '~/components/ui/button'
-import { Drawer, DrawerPopup } from '~/components/ui/drawer'
+import {
+  Drawer,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerPopup,
+  DrawerTitle,
+} from '~/components/ui/drawer'
 import { Input } from '~/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip'
 import { processArticle, processDocument, processUrl } from '~/lib/ai/rag'
@@ -38,6 +47,7 @@ import {
 import { cn } from '~/lib/utils'
 import { waitUntilContext } from '~/lib/vercel/context'
 import type { Route } from './+types/index'
+import type { loader as viewLoader } from './view.$id'
 
 export function meta() {
   return [{ title: 'Documentos — Zelus' }]
@@ -150,15 +160,23 @@ export default function DocumentsIndex({ loaderData }: Route.ComponentProps) {
   const { documents, query, isAdmin } = loaderData
   const revalidator = useRevalidator()
   const hasProcessing = documents.some((d) => d.status === 'processing')
-  const location = useLocation()
-  const navigate = useNavigate()
-  const isDrawerOpen = /\/documents\/view\/[^/]+$/.test(location.pathname)
+
+  const [viewDocId, setViewDocId] = useState<string | null>(null)
+  const viewFetcher = useFetcher<typeof viewLoader>()
+
+  useEffect(() => {
+    if (viewDocId) {
+      viewFetcher.load(`/documents/view/${viewDocId}`)
+    }
+  }, [viewDocId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!hasProcessing) return
     const interval = setInterval(() => revalidator.revalidate(), 5000)
     return () => clearInterval(interval)
   }, [hasProcessing, revalidator])
+
+  const viewData = viewFetcher.data
 
   return (
     <>
@@ -297,8 +315,7 @@ export default function DocumentsIndex({ loaderData }: Route.ComponentProps) {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            nativeButton={false}
-                            render={<Link to={href('/documents/view/:id', { id: doc.id })} />}
+                            onClick={() => setViewDocId(doc.id)}
                           />
                         }
                       >
@@ -345,13 +362,78 @@ export default function DocumentsIndex({ loaderData }: Route.ComponentProps) {
       )}
 
       <Drawer
-        open={isDrawerOpen}
+        open={!!viewDocId}
         onOpenChange={(open) => {
-          if (!open) navigate(href('/documents'))
+          if (!open) setViewDocId(null)
         }}
       >
         <DrawerPopup className="sm:max-w-2xl">
-          <Outlet />
+          {viewFetcher.state === 'loading' && (
+            <div className="flex items-center justify-center py-24">
+              <HugeiconsIcon
+                icon={Loading03Icon}
+                size={24}
+                className="text-muted-foreground animate-spin"
+              />
+            </div>
+          )}
+          {viewData && viewFetcher.state === 'idle' && (
+            <>
+              <DrawerHeader>
+                <DrawerTitle className="pr-8">
+                  {viewData.doc.type === 'url' ? viewData.doc.title : viewData.doc.fileName}
+                </DrawerTitle>
+                <DrawerDescription>
+                  {viewData.doc.type === 'url' && viewData.doc.sourceUrl ? (
+                    <a
+                      href={viewData.doc.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {viewData.doc.sourceUrl}
+                    </a>
+                  ) : (
+                    'Conteúdo extraído do documento'
+                  )}
+                </DrawerDescription>
+              </DrawerHeader>
+
+              <div className="px-6 pb-2">
+                {viewData.doc.status === 'processing' && (
+                  <div className="text-muted-foreground flex flex-col items-center gap-3 py-12 text-sm">
+                    <HugeiconsIcon icon={Loading03Icon} size={24} className="animate-spin" />
+                    <span>A extrair conteúdo…</span>
+                  </div>
+                )}
+
+                {viewData.doc.status === 'error' && (
+                  <div className="text-destructive flex flex-col items-center gap-3 py-12 text-sm">
+                    <HugeiconsIcon icon={Alert02Icon} size={24} />
+                    <span>Ocorreu um erro ao processar este documento.</span>
+                  </div>
+                )}
+
+                {viewData.doc.status === 'ready' && viewData.fullText && (
+                  <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+                    <MarkdownContent>{viewData.fullText}</MarkdownContent>
+                  </div>
+                )}
+
+                {viewData.doc.status === 'ready' && !viewData.fullText && (
+                  <p className="text-muted-foreground py-12 text-center text-sm">
+                    Nenhum conteúdo extraído.
+                  </p>
+                )}
+              </div>
+
+              <DrawerFooter>
+                <Button variant="outline" onClick={() => setViewDocId(null)}>
+                  Fechar
+                </Button>
+              </DrawerFooter>
+            </>
+          )}
         </DrawerPopup>
       </Drawer>
     </>

@@ -1,13 +1,13 @@
-import { href, data, useNavigate } from 'react-router'
 import { Loading03Icon, Alert02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { href, data, useNavigate } from 'react-router'
 
-import type { Route } from './+types/documents.$id'
+import { Button } from '~/components/ui/button'
+import { DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '~/components/ui/drawer'
+import { MarkdownContent } from '~/components/shared/markdown-content'
 import { orgContext } from '~/lib/auth/context'
 import { getDocument, getDocumentChunks } from '~/lib/services/documents.server'
-import { DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '~/components/ui/drawer'
-import { Button } from '~/components/ui/button'
-import { MarkdownContent } from '~/components/shared/markdown-content'
+import type { Route } from './+types/view.$id'
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
@@ -23,7 +23,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   return { doc, fullText }
 }
 
-export default function DocumentDetailDrawer({ loaderData }: Route.ComponentProps) {
+export default function DocumentViewDrawer({ loaderData }: Route.ComponentProps) {
   const { doc, fullText } = loaderData
   const navigate = useNavigate()
 
@@ -76,7 +76,7 @@ export default function DocumentDetailDrawer({ loaderData }: Route.ComponentProp
       </div>
 
       <DrawerFooter>
-        <Button variant="outline" onClick={() => navigate(href('/admin/documents'))}>
+        <Button variant="outline" onClick={() => navigate(href('/documents'))}>
           Fechar
         </Button>
       </DrawerFooter>

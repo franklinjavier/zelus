@@ -87,11 +87,9 @@ export function DocumentUpload() {
           </Button>
         ) : (
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="outline">
-                <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
-                Adicionar
-              </Button>
+            <DropdownMenuTrigger render={<Button variant="outline" />}>
+              <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
+              Adicionar
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setOpenDrawer('article')}>

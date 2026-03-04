@@ -1,10 +1,12 @@
+import { useState, useEffect } from 'react'
 import { Collapsible } from '@base-ui/react/collapsible'
-import { ArrowDown01Icon, ShieldKeyIcon } from '@hugeicons/core-free-icons'
+import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link, NavLink, href, useLocation } from 'react-router'
 
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
-import { mainNav, adminNav } from '~/lib/navigation'
+import type { NavGroup as NavGroupType } from '~/lib/navigation'
+import { mainNav, navGroups } from '~/lib/navigation'
 import {
   Sidebar,
   SidebarContent,
@@ -33,9 +35,9 @@ export type AppSidebarProps = {
 }
 
 export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
-  const location = useLocation()
-  const isAdminRoute = location.pathname.startsWith('/admin')
   const { setOpenMobile } = useSidebar()
+
+  const visibleGroups = navGroups.filter((g) => !g.adminOnly || isOrgAdmin)
 
   return (
     <Sidebar variant="floating">
@@ -65,41 +67,13 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
                 </SidebarMenuItem>
               ))}
 
-              {isOrgAdmin && (
-                <Collapsible.Root defaultOpen={isAdminRoute}>
-                  <SidebarMenuItem>
-                    <Collapsible.Trigger
-                      render={
-                        <SidebarMenuButton tooltip="Administração">
-                          <HugeiconsIcon icon={ShieldKeyIcon} size={16} strokeWidth={2} />
-                          <span>Administração</span>
-                          <HugeiconsIcon
-                            icon={ArrowDown01Icon}
-                            size={14}
-                            strokeWidth={2}
-                            className="text-muted-foreground ml-auto transition-transform group-data-[panel-open]:rotate-180"
-                          />
-                        </SidebarMenuButton>
-                      }
-                    />
-                    <Collapsible.Panel>
-                      <SidebarMenuSub>
-                        {adminNav.map((item) => (
-                          <SidebarMenuSubItem key={item.to}>
-                            <NavLink to={item.to} onClick={() => setOpenMobile(false)}>
-                              {({ isActive }) => (
-                                <SidebarMenuSubButton isActive={isActive} render={<span />}>
-                                  <span>{item.label}</span>
-                                </SidebarMenuSubButton>
-                              )}
-                            </NavLink>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </Collapsible.Panel>
-                  </SidebarMenuItem>
-                </Collapsible.Root>
-              )}
+              {visibleGroups.map((group) => (
+                <CollapsibleNavGroup
+                  key={group.label}
+                  group={group}
+                  onNavigate={() => setOpenMobile(false)}
+                />
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -109,5 +83,57 @@ export function AppSidebar({ user, org, orgs, isOrgAdmin }: AppSidebarProps) {
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
+  )
+}
+
+function CollapsibleNavGroup({
+  group,
+  onNavigate,
+}: {
+  group: NavGroupType
+  onNavigate: () => void
+}) {
+  const location = useLocation()
+  const isActive = group.items.some((item) => location.pathname.startsWith(item.to))
+  const [open, setOpen] = useState(isActive)
+
+  useEffect(() => {
+    if (isActive) setOpen(true)
+  }, [isActive])
+
+  return (
+    <Collapsible.Root open={open} onOpenChange={setOpen}>
+      <SidebarMenuItem>
+        <Collapsible.Trigger
+          render={
+            <SidebarMenuButton tooltip={group.label}>
+              <HugeiconsIcon icon={group.icon} size={16} strokeWidth={2} />
+              <span>{group.label}</span>
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                size={14}
+                strokeWidth={2}
+                className="text-muted-foreground ml-auto transition-transform duration-200 [[data-panel-open]_&]:rotate-180"
+              />
+            </SidebarMenuButton>
+          }
+        />
+        <Collapsible.Panel>
+          <SidebarMenuSub>
+            {group.items.map((item) => (
+              <SidebarMenuSubItem key={item.to}>
+                <NavLink to={item.to} onClick={onNavigate}>
+                  {({ isActive: active }) => (
+                    <SidebarMenuSubButton isActive={active} render={<span />}>
+                      <span>{item.label}</span>
+                    </SidebarMenuSubButton>
+                  )}
+                </NavLink>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </Collapsible.Panel>
+      </SidebarMenuItem>
+    </Collapsible.Root>
   )
 }

@@ -17,7 +17,7 @@ import {
   CommandGroup,
   CommandItem,
 } from '~/components/ui/command'
-import { mainNav, adminNav, extraNav } from '~/lib/navigation'
+import { mainNav, navGroups, extraNav } from '~/lib/navigation'
 import type { SearchScope } from '~/lib/search/provider'
 
 type LoaderData = {
@@ -102,10 +102,10 @@ export function CommandSearch({
   const isLoading = fetcher.state === 'loading'
   const hasQuery = query.trim().length > 0
 
-  const allPages = useMemo(
-    () => (isOrgAdmin ? [...mainNav, ...adminNav, ...extraNav] : [...mainNav, ...extraNav]),
-    [isOrgAdmin],
-  )
+  const allPages = useMemo(() => {
+    const groupItems = navGroups.filter((g) => !g.adminOnly || isOrgAdmin).flatMap((g) => g.items)
+    return [...mainNav, ...groupItems, ...extraNav]
+  }, [isOrgAdmin])
 
   const filteredPages = useMemo(() => {
     if (!hasQuery) return allPages

@@ -12,8 +12,10 @@ import {
   LockIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { data, Form, href, useFetcher } from 'react-router'
+import { data, Form, href, redirect, useFetcher } from 'react-router'
 
+import { DeleteConfirmDialog } from '~/components/shared/delete-dialog'
+import { AlertDialogAction } from '~/components/ui/alert-dialog'
 import { BackButton } from '~/components/layout/back-button'
 import { EmptyState } from '~/components/layout/empty-state'
 import { ErrorBanner } from '~/components/layout/feedback'
@@ -59,7 +61,12 @@ import {
 } from '~/lib/services/ticket-attachments.server'
 import { listFractions } from '~/lib/services/fractions.server'
 import { addComment, getTicketTimeline } from '~/lib/services/ticket-comments.server'
-import { getTicket, updateTicket, updateTicketStatus } from '~/lib/services/tickets.server'
+import {
+  deleteTicket,
+  getTicket,
+  updateTicket,
+  updateTicketStatus,
+} from '~/lib/services/tickets.server'
 import { setToast } from '~/lib/toast.server'
 import type { Route } from './+types/$id'
 
@@ -242,6 +249,18 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     }
   }
 
+  if (intent === 'delete') {
+    if (effectiveRole !== 'org_admin') {
+      throw new Response('Forbidden', { status: 403 })
+    }
+    try {
+      await deleteTicket(orgId, params.id, user.id)
+      return redirect(href('/tickets'))
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'Erro ao apagar ocorrência.' }
+    }
+  }
+
   return { error: 'Ação desconhecida.' }
 }
 
@@ -263,6 +282,7 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
   const fractionFetcher = useFetcher()
   const attachFetcher = useFetcher()
   const evidenceFetcher = useFetcher()
+  const deleteFetcher = useFetcher()
   const canEdit = isAdmin || isCreator
   const [editOpen, setEditOpen] = useState(false)
 
@@ -270,12 +290,25 @@ export default function TicketDetailPage({ loaderData, actionData }: Route.Compo
     <div>
       <div className="flex items-center justify-between">
         <BackButton to={href('/tickets')} />
-        {canEdit && (
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <HugeiconsIcon icon={Edit02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
-            Editar
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button variant="outline" onClick={() => setEditOpen(true)}>
+              <HugeiconsIcon icon={Edit02Icon} data-icon="inline-start" size={16} strokeWidth={2} />
+              Editar
+            </Button>
+          )}
+          {isAdmin && (
+            <DeleteConfirmDialog
+              title="Apagar ocorrência?"
+              description="Esta ação não pode ser revertida. A ocorrência e todos os comentários, anexos e eventos associados serão apagados."
+            >
+              <deleteFetcher.Form method="post">
+                <input type="hidden" name="intent" value="delete" />
+                <AlertDialogAction type="submit">Apagar</AlertDialogAction>
+              </deleteFetcher.Form>
+            </DeleteConfirmDialog>
+          )}
+        </div>
       </div>
 
       {actionData && 'error' in actionData && (
@@ -479,53 +512,53 @@ function EvidenceGallery({
       })}
       <>
         <input
-            ref={evidenceFileInputRef}
-            type="file"
-            accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-              const previewUrl = URL.createObjectURL(file)
-              setPendingPreviews((prev) => [
-                ...prev,
-                { fileName: file.name, previewUrl, fileSize: file.size, mimeType: file.type },
-              ])
-              setIsEvidenceUploading(true)
-              try {
-                const { url } = await uploadFile(file, { access: 'public' })
-                evidenceFetcher.submit(
-                  {
-                    intent: 'attach',
-                    fileName: file.name,
-                    fileUrl: url,
-                    fileSize: String(file.size),
-                    mimeType: file.type,
-                  },
-                  { method: 'post' },
-                )
-              } catch {
-                setPendingPreviews((prev) => {
-                  const idx = prev.findIndex((p) => p.previewUrl === previewUrl)
-                  if (idx === -1) return prev
-                  URL.revokeObjectURL(previewUrl)
-                  return [...prev.slice(0, idx), ...prev.slice(idx + 1)]
-                })
-              } finally {
-                setIsEvidenceUploading(false)
-                if (evidenceFileInputRef.current) evidenceFileInputRef.current.value = ''
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="border-foreground/10 text-muted-foreground hover:border-primary/30 hover:text-primary flex h-36 w-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed transition-colors"
-            disabled={isEvidenceUploading}
-            onClick={() => evidenceFileInputRef.current?.click()}
-          >
-            <HugeiconsIcon icon={Camera01Icon} size={20} strokeWidth={1.5} />
-            <span className="text-sm font-medium">Adicionar evidência</span>
-          </button>
+          ref={evidenceFileInputRef}
+          type="file"
+          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            const previewUrl = URL.createObjectURL(file)
+            setPendingPreviews((prev) => [
+              ...prev,
+              { fileName: file.name, previewUrl, fileSize: file.size, mimeType: file.type },
+            ])
+            setIsEvidenceUploading(true)
+            try {
+              const { url } = await uploadFile(file, { access: 'public' })
+              evidenceFetcher.submit(
+                {
+                  intent: 'attach',
+                  fileName: file.name,
+                  fileUrl: url,
+                  fileSize: String(file.size),
+                  mimeType: file.type,
+                },
+                { method: 'post' },
+              )
+            } catch {
+              setPendingPreviews((prev) => {
+                const idx = prev.findIndex((p) => p.previewUrl === previewUrl)
+                if (idx === -1) return prev
+                URL.revokeObjectURL(previewUrl)
+                return [...prev.slice(0, idx), ...prev.slice(idx + 1)]
+              })
+            } finally {
+              setIsEvidenceUploading(false)
+              if (evidenceFileInputRef.current) evidenceFileInputRef.current.value = ''
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="border-foreground/10 text-muted-foreground hover:border-primary/30 hover:text-primary flex h-36 w-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed transition-colors"
+          disabled={isEvidenceUploading}
+          onClick={() => evidenceFileInputRef.current?.click()}
+        >
+          <HugeiconsIcon icon={Camera01Icon} size={20} strokeWidth={1.5} />
+          <span className="text-sm font-medium">Adicionar evidência</span>
+        </button>
       </>
     </div>
   )

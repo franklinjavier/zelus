@@ -4,6 +4,7 @@ import { db } from '~/lib/db'
 import {
   tickets,
   ticketComments,
+  ticketAttachments,
   ticketEvents,
   fractions,
   userFractions,
@@ -260,6 +261,38 @@ export async function updateTicketStatus(
   }
 
   return updated
+}
+
+export async function deleteTicket(orgId: string, ticketId: string, adminUserId: string) {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(ticketAttachments)
+      .where(and(eq(ticketAttachments.orgId, orgId), eq(ticketAttachments.ticketId, ticketId)))
+    await tx
+      .delete(ticketEvents)
+      .where(and(eq(ticketEvents.orgId, orgId), eq(ticketEvents.ticketId, ticketId)))
+    await tx
+      .delete(ticketComments)
+      .where(and(eq(ticketComments.orgId, orgId), eq(ticketComments.ticketId, ticketId)))
+  })
+
+  const [deleted] = await db
+    .delete(tickets)
+    .where(and(eq(tickets.id, ticketId), eq(tickets.orgId, orgId)))
+    .returning()
+
+  if (deleted) {
+    await logAuditEvent({
+      orgId,
+      userId: adminUserId,
+      action: 'ticket.deleted',
+      entityType: 'ticket',
+      entityId: ticketId,
+      metadata: { title: deleted.title },
+    })
+  }
+
+  return deleted ?? null
 }
 
 export async function bulkCreateTickets(

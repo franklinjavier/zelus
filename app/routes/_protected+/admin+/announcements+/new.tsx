@@ -123,6 +123,8 @@ export type AnnouncementFormProps = {
   error?: string
 }
 
+const DAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+
 const selectClassName =
   'border-input bg-background ring-foreground/10 h-10 w-full rounded-4xl px-3 text-sm ring-1'
 
@@ -134,6 +136,9 @@ export function AnnouncementForm({
 }: AnnouncementFormProps) {
   const [recurrenceType, setRecurrenceType] = useState(defaultValues.recurrenceType ?? 'none')
   const [frequency, setFrequency] = useState(defaultValues.frequency ?? 'weekly')
+  const [selectedDays, setSelectedDays] = useState<number[]>(
+    defaultValues.daysOfWeek ? defaultValues.daysOfWeek.split(',').map(Number) : [],
+  )
 
   return (
     <div className="px-6 pb-6">
@@ -236,16 +241,31 @@ export function AnnouncementForm({
 
             {frequency === 'weekly' && (
               <Field>
-                <FieldLabel htmlFor="ann-days">
-                  Dias da semana (0=Dom, 1=Seg, ..., 6=Sab)
-                </FieldLabel>
-                <Input
-                  id="ann-days"
-                  name="daysOfWeek"
-                  type="text"
-                  placeholder="5"
-                  defaultValue={defaultValues.daysOfWeek}
-                />
+                <FieldLabel>Dias da semana</FieldLabel>
+                <input type="hidden" name="daysOfWeek" value={selectedDays.join(',')} />
+                <div className="flex gap-1.5">
+                  {DAY_LABELS.map((label, i) => {
+                    const active = selectedDays.includes(i)
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() =>
+                          setSelectedDays((prev) =>
+                            active ? prev.filter((d) => d !== i) : [...prev, i],
+                          )
+                        }
+                        className={`flex size-9 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                          active
+                            ? 'bg-primary text-primary-foreground'
+                            : 'ring-foreground/10 bg-background hover:bg-accent ring-1'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
               </Field>
             )}
 

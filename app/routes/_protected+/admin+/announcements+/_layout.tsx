@@ -12,7 +12,11 @@ import {
   pauseAnnouncement,
   resumeAnnouncement,
 } from '~/lib/services/announcements.server'
-import { getNextOccurrence, type Recurrence } from '~/lib/announcements/recurrence'
+import {
+  getNextOccurrence,
+  getFrequencyLabel,
+  type Recurrence,
+} from '~/lib/announcements/recurrence'
 import { formatDate } from '~/lib/format'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
@@ -33,28 +37,21 @@ export function meta(_args: Route.MetaArgs) {
   return [{ title: 'Avisos — Zelus' }]
 }
 
-function getFrequencyLabel(recurrence: Recurrence | null): string | null {
-  if (!recurrence) return null
-  if (recurrence.frequency === 'weekly') {
-    return recurrence.interval === 1 ? 'Semanal' : `A cada ${recurrence.interval} semanas`
-  }
-  return recurrence.interval === 1 ? 'Mensal' : `A cada ${recurrence.interval} meses`
-}
-
 export async function loader({ context }: Route.LoaderArgs) {
   const { orgId } = context.get(orgContext)
   const rows = await listAnnouncementsAdmin(orgId)
   const now = new Date()
 
   const enriched = rows.map((row) => {
+    const isArchived = !!row.archivedAt
     const recurrence = row.recurrence as Recurrence | null
-    const nextOccurrence = getNextOccurrence(row.eventDate, recurrence, now)
+    const nextOccurrence = isArchived ? null : getNextOccurrence(row.eventDate, recurrence, now)
     const frequencyLabel = getFrequencyLabel(recurrence)
     return {
       ...row,
       nextOccurrence: nextOccurrence?.toISOString() ?? null,
       frequencyLabel,
-      isArchived: !!row.archivedAt,
+      isArchived,
       isPaused: !!row.pausedAt,
     }
   })

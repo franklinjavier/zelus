@@ -69,6 +69,17 @@ export function formatPhone(phone: string | null | undefined): string {
   return phone
 }
 
+export function formatEventDate(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0
+  return d.toLocaleDateString('pt-PT', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    ...(hasTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  })
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`

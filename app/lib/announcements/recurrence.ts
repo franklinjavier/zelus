@@ -40,6 +40,14 @@ export type Recurrence =
       endCount: number
     }
 
+export function getFrequencyLabel(recurrence: Recurrence | null): string | null {
+  if (!recurrence) return null
+  if (recurrence.frequency === 'weekly') {
+    return recurrence.interval === 1 ? 'Semanal' : `A cada ${recurrence.interval} semanas`
+  }
+  return recurrence.interval === 1 ? 'Mensal' : `A cada ${recurrence.interval} meses`
+}
+
 /** Get the Monday of the UTC week containing the given date (Mon=1, Sun=7 ISO style) */
 function getMondayUTC(date: Date): Date {
   const d = new Date(date)

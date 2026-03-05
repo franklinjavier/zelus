@@ -16,6 +16,7 @@ import { DocumentsList } from '~/components/shared/documents-list'
 import { orgContext, userContext } from '~/lib/auth/context'
 import { getActiveAnnouncements } from '~/lib/services/announcements.server'
 import { getDocumentsHighlights } from '~/lib/services/documents.server'
+import { formatEventDate } from '~/lib/format'
 import type { Route } from './+types/home'
 import { CardLink } from '~/components/brand/card-link'
 
@@ -112,7 +113,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">{a.title}</p>
                     {a.recurrence && (
-                      <Badge variant="secondary" className="shrink-0 text-xs">
+                      <Badge variant="secondary" className="shrink-0">
                         {(a.recurrence as { frequency: string }).frequency === 'weekly'
                           ? 'Semanal'
                           : 'Mensal'}
@@ -120,14 +121,7 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
                     )}
                   </div>
                   <p className="text-primary/70 mt-0.5 text-sm">
-                    {a.nextOccurrence!.toLocaleDateString('pt-PT', {
-                      weekday: 'long',
-                      day: '2-digit',
-                      month: 'long',
-                      ...(a.nextOccurrence!.getHours() !== 0 || a.nextOccurrence!.getMinutes() !== 0
-                        ? { hour: '2-digit', minute: '2-digit' }
-                        : {}),
-                    })}
+                    {formatEventDate(a.nextOccurrence!)}
                   </p>
                   <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{a.description}</p>
                 </div>

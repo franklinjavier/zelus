@@ -4,7 +4,7 @@ import { db } from '~/lib/db'
 import { announcements, member, user } from '~/lib/db/schema'
 import { getNextOccurrence, type Recurrence } from '~/lib/announcements/recurrence'
 import { logAuditEvent } from './audit.server'
-import { createNotification } from './notifications.server'
+import { createNotifications } from './notifications.server'
 import { sendEmail } from '~/lib/email/client'
 import { announcementEmail } from '~/lib/email/templates/announcement'
 
@@ -66,23 +66,25 @@ export async function broadcastAnnouncement(
     eventDate: announcement.eventDate,
   })
 
-  await Promise.allSettled(
-    members.map(async (m) => {
-      await createNotification({
-        orgId,
-        userId: m.userId,
-        type: 'announcement',
-        title: announcement.title,
-        message: truncatedDesc,
-        metadata: { announcementId: announcement.id },
-      })
+  await createNotifications(
+    members.map((m) => ({
+      orgId,
+      userId: m.userId,
+      type: 'announcement',
+      title: announcement.title,
+      message: truncatedDesc,
+      metadata: { announcementId: announcement.id },
+    })),
+  )
 
-      await sendEmail({
+  await Promise.allSettled(
+    members.map((m) =>
+      sendEmail({
         to: m.email,
         subject: email.subject,
         html: email.html,
-      })
-    }),
+      }),
+    ),
   )
 
   await logAuditEvent({
@@ -126,10 +128,17 @@ export async function updateAnnouncement(
   return updated ?? null
 }
 
-export async function archiveAnnouncement(orgId: string, id: string, userId: string) {
+async function setAnnouncementFlag(
+  orgId: string,
+  id: string,
+  userId: string,
+  field: 'archivedAt' | 'pausedAt',
+  value: Date | null,
+  auditAction: string,
+) {
   const [updated] = await db
     .update(announcements)
-    .set({ archivedAt: new Date() })
+    .set({ [field]: value })
     .where(and(eq(announcements.id, id), eq(announcements.orgId, orgId)))
     .returning()
 
@@ -137,7 +146,7 @@ export async function archiveAnnouncement(orgId: string, id: string, userId: str
     await logAuditEvent({
       orgId,
       userId,
-      action: 'announcement.archived',
+      action: auditAction,
       entityType: 'announcement',
       entityId: id,
       metadata: { title: updated.title },
@@ -147,67 +156,20 @@ export async function archiveAnnouncement(orgId: string, id: string, userId: str
   return updated ?? null
 }
 
-export async function unarchiveAnnouncement(orgId: string, id: string, userId: string) {
-  const [updated] = await db
-    .update(announcements)
-    .set({ archivedAt: null })
-    .where(and(eq(announcements.id, id), eq(announcements.orgId, orgId)))
-    .returning()
-
-  if (updated) {
-    await logAuditEvent({
-      orgId,
-      userId,
-      action: 'announcement.unarchived',
-      entityType: 'announcement',
-      entityId: id,
-      metadata: { title: updated.title },
-    })
-  }
-
-  return updated ?? null
+export function archiveAnnouncement(orgId: string, id: string, userId: string) {
+  return setAnnouncementFlag(orgId, id, userId, 'archivedAt', new Date(), 'announcement.archived')
 }
 
-export async function pauseAnnouncement(orgId: string, id: string, userId: string) {
-  const [updated] = await db
-    .update(announcements)
-    .set({ pausedAt: new Date() })
-    .where(and(eq(announcements.id, id), eq(announcements.orgId, orgId)))
-    .returning()
-
-  if (updated) {
-    await logAuditEvent({
-      orgId,
-      userId,
-      action: 'announcement.paused',
-      entityType: 'announcement',
-      entityId: id,
-      metadata: { title: updated.title },
-    })
-  }
-
-  return updated ?? null
+export function unarchiveAnnouncement(orgId: string, id: string, userId: string) {
+  return setAnnouncementFlag(orgId, id, userId, 'archivedAt', null, 'announcement.unarchived')
 }
 
-export async function resumeAnnouncement(orgId: string, id: string, userId: string) {
-  const [updated] = await db
-    .update(announcements)
-    .set({ pausedAt: null })
-    .where(and(eq(announcements.id, id), eq(announcements.orgId, orgId)))
-    .returning()
+export function pauseAnnouncement(orgId: string, id: string, userId: string) {
+  return setAnnouncementFlag(orgId, id, userId, 'pausedAt', new Date(), 'announcement.paused')
+}
 
-  if (updated) {
-    await logAuditEvent({
-      orgId,
-      userId,
-      action: 'announcement.resumed',
-      entityType: 'announcement',
-      entityId: id,
-      metadata: { title: updated.title },
-    })
-  }
-
-  return updated ?? null
+export function resumeAnnouncement(orgId: string, id: string, userId: string) {
+  return setAnnouncementFlag(orgId, id, userId, 'pausedAt', null, 'announcement.resumed')
 }
 
 export async function deleteAnnouncement(orgId: string, id: string, userId: string) {

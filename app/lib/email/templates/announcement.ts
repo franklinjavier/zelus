@@ -1,4 +1,5 @@
 import { getAppUrl } from '~/lib/misc/app-url'
+import { formatEventDate } from '~/lib/format'
 
 export function announcementEmail(params: {
   orgName: string
@@ -8,14 +9,7 @@ export function announcementEmail(params: {
 }) {
   const logoUrl = `${getAppUrl()}/logo.png`
   const homeUrl = `${getAppUrl()}/home`
-  const hasTime = params.eventDate.getHours() !== 0 || params.eventDate.getMinutes() !== 0
-  const formattedDate = params.eventDate.toLocaleDateString('pt-PT', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    ...(hasTime ? { hour: '2-digit', minute: '2-digit' } : {}),
-  })
+  const formattedDate = formatEventDate(params.eventDate)
 
   return {
     subject: `Aviso: ${params.title} — ${params.orgName}`,

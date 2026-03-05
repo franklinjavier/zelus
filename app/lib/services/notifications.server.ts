@@ -26,6 +26,29 @@ export async function createNotification(params: {
   return notification
 }
 
+export async function createNotifications(
+  rows: Array<{
+    orgId: string
+    userId: string
+    type: string
+    title: string
+    message: string
+    metadata?: Record<string, unknown>
+  }>,
+) {
+  if (rows.length === 0) return
+  await db.insert(notifications).values(
+    rows.map((r) => ({
+      orgId: r.orgId,
+      userId: r.userId,
+      type: r.type,
+      title: r.title,
+      message: r.message,
+      metadata: r.metadata ?? null,
+    })),
+  )
+}
+
 export async function listNotifications(orgId: string, userId: string) {
   return db
     .select()

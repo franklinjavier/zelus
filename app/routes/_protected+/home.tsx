@@ -124,8 +124,9 @@ export default function HomePage({ loaderData }: Route.ComponentProps) {
                       weekday: 'long',
                       day: '2-digit',
                       month: 'long',
-                      hour: '2-digit',
-                      minute: '2-digit',
+                      ...(a.nextOccurrence!.getHours() !== 0 || a.nextOccurrence!.getMinutes() !== 0
+                        ? { hour: '2-digit', minute: '2-digit' }
+                        : {}),
                     })}
                   </p>
                   <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{a.description}</p>

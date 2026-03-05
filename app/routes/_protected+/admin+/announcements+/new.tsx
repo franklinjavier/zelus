@@ -18,7 +18,7 @@ const createSchema = z.object({
   title: z.string().min(1, 'Titulo e obrigatorio'),
   description: z.string().min(1, 'Descricao e obrigatoria'),
   eventDate: z.string().min(1, 'Data e obrigatoria'),
-  eventTime: z.string().min(1, 'Hora e obrigatoria'),
+  eventTime: z.string().optional(),
   recurrenceType: z.enum(['none', 'custom']).default('none'),
   frequency: z.enum(['weekly', 'monthly']).optional(),
   interval: z.coerce.number().min(1).optional(),
@@ -82,7 +82,9 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   const { title, description, eventDate, eventTime } = parsed.data
-  const dateTime = new Date(`${eventDate}T${eventTime}:00`)
+  const dateTime = eventTime
+    ? new Date(`${eventDate}T${eventTime}:00`)
+    : new Date(`${eventDate}T00:00:00`)
   const recurrence = buildRecurrence(parsed.data)
   const notify = parsed.data.notify === 'on'
 
@@ -178,15 +180,13 @@ export function AnnouncementForm({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="ann-time">
-              Hora <span className="text-destructive">*</span>
-            </FieldLabel>
+            <FieldLabel htmlFor="ann-time">Hora</FieldLabel>
             <Input
               id="ann-time"
               name="eventTime"
               type="time"
-              defaultValue={defaultValues.eventTime ?? '09:00'}
-              required
+              defaultValue={defaultValues.eventTime}
+              placeholder="Opcional"
             />
           </Field>
         </div>

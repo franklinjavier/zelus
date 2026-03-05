@@ -13,7 +13,7 @@ const updateSchema = z.object({
   title: z.string().min(1, 'Titulo e obrigatorio'),
   description: z.string().min(1, 'Descricao e obrigatoria'),
   eventDate: z.string().min(1, 'Data e obrigatoria'),
-  eventTime: z.string().min(1, 'Hora e obrigatoria'),
+  eventTime: z.string().optional(),
   recurrenceType: z.enum(['none', 'custom']).default('none'),
   frequency: z.enum(['weekly', 'monthly']).optional(),
   interval: z.coerce.number().min(1).optional(),
@@ -68,9 +68,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   if (!announcement) throw new Response('Not Found', { status: 404 })
 
   const recurrence = announcement.recurrence as Recurrence | null
-  const hours = String(announcement.eventDate.getHours()).padStart(2, '0')
-  const minutes = String(announcement.eventDate.getMinutes()).padStart(2, '0')
-  const eventTime = `${hours}:${minutes}`
+  const h = announcement.eventDate.getHours()
+  const m = announcement.eventDate.getMinutes()
+  const eventTime =
+    h === 0 && m === 0 ? undefined : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 
   let defaultValues: Record<string, unknown> = {
     title: announcement.title,
@@ -115,7 +116,9 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   }
 
   const { title, description, eventDate, eventTime } = parsed.data
-  const dateTime = new Date(`${eventDate}T${eventTime}:00`)
+  const dateTime = eventTime
+    ? new Date(`${eventDate}T${eventTime}:00`)
+    : new Date(`${eventDate}T00:00:00`)
   const recurrence = buildRecurrence(parsed.data)
 
   await updateAnnouncement(

@@ -2,6 +2,7 @@ import {
   AiChat02Icon,
   BookOpen01Icon,
   Building06Icon,
+  Calendar03Icon,
   Home09Icon,
   Notification03Icon,
   ShieldKeyIcon,
@@ -39,6 +40,7 @@ export const navGroups: NavGroup[] = [
     adminOnly: true,
     items: [
       { label: 'Dashboard', to: href('/admin/dashboard'), icon: ShieldKeyIcon },
+      { label: 'Avisos', to: href('/admin/announcements'), icon: Calendar03Icon },
       { label: 'Categorias', to: href('/admin/categories'), icon: ShieldKeyIcon },
       { label: 'Condomínio', to: href('/admin/organization'), icon: ShieldKeyIcon },
       { label: 'Convites', to: href('/admin/invites'), icon: ShieldKeyIcon },

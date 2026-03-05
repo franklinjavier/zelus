@@ -1,4 +1,4 @@
-import { data, Form, Link, Outlet, useMatches, useNavigate, href } from 'react-router'
+import { data, Form, Link, Outlet, useMatches, useNavigate, useFetcher, href } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Calendar03Icon } from '@hugeicons/core-free-icons'
 
@@ -101,8 +101,13 @@ export async function action({ request, context }: Route.ActionArgs) {
 type EnrichedAnnouncement = Awaited<ReturnType<typeof loader>>['active'][number]
 
 function AnnouncementItem({ item }: { item: EnrichedAnnouncement }) {
+  const fetcher = useFetcher({ key: `announcement-${item.id}` })
+  const isSubmitting = fetcher.state !== 'idle'
+
   return (
-    <div className="ring-foreground/5 flex items-center gap-3 rounded-2xl p-3 ring-1">
+    <div
+      className={`ring-foreground/5 flex items-center gap-3 rounded-2xl p-3 ring-1 ${isSubmitting ? 'opacity-60' : ''}`}
+    >
       <div className="bg-primary/10 flex size-9 shrink-0 items-center justify-center rounded-xl">
         <HugeiconsIcon icon={Calendar03Icon} size={18} strokeWidth={1.5} className="text-primary" />
       </div>
@@ -128,22 +133,22 @@ function AnnouncementItem({ item }: { item: EnrichedAnnouncement }) {
 
       <div className="flex shrink-0 items-center gap-1">
         {!item.isArchived && (
-          <Form method="post">
+          <fetcher.Form method="post">
             <input type="hidden" name="id" value={item.id} />
             <input type="hidden" name="intent" value={item.isPaused ? 'resume' : 'pause'} />
-            <Button type="submit" variant="ghost" size="sm">
+            <Button type="submit" variant="ghost" size="sm" disabled={isSubmitting}>
               {item.isPaused ? 'Retomar' : 'Pausar'}
             </Button>
-          </Form>
+          </fetcher.Form>
         )}
 
-        <Form method="post">
+        <fetcher.Form method="post">
           <input type="hidden" name="id" value={item.id} />
           <input type="hidden" name="intent" value={item.isArchived ? 'unarchive' : 'archive'} />
-          <Button type="submit" variant="ghost" size="sm">
+          <Button type="submit" variant="ghost" size="sm" disabled={isSubmitting}>
             {item.isArchived ? 'Restaurar' : 'Arquivar'}
           </Button>
-        </Form>
+        </fetcher.Form>
 
         <DeleteConfirmDialog
           title="Apagar aviso?"

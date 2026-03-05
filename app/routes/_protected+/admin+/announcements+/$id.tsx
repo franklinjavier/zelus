@@ -16,12 +16,15 @@ const updateSchema = z.object({
   eventTime: z.string().optional(),
   recurrenceType: z.enum(['none', 'custom']).default('none'),
   frequency: z.enum(['weekly', 'monthly']).optional(),
-  interval: z.coerce.number().min(1).optional(),
+  interval: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().min(1).optional()),
   daysOfWeek: z.string().optional(),
-  dayOfMonth: z.coerce.number().min(1).max(31).optional(),
+  dayOfMonth: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.coerce.number().min(1).max(31).optional(),
+  ),
   endType: z.enum(['never', 'date', 'count']).optional(),
   endDate: z.string().optional(),
-  endCount: z.coerce.number().min(1).optional(),
+  endCount: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().min(1).optional()),
 })
 
 function buildRecurrence(fields: z.infer<typeof updateSchema>): Recurrence | null {

@@ -1,4 +1,5 @@
 import {
+  Calendar03Icon,
   CheckmarkCircle01Icon,
   Comment01Icon,
   MailSend02Icon,
@@ -83,6 +84,11 @@ const typeConfig: Record<
   },
   invite_received: {
     icon: MailSend02Icon,
+    iconClass: 'text-primary',
+    bgClass: 'bg-primary/10',
+  },
+  announcement: {
+    icon: Calendar03Icon,
     iconClass: 'text-primary',
     bgClass: 'bg-primary/10',
   },

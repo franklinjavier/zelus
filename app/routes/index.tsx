@@ -269,9 +269,14 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
       {/* Section 2: Before / After comparison */}
       <section id="problems" className="scroll-mt-8 px-6 py-16 md:py-24">
         <div className="mx-auto max-w-4xl">
-          <h2 className="mb-10 text-center text-xl font-semibold tracking-tight md:text-2xl">
-            O que muda com o Zelus?
-          </h2>
+          <div className="mb-10 text-center">
+            <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
+              O que muda com o Zelus?
+            </h2>
+            <p className="text-muted-foreground mt-2 text-base">
+              Os problemas de sempre, resolvidos de uma vez.
+            </p>
+          </div>
 
           <div className="flex flex-col gap-4">
             {[
@@ -304,12 +309,12 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
                 key={i}
                 className="ring-foreground/10 grid grid-cols-1 overflow-hidden rounded-2xl ring-1 md:grid-cols-2"
               >
-                <div className="bg-destructive/[0.04] flex items-start gap-3 p-5">
-                  <span className="text-destructive mt-0.5 text-base leading-none">&#x2717;</span>
+                <div className="bg-destructive/5 flex items-start gap-3 p-5">
+                  <span className="text-destructive mt-0.5 text-lg leading-none">&#x2717;</span>
                   <p className="text-sm">{item.before}</p>
                 </div>
-                <div className="bg-primary/[0.04] flex items-start gap-3 border-t p-5 md:border-t-0 md:border-l">
-                  <span className="text-primary mt-0.5 text-base leading-none">&#x2713;</span>
+                <div className="bg-primary/5 flex items-start gap-3 border-t p-5 md:border-t-0 md:border-l">
+                  <span className="text-primary mt-0.5 text-lg leading-none">&#x2713;</span>
                   <p className="text-sm">{item.after}</p>
                 </div>
               </div>

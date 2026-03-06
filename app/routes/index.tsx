@@ -157,6 +157,37 @@ function WaitlistForm({
   )
 }
 
+const features = [
+  {
+    title: 'Tudo começa na página inicial',
+    description:
+      'Avisos do condomínio, atalhos para as funcionalidades principais e documentos importantes — tudo visível assim que entra.',
+    screenshot: '/screenshots/01-home.png',
+    alt: 'Página inicial do Zelus com avisos e atalhos',
+  },
+  {
+    title: 'Ocorrências organizadas, do início ao fim',
+    description:
+      'Reporte problemas, acompanhe o estado e veja quem tratou e quando. Sem perseguir ninguém por mensagem.',
+    screenshot: '/screenshots/02-tickets.png',
+    alt: 'Lista de ocorrências do condomínio no Zelus',
+  },
+  {
+    title: 'Perguntas respondidas sem incomodar ninguém',
+    description:
+      'O assistente IA encontra respostas nos documentos e dados do condomínio. Regulamentos, contactos, historial — tudo acessível numa conversa.',
+    screenshot: '/screenshots/03-assistant.png',
+    alt: 'Assistente IA do Zelus a responder sobre ocorrências',
+  },
+  {
+    title: 'Prestadores sempre à mão',
+    description:
+      'Canalizador, eletricista, empresa de elevadores — todos os contactos organizados por categoria, sem depender da memória de ninguém.',
+    screenshot: '/screenshots/04-suppliers.png',
+    alt: 'Diretório de prestadores de serviço no Zelus',
+  },
+]
+
 export default function LandingPage({ actionData, loaderData }: Route.ComponentProps) {
   return (
     <div className="scroll-smooth">
@@ -192,7 +223,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
           </p>
 
           <div className="ring-foreground/10 aspect-video w-full overflow-hidden rounded-2xl shadow-xl ring-1">
-            <video autoPlay muted loop playsInline className="h-full w-full object-cover">
+            <video autoPlay muted loop playsInline controls className="h-full w-full object-cover">
               <source src="/hero.webm" type="video/webm" />
               <source src="/hero.mp4" type="video/mp4" />
               Vídeo demonstrativo do Zelus — gestão de condomínios simplificada.
@@ -312,6 +343,39 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
                 assistente encontra a resposta nos documentos do condomínio.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3b: Feature Showcase */}
+      <section className="px-6 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-12 text-center text-xl font-semibold tracking-tight md:text-2xl">
+            Tudo o que precisa, num só lugar.
+          </h2>
+
+          <div className="flex flex-col gap-16 md:gap-24">
+            {features.map((feature, i) => (
+              <div
+                key={feature.screenshot}
+                className={`flex flex-col items-center gap-6 md:gap-10 ${
+                  i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                }`}
+              >
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-lg font-semibold tracking-tight">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </div>
+                <div className="ring-foreground/10 w-full flex-1 overflow-hidden rounded-2xl shadow-xl ring-1">
+                  <img
+                    src={feature.screenshot}
+                    alt={feature.alt}
+                    className="h-auto w-full"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

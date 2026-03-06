@@ -67,12 +67,14 @@ function ImagePreview({
   thumbnailSrc,
   alt,
   className,
+  imgClassName,
   caption,
 }: {
   src: string
   thumbnailSrc?: string
   alt: string
   className?: string
+  imgClassName?: string
   caption?: string
 }) {
   const [mounted, setMounted] = useState(false)
@@ -101,7 +103,8 @@ function ImagePreview({
           src={thumbnailSrc ?? src}
           alt={alt}
           className={
-            className ? 'size-full object-cover' : 'max-h-64 rounded-lg border object-contain'
+            imgClassName ??
+            (className ? 'size-full object-cover' : 'max-h-64 rounded-lg border object-contain')
           }
         />
       </button>

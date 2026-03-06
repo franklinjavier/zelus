@@ -377,6 +377,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
                     thumbnailSrc={feature.thumbnail}
                     alt={feature.alt}
                     className="ring-foreground/10 block w-full cursor-zoom-in overflow-hidden rounded-2xl shadow-xl ring-1"
+                    imgClassName="h-auto w-full"
                   />
                 </div>
               </div>

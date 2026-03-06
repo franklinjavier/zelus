@@ -1,5 +1,5 @@
 /**
- * Capture screenshots of the app for the Remotion hero video.
+ * Capture screenshots of the app for the landing page feature showcase.
  *
  * Uses client-side navigation (sidebar clicks) instead of full page.goto()
  * to avoid SSR hydration issues in headless Chromium.
@@ -15,7 +15,7 @@ import { existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:5173'
-const OUTPUT_DIR = resolve(import.meta.dirname ?? __dirname, '..', 'video', 'screenshots')
+const OUTPUT_DIR = resolve(import.meta.dirname ?? __dirname, '..', 'public', 'screenshots')
 
 if (!existsSync(OUTPUT_DIR)) {
   mkdirSync(OUTPUT_DIR, { recursive: true })
@@ -63,21 +63,11 @@ async function main() {
   console.log('Login successful')
 
   // -------------------------------------------------------------------------
-  // 1. Admin Dashboard
+  // 1. Home page
   // -------------------------------------------------------------------------
-  console.log('  Capturing 01-dashboard...')
-  // Open the Administração collapsible in sidebar
-  await page
-    .getByRole('button', { name: /Administração/i })
-    .first()
-    .click()
-  await page.waitForTimeout(300)
-  // Click Dashboard sub-link
-  await page.getByRole('link', { name: 'Dashboard' }).first().click()
-  await page.waitForURL('**/admin/dashboard**', { timeout: 10_000 })
-  await page.waitForLoadState('networkidle')
-  await page.waitForTimeout(800)
-  await screenshot('01-dashboard')
+  console.log('  Capturing 01-home...')
+  await clickSidebarLink('Início', '**/home**')
+  await screenshot('01-home')
 
   // -------------------------------------------------------------------------
   // 2. Tickets list
@@ -87,37 +77,9 @@ async function main() {
   await screenshot('02-tickets')
 
   // -------------------------------------------------------------------------
-  // 3. Ticket detail — click on the "Elevador" ticket
+  // 3. Assistant — go to conversation with messages
   // -------------------------------------------------------------------------
-  console.log('  Capturing 03-ticket-detail...')
-  const elevatorTicket = page.getByRole('link', { name: /Elevador/i }).first()
-  if (await elevatorTicket.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await elevatorTicket.click()
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(800)
-  } else {
-    // Fallback: click any ticket link
-    console.warn('  ⚠ Elevator ticket not found, clicking first ticket...')
-    const anyTicket = page.locator('a[href*="/tickets/"]').first()
-    if (await anyTicket.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await anyTicket.click()
-      await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(800)
-    }
-  }
-  await screenshot('03-ticket-detail')
-
-  // -------------------------------------------------------------------------
-  // 4. Fractions
-  // -------------------------------------------------------------------------
-  console.log('  Capturing 04-fractions...')
-  await clickSidebarLink('Frações', '**/fractions**')
-  await screenshot('04-fractions')
-
-  // -------------------------------------------------------------------------
-  // 5. Assistant — go to conversation with messages
-  // -------------------------------------------------------------------------
-  console.log('  Capturing 05-assistant...')
+  console.log('  Capturing 03-assistant...')
   await clickSidebarLink('Assistente', '**/assistant**')
   await page.waitForTimeout(500)
 
@@ -128,20 +90,20 @@ async function main() {
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(800)
   }
-  await screenshot('05-assistant')
+  await screenshot('03-assistant')
 
   // -------------------------------------------------------------------------
-  // 6. Suppliers
+  // 4. Suppliers
   // -------------------------------------------------------------------------
-  console.log('  Capturing 06-suppliers...')
+  console.log('  Capturing 04-suppliers...')
   await clickSidebarLink('Prestadores', '**/suppliers**')
-  await screenshot('06-suppliers')
+  await screenshot('04-suppliers')
 
   // -------------------------------------------------------------------------
   // Done
   // -------------------------------------------------------------------------
   await browser.close()
-  console.log(`\nDone! 6 screenshots saved to ${OUTPUT_DIR}`)
+  console.log(`\nDone! 4 screenshots saved to ${OUTPUT_DIR}`)
 }
 
 main().catch((err) => {

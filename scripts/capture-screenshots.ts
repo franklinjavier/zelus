@@ -11,8 +11,9 @@
  * Usage: bun run video:capture
  */
 import { chromium } from 'playwright'
-import { existsSync, mkdirSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync } from 'fs'
 import { resolve } from 'path'
+import sharp from 'sharp'
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:5173'
 const OUTPUT_DIR = resolve(import.meta.dirname ?? __dirname, '..', 'public', 'screenshots')
@@ -99,10 +100,25 @@ async function main() {
   await screenshot('04-suppliers')
 
   // -------------------------------------------------------------------------
-  // Done
+  // Done — close browser, then generate thumbnails
   // -------------------------------------------------------------------------
   await browser.close()
-  console.log(`\nDone! 4 screenshots saved to ${OUTPUT_DIR}`)
+
+  // Generate optimized thumbnails (webp, 50% width)
+  console.log('\nGenerating thumbnails...')
+  const pngFiles = readdirSync(OUTPUT_DIR).filter((f) => f.endsWith('.png'))
+  for (const file of pngFiles) {
+    const input = resolve(OUTPUT_DIR, file)
+    const output = resolve(OUTPUT_DIR, file.replace('.png', '-thumb.webp'))
+    const metadata = await sharp(input).metadata()
+    await sharp(input)
+      .resize({ width: Math.round((metadata.width ?? 1280) / 2) })
+      .webp({ quality: 80 })
+      .toFile(output)
+    console.log(`  ✓ ${file.replace('.png', '-thumb.webp')} saved`)
+  }
+
+  console.log(`\nDone! 4 screenshots + 4 thumbnails saved to ${OUTPUT_DIR}`)
 }
 
 main().catch((err) => {

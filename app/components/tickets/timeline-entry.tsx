@@ -64,11 +64,13 @@ function MemberAvatar({ name, image }: { name: string; image?: string | null }) 
 
 function ImagePreview({
   src,
+  thumbnailSrc,
   alt,
   className,
   caption,
 }: {
   src: string
+  thumbnailSrc?: string
   alt: string
   className?: string
   caption?: string
@@ -96,7 +98,7 @@ function ImagePreview({
     <>
       <button type="button" onClick={open} className={className ?? 'mt-1.5 block cursor-zoom-in'}>
         <img
-          src={src}
+          src={thumbnailSrc ?? src}
           alt={alt}
           className={
             className ? 'size-full object-cover' : 'max-h-64 rounded-lg border object-contain'

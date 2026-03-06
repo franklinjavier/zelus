@@ -8,6 +8,7 @@ import { lazy, Suspense, useId } from 'react'
 const AzulejoPattern = lazy(() =>
   import('~/components/brand/azulejo-pattern').then((m) => ({ default: m.AzulejoPattern })),
 )
+import { ImagePreview } from '~/components/tickets/timeline-entry'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -163,6 +164,7 @@ const features = [
     description:
       'Avisos do condomínio, atalhos para as funcionalidades principais e documentos importantes — tudo visível assim que entra.',
     screenshot: '/screenshots/01-home.png',
+    thumbnail: '/screenshots/01-home-thumb.webp',
     alt: 'Página inicial do Zelus com avisos e atalhos',
   },
   {
@@ -170,6 +172,7 @@ const features = [
     description:
       'Reporte problemas, acompanhe o estado e veja quem tratou e quando. Sem perseguir ninguém por mensagem.',
     screenshot: '/screenshots/02-tickets.png',
+    thumbnail: '/screenshots/02-tickets-thumb.webp',
     alt: 'Lista de ocorrências do condomínio no Zelus',
   },
   {
@@ -177,6 +180,7 @@ const features = [
     description:
       'O assistente IA encontra respostas nos documentos e dados do condomínio. Regulamentos, contactos, historial — tudo acessível numa conversa.',
     screenshot: '/screenshots/03-assistant.png',
+    thumbnail: '/screenshots/03-assistant-thumb.webp',
     alt: 'Assistente IA do Zelus a responder sobre ocorrências',
   },
   {
@@ -184,6 +188,7 @@ const features = [
     description:
       'Canalizador, eletricista, empresa de elevadores — todos os contactos organizados por categoria, sem depender da memória de ninguém.',
     screenshot: '/screenshots/04-suppliers.png',
+    thumbnail: '/screenshots/04-suppliers-thumb.webp',
     alt: 'Diretório de prestadores de serviço no Zelus',
   },
 ]
@@ -366,12 +371,12 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
                   <h3 className="text-lg font-semibold tracking-tight">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
                 </div>
-                <div className="ring-foreground/10 w-full flex-1 overflow-hidden rounded-2xl shadow-xl ring-1">
-                  <img
+                <div className="w-full flex-1">
+                  <ImagePreview
                     src={feature.screenshot}
+                    thumbnailSrc={feature.thumbnail}
                     alt={feature.alt}
-                    className="h-auto w-full"
-                    loading="lazy"
+                    className="ring-foreground/10 block w-full cursor-zoom-in overflow-hidden rounded-2xl shadow-xl ring-1"
                   />
                 </div>
               </div>

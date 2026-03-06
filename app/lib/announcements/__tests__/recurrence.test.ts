@@ -9,9 +9,9 @@ describe('getNextOccurrence', () => {
     expect(result).toEqual(d('2026-04-01'))
   })
 
-  it('returns null for one-time past event', () => {
+  it('returns eventDate for one-time past event (visible until archived)', () => {
     const result = getNextOccurrence(d('2026-02-01'), null, d('2026-03-01'))
-    expect(result).toBeNull()
+    expect(result).toEqual(d('2026-02-01'))
   })
 
   it('returns next weekly occurrence — same day of week in future', () => {

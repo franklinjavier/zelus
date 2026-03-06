@@ -57,16 +57,15 @@ async function main() {
   await page.fill('#email', 'admin@zelus.sh')
   await page.fill('#password', 'password123')
   await page.click('button[type="submit"]')
-  await page.waitForURL('**/assistant**', { timeout: 15_000 })
+  await page.waitForURL('**/home**', { timeout: 15_000 })
   await page.waitForLoadState('networkidle')
   await page.waitForTimeout(1000)
   console.log('Login successful')
 
   // -------------------------------------------------------------------------
-  // 1. Home page
+  // 1. Home page (already on /home after login)
   // -------------------------------------------------------------------------
   console.log('  Capturing 01-home...')
-  await clickSidebarLink('Início', '**/home**')
   await screenshot('01-home')
 
   // -------------------------------------------------------------------------

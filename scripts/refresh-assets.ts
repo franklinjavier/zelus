@@ -11,24 +11,20 @@
  *
  * For video rendering, run `bun run video:render` separately after this.
  */
-import { spawn, type Subprocess } from 'bun'
+import { spawn, spawnSync } from 'child_process'
 import { resolve } from 'path'
 
 const ROOT = resolve(import.meta.dirname ?? __dirname, '..')
 
-function run(cmd: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(cmd, {
-      cwd: ROOT,
-      stdout: 'inherit',
-      stderr: 'inherit',
-      env: process.env,
-    })
-    proc.exited.then((code) => {
-      if (code === 0) resolve()
-      else reject(new Error(`${cmd.join(' ')} exited with code ${code}`))
-    })
+function run(cmd: string, args: string[], envOverrides?: Record<string, string>): void {
+  const result = spawnSync(cmd, args, {
+    cwd: ROOT,
+    stdio: 'inherit',
+    env: { ...process.env, ...envOverrides },
   })
+  if (result.status !== 0) {
+    throw new Error(`${cmd} ${args.join(' ')} exited with code ${result.status}`)
+  }
 }
 
 async function waitForServer(url: string, timeoutMs = 60_000): Promise<void> {
@@ -46,18 +42,18 @@ async function waitForServer(url: string, timeoutMs = 60_000): Promise<void> {
 }
 
 async function main() {
-  const baseUrl = process.env.BASE_URL ?? 'http://localhost:5173'
+  const port = process.env.PORT ?? '5199'
+  const baseUrl = `http://localhost:${port}`
 
   // 1. Seed demo data
   console.log('\n--- Step 1/3: Seeding demo data ---\n')
-  await run(['bun', 'run', 'db:seed-demo'])
+  run('bun', ['run', 'db:seed-demo'])
 
-  // 2. Start dev server
+  // 2. Start dev server on a dedicated port
   console.log('\n--- Step 2/3: Starting dev server ---\n')
-  const devServer: Subprocess = spawn(['bun', 'run', 'dev'], {
+  const devServer = spawn('bun', ['run', 'dev', '--', '--port', port], {
     cwd: ROOT,
-    stdout: 'inherit',
-    stderr: 'inherit',
+    stdio: 'inherit',
     env: process.env,
   })
 
@@ -68,7 +64,7 @@ async function main() {
 
     // 3. Capture screenshots
     console.log('--- Step 3/3: Capturing screenshots ---\n')
-    await run(['bun', 'run', 'video:capture'])
+    run('bun', ['run', 'video:capture'], { BASE_URL: baseUrl })
   } finally {
     // 4. Stop dev server
     console.log('\nStopping dev server...')

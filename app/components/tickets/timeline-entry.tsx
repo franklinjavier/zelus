@@ -149,7 +149,11 @@ function ImagePreview({
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
-              <img src={src} alt={alt} className="max-h-[85vh] max-w-[90vw] object-contain" />
+              <img
+                src={src}
+                alt={alt}
+                className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain"
+              />
               {caption && <p className="text-sm text-white/70">{caption}</p>}
             </div>
           </div>,

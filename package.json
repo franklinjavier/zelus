@@ -26,7 +26,8 @@
     "video:capture": "dotenv -e .env.local -- bun run scripts/capture-screenshots.ts",
     "video:record": "dotenv -e .env.local -- bun run scripts/record-hero-video.ts",
     "video:render": "cd video && bun run render.ts",
-    "video:studio": "cd video && bunx remotion studio"
+    "video:studio": "cd video && bunx remotion studio",
+    "assets:refresh": "dotenv -e .env.local -- bun run scripts/refresh-assets.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.47",

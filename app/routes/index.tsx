@@ -267,209 +267,200 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
       </section>
 
       {/* Section 2: Before / After comparison */}
-      <section id="problems" className="scroll-mt-8 px-6 py-16 md:py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+      <section id="problems" className="scroll-mt-8 py-16 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 overflow-hidden rounded-3xl md:grid-cols-2">
             {/* --- BEFORE column --- */}
-            <div>
-              <div className="mb-6 flex items-center gap-2">
-                <span className="bg-destructive/10 text-destructive inline-flex size-7 items-center justify-center rounded-full text-sm font-bold">
-                  &times;
-                </span>
-                <h2 className="text-lg font-semibold tracking-tight">Sem o Zelus</h2>
-              </div>
+            <div className="relative bg-gray-950 px-6 py-10 text-white md:px-10 md:py-14">
+              {/* Noise texture overlay */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.03]"
+                style={{
+                  backgroundImage:
+                    'url("data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27noise%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23noise)%27/%3E%3C/svg%3E")',
+                }}
+              />
 
-              <div className="flex flex-col gap-3">
-                {/* Mock WhatsApp chaos */}
-                <div className="bg-destructive/5 ring-destructive/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-destructive mb-2 text-sm font-semibold">
-                    Grupos de WhatsApp intermináveis
-                  </h3>
-                  <div className="flex flex-col gap-1.5">
-                    <div className="bg-background/60 w-fit max-w-[80%] rounded-xl rounded-tl-sm px-3 py-1.5 text-sm">
-                      Quem chamou o canalizador?
+              <p className="relative mb-8 text-sm font-medium tracking-widest text-red-400 uppercase">
+                Sem o Zelus
+              </p>
+
+              <div className="relative flex flex-col gap-5">
+                {/* WhatsApp chaos */}
+                <div>
+                  <p className="mb-3 text-sm font-medium text-white/50">
+                    Grupo &ldquo;Condomínio São Tomé&rdquo; &middot; 47 não lidas
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="w-fit max-w-[85%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-2.5 text-sm text-white/80 backdrop-blur-sm">
+                      Quem chamou o canalizador? Já está a pingar há 3 dias
                     </div>
-                    <div className="bg-background/60 w-fit max-w-[80%] self-end rounded-xl rounded-tr-sm px-3 py-1.5 text-sm">
+                    <div className="w-fit max-w-[85%] self-end rounded-2xl rounded-tr-md bg-white/10 px-4 py-2.5 text-sm text-white/80 backdrop-blur-sm">
                       Não fui eu, perguntem à D. Maria
                     </div>
-                    <div className="bg-background/60 w-fit max-w-[80%] rounded-xl rounded-tl-sm px-3 py-1.5 text-sm">
+                    <div className="w-fit max-w-[85%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-2.5 text-sm text-white/80 backdrop-blur-sm">
                       Já liguei 3 vezes, ninguém atende
                     </div>
-                    <p className="text-destructive/60 mt-1 text-sm italic">
-                      +47 mensagens não lidas...
-                    </p>
+                    <div className="w-fit max-w-[85%] self-end rounded-2xl rounded-tr-md bg-white/10 px-4 py-2.5 text-sm text-white/80 backdrop-blur-sm">
+                      Alguém tem o contacto do eletricista?
+                    </div>
+                    <div className="w-fit max-w-[85%] rounded-2xl rounded-tl-md bg-white/10 px-4 py-2.5 text-sm text-white/80 backdrop-blur-sm">
+                      Bom dia, quando é a próxima assembleia?
+                    </div>
                   </div>
+                  <p className="mt-3 text-sm text-red-400/70">
+                    A mensagem perdeu-se entre 200 outras.
+                  </p>
                 </div>
+
+                {/* Divider */}
+                <div className="h-px bg-white/10" />
 
                 {/* Scattered files */}
-                <div className="bg-destructive/5 ring-destructive/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-destructive mb-2 text-sm font-semibold">
-                    Ficheiros espalhados por todo o lado
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="bg-background/60 rounded-lg px-2.5 py-1 text-sm">
+                <div>
+                  <p className="mb-3 text-sm font-medium text-white/50">Ficheiros do condomínio</p>
+                  <div className="relative flex flex-wrap gap-2">
+                    <span className="-rotate-1 rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white/60">
                       orcamento_2024_v3_FINAL.xlsx
                     </span>
-                    <span className="bg-background/60 rounded-lg px-2.5 py-1 text-sm">
+                    <span className="rotate-1 rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white/60">
                       ata_assembleia (2).pdf
                     </span>
-                    <span className="bg-background/60 rounded-lg px-2.5 py-1 text-sm">
+                    <span className="-rotate-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white/60">
                       IMG_4392.jpg
                     </span>
-                    <span className="bg-background/60 rounded-lg px-2.5 py-1 text-sm">
+                    <span className="rotate-1 rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white/60 line-through decoration-red-400/50">
                       regulamento_antigo.doc
                     </span>
+                    <span className="-rotate-1 rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white/60">
+                      conta_luz_mar.pdf
+                    </span>
                   </div>
-                  <p className="text-destructive/60 mt-2 text-sm italic">
-                    Está no e-mail do antigo administrador. Ou era no Drive?
+                  <p className="mt-3 text-sm text-red-400/70">
+                    No e-mail do antigo administrador. Ou era no Drive?
                   </p>
                 </div>
 
-                {/* No visibility */}
-                <div className="bg-destructive/5 ring-destructive/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-destructive mb-2 text-sm font-semibold">
-                    Moradores sem respostas
-                  </h3>
-                  <div className="flex flex-col gap-1.5">
-                    <div className="bg-background/60 w-fit rounded-xl px-3 py-1.5 text-sm">
-                      O que foi decidido na assembleia?
-                    </div>
-                    <div className="bg-background/60 w-fit rounded-xl px-3 py-1.5 text-sm">
-                      Quando é que arranjam o elevador?
-                    </div>
-                    <div className="bg-background/60 w-fit rounded-xl px-3 py-1.5 text-sm">
-                      Quem é o contacto do eletricista?
-                    </div>
-                  </div>
-                  <p className="text-destructive/60 mt-2 text-sm italic">
-                    Sem respostas, cresce a desconfiança.
-                  </p>
-                </div>
+                {/* Divider */}
+                <div className="h-px bg-white/10" />
 
                 {/* Admin turnover */}
-                <div className="bg-destructive/5 ring-destructive/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-destructive mb-2 text-sm font-semibold">
-                    Cada troca de administração, recomeça-se do zero
-                  </h3>
-                  <div className="text-muted-foreground flex items-center gap-3 text-sm">
-                    <span className="line-through">2022 — Gestcond</span>
-                    <span>&rarr;</span>
-                    <span className="line-through">2024 — Sr. Manuel</span>
-                    <span>&rarr;</span>
-                    <span>2026 — ?</span>
+                <div>
+                  <p className="mb-3 text-sm font-medium text-white/50">
+                    Historial de administração
+                  </p>
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="text-white/30 line-through">2022 — Gestcond</span>
+                    <span className="text-white/20">&rarr;</span>
+                    <span className="text-white/30 line-through">2024 — Sr. Manuel</span>
+                    <span className="text-white/20">&rarr;</span>
+                    <span className="text-white/50">2026 — ???</span>
                   </div>
-                  <p className="text-destructive/60 mt-2 text-sm italic">
-                    Contactos, historial, contexto — tudo perdido.
+                  <p className="mt-3 text-sm text-red-400/70">
+                    Contactos, historial, contexto — tudo perdido. Recomeça-se do zero.
                   </p>
                 </div>
               </div>
             </div>
 
             {/* --- AFTER column --- */}
-            <div>
-              <div className="mb-6 flex items-center gap-2">
-                <span className="bg-primary/10 text-primary inline-flex size-7 items-center justify-center rounded-full text-sm font-bold">
-                  &check;
-                </span>
-                <h2 className="text-lg font-semibold tracking-tight">Com o Zelus</h2>
-              </div>
+            <div className="bg-primary/[0.03] ring-foreground/5 px-6 py-10 ring-1 ring-inset md:px-10 md:py-14">
+              <p className="text-primary mb-8 text-sm font-medium tracking-widest uppercase">
+                Com o Zelus
+              </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-5">
                 {/* Organized tickets */}
-                <div className="bg-primary/5 ring-primary/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-primary mb-2 text-sm font-semibold">
-                    Ocorrências organizadas, do início ao fim
-                  </h3>
+                <div>
+                  <p className="text-foreground/40 mb-3 text-sm font-medium">Ocorrências</p>
                   <div className="flex flex-col gap-1.5">
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="bg-destructive/20 text-destructive size-2 rounded-full" />
-                      Fuga de água na garagem
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 ring-1">
+                      <span className="size-2 shrink-0 rounded-full bg-emerald-500" />
+                      <span className="text-sm">Fuga de água na garagem</span>
                       <span className="text-muted-foreground ml-auto text-sm">Resolvido</span>
                     </div>
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="bg-primary/30 text-primary size-2 rounded-full" />
-                      Elevador parado no 3.º
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 ring-1">
+                      <span className="bg-primary size-2 shrink-0 rounded-full" />
+                      <span className="text-sm">Elevador parado no 3.º andar</span>
                       <span className="text-muted-foreground ml-auto text-sm">Em curso</span>
                     </div>
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="size-2 rounded-full bg-amber-400/50" />
-                      Porta da entrada não fecha
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 ring-1">
+                      <span className="size-2 shrink-0 rounded-full bg-amber-500" />
+                      <span className="text-sm">Porta da entrada não fecha</span>
                       <span className="text-muted-foreground ml-auto text-sm">Aberto</span>
                     </div>
                   </div>
-                  <p className="text-primary/60 mt-2 text-sm">
-                    Cada problema acompanhado com estado, prioridade e histórico.
-                  </p>
                 </div>
 
+                {/* Divider */}
+                <div className="bg-foreground/5 h-px" />
+
                 {/* Documents + announcements */}
-                <div className="bg-primary/5 ring-primary/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-primary mb-2 text-sm font-semibold">
-                    Documentos e avisos centralizados
-                  </h3>
+                <div>
+                  <p className="text-foreground/40 mb-3 text-sm font-medium">
+                    Documentos &amp; Avisos
+                  </p>
                   <div className="flex flex-col gap-1.5">
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="text-muted-foreground">PDF</span>
-                      Ata da assembleia — Jan 2026
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 ring-1">
+                      <span className="text-muted-foreground text-sm font-medium">PDF</span>
+                      <span className="text-sm">Ata da assembleia — Jan 2026</span>
                     </div>
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="text-muted-foreground">PDF</span>
-                      Regulamento interno
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 ring-1">
+                      <span className="text-muted-foreground text-sm font-medium">PDF</span>
+                      <span className="text-sm">Regulamento interno</span>
                     </div>
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="text-primary">Aviso</span>
-                      Limpeza da garagem — sábado
-                      <span className="bg-primary/10 text-primary ml-auto rounded-full px-2 py-0.5 text-sm">
-                        Semanal
+                    <div className="bg-primary/5 ring-primary/10 flex items-center gap-3 rounded-xl px-4 py-2.5 ring-1">
+                      <span className="text-primary text-sm font-medium">Aviso</span>
+                      <span className="text-sm">Limpeza da garagem — sábado</span>
+                      <span className="bg-primary/10 text-primary ml-auto rounded-full px-2.5 py-0.5 text-sm font-medium">
+                        Quinzenal
                       </span>
                     </div>
                   </div>
-                  <p className="text-primary/60 mt-2 text-sm">
-                    Atas, regulamentos e avisos agendados num único lugar.
-                  </p>
                 </div>
 
-                {/* AI Assistant answers */}
-                <div className="bg-primary/5 ring-primary/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-primary mb-2 text-sm font-semibold">
-                    Respostas imediatas com o assistente IA
-                  </h3>
+                {/* Divider */}
+                <div className="bg-foreground/5 h-px" />
+
+                {/* AI Assistant */}
+                <div>
+                  <p className="text-foreground/40 mb-3 text-sm font-medium">Assistente IA</p>
                   <div className="flex flex-col gap-1.5">
-                    <div className="bg-background/60 w-fit max-w-[80%] self-end rounded-xl rounded-tr-sm px-3 py-1.5 text-sm">
+                    <div className="bg-card ring-foreground/5 w-fit max-w-[80%] self-end rounded-2xl rounded-tr-md px-4 py-2.5 text-sm ring-1">
                       Quem é o contacto do eletricista?
                     </div>
-                    <div className="bg-primary/10 w-fit max-w-[85%] rounded-xl rounded-tl-sm px-3 py-1.5 text-sm">
+                    <div className="bg-primary/5 ring-primary/10 w-fit max-w-[90%] rounded-2xl rounded-tl-md px-4 py-2.5 text-sm ring-1">
                       O prestador registado é a <strong>ElétricoLuz</strong>. Contacto: Pedro Nunes,
-                      914 567 890.
+                      914&nbsp;567&nbsp;890.
                     </div>
                   </div>
-                  <p className="text-primary/60 mt-2 text-sm">
-                    Encontra respostas nos documentos e dados do condomínio.
-                  </p>
                 </div>
 
-                {/* Persistent history */}
-                <div className="bg-primary/5 ring-primary/10 rounded-2xl p-5 ring-1">
-                  <h3 className="text-primary mb-2 text-sm font-semibold">
-                    Historial que sobrevive a qualquer mudança
-                  </h3>
+                {/* Divider */}
+                <div className="bg-foreground/5 h-px" />
+
+                {/* Maintenance history */}
+                <div>
+                  <p className="text-foreground/40 mb-3 text-sm font-medium">
+                    Historial de intervenções
+                  </p>
                   <div className="flex flex-col gap-1.5">
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="text-muted-foreground">2024</span>
-                      Revisão do elevador — ElevaTécnica — 450&euro;
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm ring-1">
+                      <span className="text-muted-foreground font-medium">2024</span>
+                      <span>Revisão do elevador — ElevaTécnica</span>
+                      <span className="text-muted-foreground ml-auto">450&thinsp;&euro;</span>
                     </div>
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="text-muted-foreground">2025</span>
-                      Pintura da escadaria — PintaFácil — 1.200&euro;
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm ring-1">
+                      <span className="text-muted-foreground font-medium">2025</span>
+                      <span>Pintura da escadaria — PintaFácil</span>
+                      <span className="text-muted-foreground ml-auto">1.200&thinsp;&euro;</span>
                     </div>
-                    <div className="bg-background/60 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm">
-                      <span className="text-muted-foreground">2026</span>
-                      Desentupimento coluna — Canalizações Silva — 280&euro;
+                    <div className="bg-card ring-foreground/5 flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm ring-1">
+                      <span className="text-muted-foreground font-medium">2026</span>
+                      <span>Desentupimento — Canalizações Silva</span>
+                      <span className="text-muted-foreground ml-auto">280&thinsp;&euro;</span>
                     </div>
                   </div>
-                  <p className="text-primary/60 mt-2 text-sm">
-                    Muda a administração, o conhecimento fica.
-                  </p>
                 </div>
               </div>
             </div>

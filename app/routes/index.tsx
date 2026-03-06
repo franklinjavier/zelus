@@ -202,7 +202,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
 
       {/* Top bar */}
       <div className="relative z-10 flex justify-end px-6 py-4">
-        <Button variant="ghost" size="lg" render={<a href={href('/login')} />}>
+        <Button size="lg" nativeButton={false} render={<a href={href('/login')} />}>
           Entrar
         </Button>
       </div>
@@ -310,8 +310,8 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
                   <span className="text-destructive mt-0.5 text-lg leading-none">&#x2717;</span>
                   <p className="text-sm">{item.before}</p>
                 </div>
-                <div className="bg-primary/5 flex items-start gap-3 border-t p-5 md:border-t-0 md:border-l">
-                  <span className="text-primary mt-0.5 text-lg leading-none">&#x2713;</span>
+                <div className="flex items-start gap-3 border-t bg-emerald-500/5 p-5 md:border-t-0 md:border-l">
+                  <span className="mt-0.5 text-lg leading-none text-emerald-600">&#x2713;</span>
                   <p className="text-sm">{item.after}</p>
                 </div>
               </div>

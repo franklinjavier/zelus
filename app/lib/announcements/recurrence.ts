@@ -79,9 +79,9 @@ export function getNextOccurrence(
   recurrence: Recurrence | null,
   now: Date,
 ): Date | null {
-  // One-time event
+  // One-time event — always return eventDate so it stays visible until archived
   if (!recurrence) {
-    return eventDate >= now ? eventDate : null
+    return eventDate
   }
 
   // Check endDate constraint early

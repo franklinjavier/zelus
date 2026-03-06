@@ -88,6 +88,7 @@ export function AzulejoPattern({
   const [grid, setGrid] = useState({ cols: 0, rows: 0 })
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>
     function update() {
       const height = document.documentElement.scrollHeight
       setGrid({
@@ -95,9 +96,16 @@ export function AzulejoPattern({
         rows: Math.ceil(height / STEP) + 1,
       })
     }
+    function onResize() {
+      clearTimeout(timer)
+      timer = setTimeout(update, 300)
+    }
     update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    window.addEventListener('resize', onResize)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', onResize)
+    }
   }, [])
 
   if (grid.cols === 0) return null

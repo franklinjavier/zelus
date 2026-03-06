@@ -195,23 +195,20 @@ const features = [
 
 export default function LandingPage({ actionData, loaderData }: Route.ComponentProps) {
   return (
-    <div className="scroll-smooth">
+    <div className="relative scroll-smooth">
+      <Suspense>
+        <AzulejoPattern />
+      </Suspense>
+
       {/* Top bar */}
-      <div className="relative z-20 flex justify-end px-6 py-4">
-        <a
-          href={href('/login')}
-          className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
-        >
-          Já tem conta? Entrar
-        </a>
+      <div className="relative z-10 flex justify-end px-6 py-4">
+        <Button variant="ghost" size="lg" render={<a href={href('/login')} />}>
+          Entrar
+        </Button>
       </div>
 
       {/* Section 1: Hero */}
-      <section className="relative flex min-h-svh items-center justify-center px-6 py-16 md:py-24">
-        <Suspense>
-          <AzulejoPattern />
-        </Suspense>
-
+      <section className="flex min-h-svh items-center justify-center px-6 py-16 md:py-24">
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-3">
             <ZelusLogoTile size={64} className="text-primary" />
@@ -268,7 +265,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
 
       {/* Section 2: Before / After comparison */}
       <section id="problems" className="scroll-mt-8 px-6 py-16 md:py-24">
-        <div className="mx-auto max-w-4xl">
+        <div className="relative z-10 mx-auto max-w-4xl">
           <div className="mb-10 text-center">
             <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
               O que muda com o Zelus?
@@ -325,7 +322,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
 
       {/* Section 3b: Feature Showcase */}
       <section className="px-6 py-16 md:py-24">
-        <div className="mx-auto max-w-5xl">
+        <div className="relative z-10 mx-auto max-w-5xl">
           <h2 className="mb-12 text-center text-xl font-semibold tracking-tight md:text-2xl">
             Tudo o que precisa, num só lugar.
           </h2>
@@ -359,7 +356,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
 
       {/* Section 4: CTA Repeat */}
       <section className="px-6 py-16 md:py-24">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+        <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
           <p className="text-lg italic">Do latim zelus: o cuidado vigilante pelo que é de todos.</p>
           <p className="text-muted-foreground">
             O Zelus está em fase de acesso antecipado. Deixe o seu nome para ser dos primeiros a

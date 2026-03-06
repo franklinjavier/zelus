@@ -89,9 +89,10 @@ export function AzulejoPattern({
 
   useEffect(() => {
     function update() {
+      const height = document.documentElement.scrollHeight
       setGrid({
         cols: Math.ceil(window.innerWidth / STEP) + 1,
-        rows: Math.ceil(window.innerHeight / STEP) + 1,
+        rows: Math.ceil(height / STEP) + 1,
       })
     }
     update()

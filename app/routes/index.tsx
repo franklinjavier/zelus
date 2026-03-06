@@ -320,7 +320,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
             Um lugar para tudo o que acontece no vosso prédio.
           </h2>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
               <h3 className="mb-2 text-base font-semibold">
                 Ocorrências organizadas, do início ao fim
@@ -332,10 +332,34 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
             </div>
 
             <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
+              <h3 className="mb-2 text-base font-semibold">Avisos com data e recorrência</h3>
+              <p className="text-muted-foreground text-sm">
+                Limpeza da garagem, assembleia, corte de água — avisos agendados que chegam a todos,
+                sem depender de mensagens de grupo.
+              </p>
+            </div>
+
+            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
+              <h3 className="mb-2 text-base font-semibold">Documentos sempre acessíveis</h3>
+              <p className="text-muted-foreground text-sm">
+                Atas, regulamentos, manuais e orçamentos num único lugar. Sem depender do e-mail de
+                quem já saiu.
+              </p>
+            </div>
+
+            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
               <h3 className="mb-2 text-base font-semibold">Historial que não desaparece</h3>
               <p className="text-muted-foreground text-sm">
                 Manutenções, intervenções, fornecedores. Tudo registado. Muda a administração, o
                 conhecimento fica.
+              </p>
+            </div>
+
+            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
+              <h3 className="mb-2 text-base font-semibold">Frações e acessos sob controlo</h3>
+              <p className="text-muted-foreground text-sm">
+                Cada morador associado à sua fração, com pedidos de acesso aprovados pela
+                administração. Sem dúvidas sobre quem é quem.
               </p>
             </div>
 

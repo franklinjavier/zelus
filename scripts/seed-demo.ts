@@ -112,6 +112,7 @@ async function seedDemo() {
 
     // Delete in dependency order (conversationMessages cascade from conversations)
     await db.delete(schema.conversations).where(eq(schema.conversations.orgId, existing.id))
+    await db.delete(schema.announcements).where(eq(schema.announcements.orgId, existing.id))
     await db.delete(schema.notifications).where(eq(schema.notifications.orgId, existing.id))
     await db
       .delete(schema.maintenanceRecords)
@@ -812,6 +813,27 @@ async function seedDemo() {
   console.log(`Created ${notificationsData.length} notifications`)
 
   // -------------------------------------------------------------------------
+  // 12b. Announcements
+  // -------------------------------------------------------------------------
+  await db.insert(schema.announcements).values({
+    id: crypto.randomUUID(),
+    orgId,
+    title: 'Limpeza da garagem',
+    description:
+      'A garagem será limpa no próximo sábado de manhã. Por favor, retirem os carros até às 8h.',
+    eventDate: daysAgo(-3),
+    recurrence: {
+      frequency: 'weekly',
+      interval: 2,
+      daysOfWeek: [6],
+      endType: 'never',
+    },
+    createdById: mariaId,
+    createdAt: daysAgo(14),
+  })
+  console.log('Created 1 announcement')
+
+  // -------------------------------------------------------------------------
   // 13. Conversation + Messages (for Maria)
   // -------------------------------------------------------------------------
   await db.insert(schema.conversations).values({
@@ -876,6 +898,7 @@ async function seedDemo() {
   console.log(`Events: ${eventsData.length}`)
   console.log(`Maintenance records: ${maintenanceData.length}`)
   console.log(`Notifications: ${notificationsData.length}`)
+  console.log('Announcements: 1')
   console.log(`Conversations: 1 (${messagesData.length} messages)`)
   console.log('\nDemo seed complete.')
 }

@@ -64,13 +64,17 @@ function MemberAvatar({ name, image }: { name: string; image?: string | null }) 
 
 function ImagePreview({
   src,
+  thumbnailSrc,
   alt,
   className,
+  imgClassName,
   caption,
 }: {
   src: string
+  thumbnailSrc?: string
   alt: string
   className?: string
+  imgClassName?: string
   caption?: string
 }) {
   const [mounted, setMounted] = useState(false)
@@ -96,10 +100,11 @@ function ImagePreview({
     <>
       <button type="button" onClick={open} className={className ?? 'mt-1.5 block cursor-zoom-in'}>
         <img
-          src={src}
+          src={thumbnailSrc ?? src}
           alt={alt}
           className={
-            className ? 'size-full object-cover' : 'max-h-64 rounded-lg border object-contain'
+            imgClassName ??
+            (className ? 'size-full object-cover' : 'max-h-64 rounded-lg border object-contain')
           }
         />
       </button>
@@ -144,7 +149,11 @@ function ImagePreview({
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
-              <img src={src} alt={alt} className="max-h-[85vh] max-w-[90vw] object-contain" />
+              <img
+                src={src}
+                alt={alt}
+                className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain"
+              />
               {caption && <p className="text-sm text-white/70">{caption}</p>}
             </div>
           </div>,

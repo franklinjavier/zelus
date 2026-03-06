@@ -26,7 +26,8 @@
     "video:capture": "dotenv -e .env.local -- bun run scripts/capture-screenshots.ts",
     "video:record": "dotenv -e .env.local -- bun run scripts/record-hero-video.ts",
     "video:render": "cd video && bun run render.ts",
-    "video:studio": "cd video && bunx remotion studio"
+    "video:studio": "cd video && bunx remotion studio",
+    "assets:refresh": "dotenv -e .env.local -- bun run scripts/refresh-assets.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.47",
@@ -94,6 +95,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "pretty-quick": "^4.2.2",
+    "sharp": "^0.34.5",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",

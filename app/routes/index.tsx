@@ -8,6 +8,7 @@ import { lazy, Suspense, useId } from 'react'
 const AzulejoPattern = lazy(() =>
   import('~/components/brand/azulejo-pattern').then((m) => ({ default: m.AzulejoPattern })),
 )
+import { ImagePreview } from '~/components/tickets/timeline-entry'
 import { ZelusLogoTile } from '~/components/brand/zelus-logo-tile'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
@@ -157,25 +158,57 @@ function WaitlistForm({
   )
 }
 
+const features = [
+  {
+    title: 'Tudo começa na página inicial',
+    description:
+      'Avisos do condomínio, atalhos para as funcionalidades principais e documentos importantes — tudo visível assim que entra.',
+    screenshot: '/screenshots/01-home.png',
+    thumbnail: '/screenshots/01-home-thumb.webp',
+    alt: 'Página inicial do Zelus com avisos e atalhos',
+  },
+  {
+    title: 'Ocorrências organizadas, do início ao fim',
+    description:
+      'Reporte problemas, acompanhe o estado e veja quem tratou e quando. Sem perseguir ninguém por mensagem.',
+    screenshot: '/screenshots/02-tickets.png',
+    thumbnail: '/screenshots/02-tickets-thumb.webp',
+    alt: 'Lista de ocorrências do condomínio no Zelus',
+  },
+  {
+    title: 'Perguntas respondidas sem incomodar ninguém',
+    description:
+      'O assistente IA encontra respostas nos documentos e dados do condomínio. Regulamentos, contactos, historial — tudo acessível numa conversa.',
+    screenshot: '/screenshots/03-assistant.png',
+    thumbnail: '/screenshots/03-assistant-thumb.webp',
+    alt: 'Assistente IA do Zelus a responder sobre ocorrências',
+  },
+  {
+    title: 'Prestadores sempre à mão',
+    description:
+      'Canalizador, eletricista, empresa de elevadores — todos os contactos organizados por categoria, sem depender da memória de ninguém.',
+    screenshot: '/screenshots/04-suppliers.png',
+    thumbnail: '/screenshots/04-suppliers-thumb.webp',
+    alt: 'Diretório de prestadores de serviço no Zelus',
+  },
+]
+
 export default function LandingPage({ actionData, loaderData }: Route.ComponentProps) {
   return (
-    <div className="scroll-smooth">
+    <div className="relative scroll-smooth">
+      <Suspense>
+        <AzulejoPattern />
+      </Suspense>
+
       {/* Top bar */}
-      <div className="relative z-20 flex justify-end px-6 py-4">
-        <a
-          href={href('/login')}
-          className="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
-        >
-          Já tem conta? Entrar
-        </a>
+      <div className="relative z-10 flex justify-end px-6 py-4">
+        <Button variant="ghost" size="lg" render={<a href={href('/login')} />}>
+          Entrar
+        </Button>
       </div>
 
       {/* Section 1: Hero */}
-      <section className="relative flex min-h-svh items-center justify-center px-6 py-16 md:py-24">
-        <Suspense>
-          <AzulejoPattern />
-        </Suspense>
-
+      <section className="flex min-h-svh items-center justify-center px-6 py-16 md:py-24">
         <div className="relative z-10 flex w-full max-w-5xl flex-col items-center gap-6 text-center">
           <div className="flex flex-col items-center gap-3">
             <ZelusLogoTile size={64} className="text-primary" />
@@ -192,7 +225,7 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
           </p>
 
           <div className="ring-foreground/10 aspect-video w-full overflow-hidden rounded-2xl shadow-xl ring-1">
-            <video autoPlay muted loop playsInline className="h-full w-full object-cover">
+            <video autoPlay muted loop playsInline controls className="h-full w-full object-cover">
               <source src="/hero.webm" type="video/webm" />
               <source src="/hero.mp4" type="video/mp4" />
               Vídeo demonstrativo do Zelus — gestão de condomínios simplificada.
@@ -230,95 +263,100 @@ export default function LandingPage({ actionData, loaderData }: Route.ComponentP
         </div>
       </section>
 
-      {/* Section 2: Problems */}
+      {/* Section 2: Before / After comparison */}
       <section id="problems" className="scroll-mt-8 px-6 py-16 md:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-8 text-center text-xl font-semibold tracking-tight md:text-2xl">
-            Gerir um condomínio não devia ser assim 👇
-          </h2>
+        <div className="relative z-10 mx-auto max-w-4xl">
+          <div className="mb-10 text-center">
+            <h2 className="text-xl font-semibold tracking-tight md:text-2xl">
+              O que muda com o Zelus?
+            </h2>
+            <p className="text-muted-foreground mt-2 text-base">
+              Os problemas de sempre, resolvidos de uma vez.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">Grupos de WhatsApp intermináveis</h3>
-              <p className="text-muted-foreground text-sm">
-                Quem chamou o canalizador? Quando foi? Ninguém sabe. A mensagem perdeu-se entre 200
-                outras.
-              </p>
-            </div>
-
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">
-                E-mails e planilhas que ninguém encontra
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                O orçamento está no e-mail do antigo administrador. A ata está numa pasta no Drive.
-                Ou era no Dropbox?
-              </p>
-            </div>
-
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">Moradores sem visibilidade</h3>
-              <p className="text-muted-foreground text-sm">
-                O que foi decidido na última assembleia? O que está em curso? Sem respostas, cresce
-                a desconfiança.
-              </p>
-            </div>
-
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">
-                Cada troca de administração, recomeça-se do zero
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Três anos, três administradoras. De cada vez, perde-se contactos, historial,
-                contexto. Como se o prédio não tivesse memória.
-              </p>
-            </div>
+          <div className="flex flex-col gap-4">
+            {[
+              {
+                before: 'Problemas reportados no WhatsApp e esquecidos',
+                after: 'Cada ocorrência registada com estado, prioridade e histórico completo',
+              },
+              {
+                before: 'Atas e documentos espalhados entre e-mails, pastas e drives',
+                after: 'Documentos centralizados e acessíveis a qualquer momento',
+              },
+              {
+                before: 'Avisos que se perdem entre mensagens de grupo',
+                after: 'Avisos com data, recorrência e visíveis na página inicial',
+              },
+              {
+                before: 'Ninguém sabe que prestador chamar nem o contacto',
+                after: 'Diretório de prestadores organizado por categoria',
+              },
+              {
+                before: 'Moradores fazem perguntas, ninguém tem a resposta à mão',
+                after: 'Assistente IA que encontra respostas nos dados do condomínio',
+              },
+              {
+                before: 'Muda a administração e perde-se todo o contexto',
+                after: 'Historial de intervenções e manutenções que sobrevive a qualquer mudança',
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="ring-foreground/10 grid grid-cols-1 overflow-hidden rounded-2xl ring-1 md:grid-cols-2"
+              >
+                <div className="bg-destructive/5 flex items-start gap-3 p-5">
+                  <span className="text-destructive mt-0.5 text-lg leading-none">&#x2717;</span>
+                  <p className="text-sm">{item.before}</p>
+                </div>
+                <div className="bg-primary/5 flex items-start gap-3 border-t p-5 md:border-t-0 md:border-l">
+                  <span className="text-primary mt-0.5 text-lg leading-none">&#x2713;</span>
+                  <p className="text-sm">{item.after}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Section 3: Solution */}
+      {/* Section 3b: Feature Showcase */}
       <section className="px-6 py-16 md:py-24">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="mb-8 text-center text-xl font-semibold tracking-tight md:text-2xl">
-            Um lugar para tudo o que acontece no vosso prédio.
+        <div className="relative z-10 mx-auto max-w-5xl">
+          <h2 className="mb-12 text-center text-xl font-semibold tracking-tight md:text-2xl">
+            Tudo o que precisa, num só lugar.
           </h2>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">
-                Ocorrências organizadas, do início ao fim
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Reportar problemas, acompanhar o estado, ver quem tratou e quando. Sem perseguir
-                ninguém.
-              </p>
-            </div>
-
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">Historial que não desaparece</h3>
-              <p className="text-muted-foreground text-sm">
-                Manutenções, intervenções, fornecedores. Tudo registado. Muda a administração, o
-                conhecimento fica.
-              </p>
-            </div>
-
-            <div className="bg-card ring-foreground/10 rounded-2xl p-5 ring-1">
-              <h3 className="mb-2 text-base font-semibold">
-                Perguntas respondidas sem incomodar ninguém
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                O regulamento permite obras no terraço? Quando foi a última inspeção do elevador? O
-                assistente encontra a resposta nos documentos do condomínio.
-              </p>
-            </div>
+          <div className="flex flex-col gap-16 md:gap-24">
+            {features.map((feature, i) => (
+              <div
+                key={feature.screenshot}
+                className={`flex flex-col items-center gap-6 md:gap-10 ${
+                  i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                }`}
+              >
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-lg font-semibold tracking-tight">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </div>
+                <div className="w-full flex-1">
+                  <ImagePreview
+                    src={feature.screenshot}
+                    thumbnailSrc={feature.thumbnail}
+                    alt={feature.alt}
+                    className="ring-foreground/10 block w-full cursor-zoom-in overflow-hidden rounded-2xl shadow-xl ring-1"
+                    imgClassName="h-auto w-full"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Section 4: CTA Repeat */}
       <section className="px-6 py-16 md:py-24">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+        <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
           <p className="text-lg italic">Do latim zelus: o cuidado vigilante pelo que é de todos.</p>
           <p className="text-muted-foreground">
             O Zelus está em fase de acesso antecipado. Deixe o seu nome para ser dos primeiros a

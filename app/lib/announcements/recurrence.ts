@@ -1,3 +1,14 @@
+import {
+  startOfDay,
+  startOfWeek,
+  addDays,
+  addWeeks,
+  getDaysInMonth,
+  differenceInWeeks,
+  differenceInMonths,
+} from 'date-fns'
+import { UTCDate } from '@date-fns/utc'
+
 export type Recurrence =
   | {
       frequency: 'weekly'
@@ -48,22 +59,10 @@ export function getFrequencyLabel(recurrence: Recurrence | null): string | null 
   return recurrence.interval === 1 ? 'Mensal' : `A cada ${recurrence.interval} meses`
 }
 
-/** Get the Monday of the UTC week containing the given date (Mon=1, Sun=7 ISO style) */
-function getMondayUTC(date: Date): Date {
-  const d = new Date(date)
-  const day = d.getUTCDay() // 0=Sun, 1=Mon, ...
-  const diff = day === 0 ? -6 : 1 - day
-  d.setUTCDate(d.getUTCDate() + diff)
-  d.setUTCHours(9, 0, 0, 0)
-  return d
-}
-
-function daysInMonthUTC(year: number, month: number): number {
-  return new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
-}
-
-function makeDateUTC(year: number, month: number, day: number): Date {
-  return new Date(Date.UTC(year, month, day, 9, 0, 0, 0))
+/** Normalize a Date to a UTCDate at 09:00 for consistent comparison */
+function toUTC9(date: Date): UTCDate {
+  const d = startOfDay(new UTCDate(date))
+  return new UTCDate(d.getTime() + 9 * 60 * 60 * 1000)
 }
 
 /**
@@ -79,15 +78,18 @@ export function getNextOccurrence(
   recurrence: Recurrence | null,
   now: Date,
 ): Date | null {
-  // One-time event — always return eventDate so it stays visible until archived
+  const today = startOfDay(new UTCDate(now))
+
+  // One-time event — show on the event day, hide after
   if (!recurrence) {
-    return eventDate
+    const eventDay = startOfDay(new UTCDate(eventDate))
+    return eventDay >= today ? eventDate : null
   }
 
   // Check endDate constraint early
   if (recurrence.endType === 'date') {
-    const end = new Date(`${recurrence.endDate}T23:59:59.999Z`)
-    if (now > end) return null
+    const end = new UTCDate(`${recurrence.endDate}T23:59:59.999Z`)
+    if (new UTCDate(now) > end) return null
   }
 
   if (recurrence.frequency === 'weekly') {
@@ -103,42 +105,31 @@ function getNextWeekly(
   now: Date,
 ): Date | null {
   const { interval, daysOfWeek } = rec
-  const eventMonday = getMondayUTC(eventDate)
+  const eventMonday = startOfWeek(new UTCDate(eventDate), { weekStartsOn: 1 })
   const sortedDays = [...daysOfWeek].sort((a, b) => a - b)
 
-  // Determine the effective start: max(eventDate, now)
-  const effective = eventDate > now ? eventDate : now
+  const effective = eventDate > now ? new UTCDate(eventDate) : new UTCDate(now)
+  const effectiveMonday = startOfWeek(effective, { weekStartsOn: 1 })
 
-  // Find the Monday of the effective date's week
-  const effectiveMonday = getMondayUTC(effective)
+  const weeksDiff = differenceInWeeks(effectiveMonday, eventMonday)
 
-  // Calculate weeks between event start Monday and effective Monday
-  const msDiff = effectiveMonday.getTime() - eventMonday.getTime()
-  const weeksDiff = Math.round(msDiff / (7 * 24 * 60 * 60 * 1000))
-
-  // Find the nearest valid week >= effective that aligns with interval
   const remainder = ((weeksDiff % interval) + interval) % interval
   const weeksToAdd = remainder === 0 ? 0 : interval - remainder
   let currentWeekOffset = weeksDiff + weeksToAdd
 
-  // Check this week and the next valid week
   for (let attempt = 0; attempt < 2; attempt++) {
-    const weekMonday = new Date(eventMonday)
-    weekMonday.setUTCDate(weekMonday.getUTCDate() + currentWeekOffset * 7)
+    const weekMonday = addWeeks(eventMonday, currentWeekOffset)
 
     for (const dayOfWeek of sortedDays) {
       // dayOfWeek: 0=Sun, 1=Mon, ... 6=Sat
-      const candidate = new Date(weekMonday)
-      const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // offset from Monday
-      candidate.setUTCDate(candidate.getUTCDate() + offset)
-      candidate.setUTCHours(9, 0, 0, 0)
+      const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+      const candidate = toUTC9(addDays(weekMonday, offset))
 
-      if (candidate < eventDate) continue
-      if (candidate < now) continue
+      if (candidate < new UTCDate(eventDate)) continue
+      if (candidate < new UTCDate(now)) continue
 
-      // Check end constraints
       if (rec.endType === 'date') {
-        const end = new Date(`${rec.endDate}T23:59:59.999Z`)
+        const end = new UTCDate(`${rec.endDate}T23:59:59.999Z`)
         if (candidate > end) return null
       }
 
@@ -163,30 +154,25 @@ function countWeeklyOccurrencesBefore(
   candidate: Date,
 ): number {
   const { interval, daysOfWeek } = rec
-  const eventMonday = getMondayUTC(eventDate)
+  const eventMonday = startOfWeek(new UTCDate(eventDate), { weekStartsOn: 1 })
   const sortedDays = [...daysOfWeek].sort((a, b) => a - b)
 
   let count = 0
   let weekOffset = 0
 
-  // Iterate through valid weeks until we reach the candidate
   while (true) {
-    const weekMonday = new Date(eventMonday)
-    weekMonday.setUTCDate(weekMonday.getUTCDate() + weekOffset * 7)
+    const weekMonday = addWeeks(eventMonday, weekOffset)
 
     for (const dayOfWeek of sortedDays) {
-      const occ = new Date(weekMonday)
       const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-      occ.setUTCDate(occ.getUTCDate() + offset)
-      occ.setUTCHours(9, 0, 0, 0)
+      const occ = toUTC9(addDays(weekMonday, offset))
 
-      if (occ < eventDate) continue
-      if (occ >= candidate) return count
+      if (occ < new UTCDate(eventDate)) continue
+      if (occ >= new UTCDate(candidate)) return count
       count++
     }
 
     weekOffset += interval
-    // Safety: don't loop more than ~520 weeks (10 years)
     if (weekOffset > 520) break
   }
 
@@ -199,35 +185,33 @@ function getNextMonthly(
   now: Date,
 ): Date | null {
   const { interval, dayOfMonth } = rec
-  const eventYear = eventDate.getUTCFullYear()
-  const eventMonth = eventDate.getUTCMonth()
+  const utcEvent = new UTCDate(eventDate)
+  const utcNow = new UTCDate(now)
+  const eventYear = utcEvent.getFullYear()
+  const eventMonth = utcEvent.getMonth()
 
-  // Determine effective start
-  const effective = eventDate > now ? eventDate : now
-  const effYear = effective.getUTCFullYear()
-  const effMonth = effective.getUTCMonth()
+  const effective = utcEvent > utcNow ? utcEvent : utcNow
 
-  // Calculate months from event start to effective
-  const monthsDiff = (effYear - eventYear) * 12 + (effMonth - eventMonth)
+  const monthsDiff = differenceInMonths(
+    new UTCDate(effective.getFullYear(), effective.getMonth(), 1),
+    new UTCDate(eventYear, eventMonth, 1),
+  )
 
-  // Find nearest aligned month >= effective
   const remainder = ((monthsDiff % interval) + interval) % interval
   let monthOffset = monthsDiff + (remainder === 0 ? 0 : interval - remainder)
 
-  // Try this month and the next valid month
   for (let attempt = 0; attempt < 2; attempt++) {
     const totalMonth = eventMonth + monthOffset
     const year = eventYear + Math.floor(totalMonth / 12)
     const month = totalMonth % 12
 
-    const maxDay = daysInMonthUTC(year, month)
+    const maxDay = getDaysInMonth(new UTCDate(year, month, 1))
     const day = Math.min(dayOfMonth, maxDay)
-    const candidate = makeDateUTC(year, month, day)
+    const candidate = new UTCDate(year, month, day, 9, 0, 0, 0)
 
-    if (candidate >= eventDate && candidate >= now) {
-      // Check end constraints
+    if (candidate >= utcEvent && candidate >= utcNow) {
       if (rec.endType === 'date') {
-        const end = new Date(`${rec.endDate}T23:59:59.999Z`)
+        const end = new UTCDate(`${rec.endDate}T23:59:59.999Z`)
         if (candidate > end) return null
       }
 
